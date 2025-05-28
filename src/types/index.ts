@@ -4,7 +4,7 @@ import type { LucideIcon } from 'lucide-react';
 export interface TemplateField {
   id: string;
   label: string;
-  type: 'text' | 'textarea' | 'date' | 'number' | 'email' | 'boolean';
+  type: 'text' | 'textarea' | 'date' | 'number' | 'email' | 'boolean' | 'file';
   placeholder?: string;
   required?: boolean;
   defaultValue?: string | number | boolean;

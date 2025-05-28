@@ -99,8 +99,8 @@ const WorkOrderPreview = (data: FormData) => {
               Contact: {data.businessContactNumber || 'N/A'} | Email: {data.businessEmail || 'N/A'}
             </p>
           </div>
-          {data.businessLogoUrl && (
-            <Image src={data.businessLogoUrl as string} alt="Business Logo" width={120} height={60} className="object-contain rounded shadow" data-ai-hint="company brand" />
+          {data.businessLogoUrl && typeof data.businessLogoUrl === 'string' && (data.businessLogoUrl.startsWith('http') || data.businessLogoUrl.startsWith('data:image')) && (
+            <Image src={data.businessLogoUrl} alt="Business Logo" width={120} height={60} className="object-contain rounded shadow" data-ai-hint="company brand" />
           )}
         </div>
         <Separator className="my-4" />
@@ -447,7 +447,7 @@ const workOrderFields: TemplateField[] = [
   { id: 'businessAddress', label: 'Business Address', type: 'textarea', placeholder: '123 Business St, City, State, PIN', required: true, defaultValue: "123 Main Street, Anytown, ST 12345" },
   { id: 'businessContactNumber', label: 'Business Contact Number', type: 'text', placeholder: '9876543210', required: true, defaultValue: "555-123-4567" },
   { id: 'businessEmail', label: 'Business Email', type: 'email', placeholder: 'contact@business.com', required: true, defaultValue: "contact@abcconstructions.com" },
-  { id: 'businessLogoUrl', label: 'Business Logo URL (Optional)', type: 'text', placeholder: 'https://placehold.co/120x60.png', defaultValue: 'https://placehold.co/120x60.png' },
+  { id: 'businessLogoUrl', label: 'Business Logo', type: 'file' }, // Changed type to 'file', removed placeholder and defaultValue
 
   // Work Order Details
   { id: 'orderNumber', label: 'Order Number', type: 'text', placeholder: `WO-${Date.now().toString().slice(-6)}`, defaultValue: `WO-${Date.now().toString().slice(-5)}`, required: true },
