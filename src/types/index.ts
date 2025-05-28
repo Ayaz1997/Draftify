@@ -4,10 +4,12 @@ import type { LucideIcon } from 'lucide-react';
 export interface TemplateField {
   id: string;
   label: string;
-  type: 'text' | 'textarea' | 'date' | 'number' | 'email';
+  type: 'text' | 'textarea' | 'date' | 'number' | 'email' | 'boolean';
   placeholder?: string;
   required?: boolean;
-  defaultValue?: string | number;
+  defaultValue?: string | number | boolean;
+  options?: Array<{ value: string; label: string }>; // For select or radio
+  rows?: number; // For textarea
 }
 
 export type FormData = Record<string, any>;

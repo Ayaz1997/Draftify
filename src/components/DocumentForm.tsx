@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye } from 'lucide-react';
@@ -34,24 +35,36 @@ function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
         validator = z.string().email({ message: 'Invalid email address' });
         break;
       case 'number':
-        validator = z.coerce.number({ invalid_type_error: 'Must be a number' });
+        validator = z.coerce.number({ invalid_type_error: 'Must be a number' }).nullable();
         break;
       case 'date':
         validator = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'Date must be YYYY-MM-DD' });
         break;
       case 'textarea':
-        validator = z.string().min(10, { message: 'Must be at least 10 characters' });
+        validator = z.string().min(field.required ? 1 : 0, { message: `${field.label} is required` });
+        if (field.required && validator instanceof z.ZodString) {
+            validator = validator.min(10, { message: 'Must be at least 10 characters' });
+        }
+        break;
+      case 'boolean':
+        validator = z.boolean();
         break;
       case 'text':
       default:
         validator = z.string();
         break;
     }
-    if (field.required) {
-      validator = validator.min(1, { message: `${field.label} is required` });
-    } else {
+    if (field.required && field.type !== 'boolean') { // Boolean handles its own requirement via default
+        if (validator instanceof z.ZodString) {
+            validator = validator.min(1, { message: `${field.label} is required` });
+        } else if (validator instanceof z.ZodNumber || validator instanceof z.ZodNullable && validator.unwrap() instanceof z.ZodNumber) {
+             // For required numbers, ensure they are not null/undefined post-coercion if that's the intent
+            validator = z.coerce.number({required_error: `${field.label} is required`, invalid_type_error: 'Must be a number'});
+        }
+    } else if (field.type !== 'boolean') {
       validator = validator.optional();
     }
+    
     shape[field.id] = validator;
   });
   return z.object(shape);
@@ -68,7 +81,10 @@ export function DocumentForm({ template }: DocumentFormProps) {
       defaultValues[field.id] = field.defaultValue;
     } else if (field.type === 'number') {
       defaultValues[field.id] = undefined; 
-    } else {
+    } else if (field.type === 'boolean') {
+      defaultValues[field.id] = false; // Default booleans to false if not specified
+    }
+     else {
       defaultValues[field.id] = '';
     }
   });
@@ -86,13 +102,35 @@ export function DocumentForm({ template }: DocumentFormProps) {
   const renderField = (field: TemplateField, formField: any) => {
     switch (field.type) {
       case 'textarea':
-        return <Textarea placeholder={field.placeholder} {...formField} rows={5} />;
+        return <Textarea placeholder={field.placeholder} {...formField} rows={field.rows || 5} />;
       case 'number':
-        return <Input type="number" placeholder={field.placeholder} {...formField} />;
+        return <Input type="number" placeholder={field.placeholder} {...formField} step="any" />;
       case 'date':
         return <Input type="date" placeholder={field.placeholder} {...formField} />;
       case 'email':
         return <Input type="email" placeholder={field.placeholder} {...formField} />;
+      case 'boolean':
+        return (
+          <FormItem className="flex flex-row items-center space-x-3 space-y-0 py-2">
+            <FormControl>
+              <Checkbox
+                checked={formField.value}
+                onCheckedChange={formField.onChange}
+                id={field.id}
+              />
+            </FormControl>
+            <div className="space-y-1 leading-none">
+              <FormLabel htmlFor={field.id} className="font-normal"> 
+                {field.label}
+              </FormLabel>
+              {field.placeholder && (
+                <FormDescription className="text-xs">
+                  {field.placeholder}
+                </FormDescription>
+              )}
+            </div>
+          </FormItem>
+        );
       case 'text':
       default:
         return <Input type="text" placeholder={field.placeholder} {...formField} />;
@@ -113,18 +151,22 @@ export function DocumentForm({ template }: DocumentFormProps) {
                 control={form.control}
                 name={field.id as keyof z.infer<typeof formSchema>}
                 render={({ field: formHookField }) => (
-                  <FormItem>
-                    <FormLabel className="font-semibold text-foreground/90">{field.label}{field.required && <span className="text-destructive ml-1">*</span>}</FormLabel>
-                    <FormControl>
-                      {renderField(field, formHookField)}
-                    </FormControl>
-                    {field.placeholder && !field.type.includes('area') && ( 
-                      <FormDescription className="text-xs text-muted-foreground">
-                        Example: {field.placeholder}
-                      </FormDescription>
-                    )}
-                    <FormMessage />
-                  </FormItem>
+                  field.type === 'boolean' ? (
+                     renderField(field, formHookField) // Boolean fields handle their FormItem structure internally
+                  ) : (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-foreground/90">{field.label}{field.required && <span className="text-destructive ml-1">*</span>}</FormLabel>
+                      <FormControl>
+                        {renderField(field, formHookField)}
+                      </FormControl>
+                      {field.placeholder && !field.type.includes('area') && field.type !== 'boolean' && ( 
+                        <FormDescription className="text-xs text-muted-foreground">
+                          Example: {field.placeholder}
+                        </FormDescription>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  )
                 )}
               />
             ))}

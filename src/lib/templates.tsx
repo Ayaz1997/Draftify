@@ -1,71 +1,328 @@
 
 import React from 'react';
-import type { Template, FormData } from '@/types';
-import { Briefcase, Scroll, Receipt, Mail, Phone, User, Building, CalendarDays, DollarSign, Hash, FileText } from 'lucide-react';
+import type { Template, FormData, TemplateField } from '@/types';
+import { Briefcase, Scroll, Receipt } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import Image from 'next/image';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter as UiTableFooter } from '@/components/ui/table';
 
 const formatDate = (dateString?: string) => {
   if (!dateString) return 'N/A';
+  // Ensure the date string is treated as UTC to avoid timezone issues if it's just a date without time
+  if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    return new Date(dateString + 'T00:00:00Z').toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+  }
   try {
-    // Ensure the date string is treated as UTC to avoid timezone issues if it's just a date without time
-    if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      return new Date(dateString + 'T00:00:00Z').toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
-    }
-    return new Date(dateString).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+    return new Date(dateString).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
   } catch (e) {
     return dateString; // Fallback if date is invalid
   }
 };
 
-const WorkOrderPreview = (data: FormData) => (
-  <Card className="w-full max-w-3xl mx-auto shadow-lg border-primary/50">
-    <CardHeader className="bg-primary text-primary-foreground p-6 rounded-t-lg">
-      <div className="flex justify-between items-center">
-        <CardTitle className="text-3xl font-bold">Work Order</CardTitle>
-        <Briefcase className="h-10 w-10" />
-      </div>
-      <CardDescription className="text-primary-foreground/80 mt-1">
-        Order ID: #{data.orderId || `WO-${Date.now().toString().slice(-6)}`}
-      </CardDescription>
-    </CardHeader>
-    <CardContent className="p-8 space-y-6 bg-card text-card-foreground">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <h3 className="text-lg font-semibold text-primary mb-2 border-b pb-1">Client Details</h3>
-          <p><strong>Name:</strong> {data.clientName || 'N/A'}</p>
-          <p><strong>Contact:</strong> {data.clientContact || 'N/A'}</p>
-          <p><strong>Address:</strong> {data.clientAddress || 'N/A'}</p>
+const formatCurrency = (amount?: number | string, currencySymbol = '₹') => {
+  const num = parseFloat(String(amount || 0));
+  return `${currencySymbol}${num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+
+const WorkOrderPreview = (data: FormData) => {
+  const workItems = [];
+  let subtotalWorkDescription = 0;
+  if (data.includeWorkDescriptionTable) {
+    for (let i = 1; i <= 3; i++) {
+      if (data[`workItem${i}Description`]) {
+        const area = parseFloat(data[`workItem${i}Area`] || 0);
+        const rate = parseFloat(data[`workItem${i}Rate`] || 0);
+        const amount = area * rate;
+        workItems.push({
+          description: data[`workItem${i}Description`],
+          area: area,
+          rate: rate,
+          amount: amount,
+        });
+        subtotalWorkDescription += amount;
+      }
+    }
+  }
+
+  const materialItems = [];
+  let subtotalMaterial = 0;
+  if (data.includeMaterialTable) {
+    for (let i = 1; i <= 3; i++) {
+      if (data[`materialItem${i}Name`]) {
+        const quantity = parseFloat(data[`materialItem${i}Quantity`] || 1); // Assuming quantity if not specified
+        const pricePerUnit = parseFloat(data[`materialItem${i}PricePerUnit`] || 0);
+        const amount = quantity * pricePerUnit;
+        materialItems.push({
+          name: data[`materialItem${i}Name`],
+          unit: data[`materialItem${i}Unit`],
+          quantity: quantity,
+          pricePerUnit: pricePerUnit,
+          amount: amount,
+        });
+        subtotalMaterial += amount;
+      }
+    }
+  }
+
+  const laborItems = [];
+  let subtotalLabor = 0;
+  if (data.includeLaborTable) {
+    for (let i = 1; i <= 3; i++) {
+      if (data[`laborItem${i}TeamName`]) {
+        const numPersons = parseInt(data[`laborItem${i}NumPersons`] || 1);
+        const amount = parseFloat(data[`laborItem${i}Amount`] || 0);
+        laborItems.push({
+          teamName: data[`laborItem${i}TeamName`],
+          numPersons: numPersons,
+          amount: amount,
+        });
+        subtotalLabor += amount;
+      }
+    }
+  }
+
+  const grandSubtotal = subtotalWorkDescription + subtotalMaterial + subtotalLabor + parseFloat(data.otherCosts || 0);
+  const taxRate = parseFloat(data.taxRatePercentage || 0) / 100;
+  const taxAmount = grandSubtotal * taxRate;
+  const finalTotalAmount = grandSubtotal + taxAmount;
+
+  return (
+    <Card className="w-full max-w-4xl mx-auto shadow-xl border-primary/30 printable-area">
+      {/* Header Section */}
+      <CardHeader className="bg-muted/30 p-6 rounded-t-lg">
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold text-primary">{data.businessName || 'Your Business Name'}</h1>
+            <p className="text-sm text-foreground/80 whitespace-pre-wrap">{data.businessAddress || '123 Business St, City, State, PIN'}</p>
+            <p className="text-sm text-foreground/80">
+              Contact: {data.businessContactNumber || 'N/A'} | Email: {data.businessEmail || 'N/A'}
+            </p>
+          </div>
+          {data.businessLogoUrl && (
+            <Image src={data.businessLogoUrl as string} alt="Business Logo" width={120} height={60} className="object-contain rounded shadow" data-ai-hint="company brand" />
+          )}
         </div>
-        <div>
-          <h3 className="text-lg font-semibold text-primary mb-2 border-b pb-1">Company Details</h3>
-          <p><strong>Company:</strong> {data.companyName || 'Your Company LLC'}</p>
-          <p><strong>Technician:</strong> {data.technicianName || 'N/A'}</p>
+        <Separator className="my-4" />
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-2xl font-semibold text-accent">Work Order</CardTitle>
+          <Briefcase className="h-8 w-8 text-accent" />
         </div>
-      </div>
-      <Separator />
-      <div>
-        <h3 className="text-lg font-semibold text-primary mb-2 border-b pb-1">Work Description</h3>
-        <p className="whitespace-pre-wrap">{data.workDescription || 'N/A'}</p>
-      </div>
-      <Separator />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <h3 className="text-lg font-semibold text-primary mb-2">Scheduled Date</h3>
-          <p>{formatDate(data.scheduledDate)}</p>
+      </CardHeader>
+
+      <CardContent className="p-6 space-y-6">
+        {/* Work Order Details */}
+        <div className="border p-4 rounded-md shadow-sm">
+          <h3 className="text-lg font-semibold text-primary mb-2">Order Details</h3>
+          <Table>
+            <TableBody>
+              <TableRow>
+                <TableCell className="font-medium">Order Number:</TableCell>
+                <TableCell>{data.orderNumber || `WO-${Date.now().toString().slice(-6)}`}</TableCell>
+                <TableCell className="font-medium">Order Date:</TableCell>
+                <TableCell>{formatDate(data.orderDate)}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-medium">Expected Start Date:</TableCell>
+                <TableCell>{formatDate(data.expectedStartDate)}</TableCell>
+                <TableCell className="font-medium">Expected End Date:</TableCell>
+                <TableCell>{formatDate(data.expectedEndDate)}</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
         </div>
-        <div className="text-left md:text-right">
-          <h3 className="text-lg font-semibold text-primary mb-2">Estimated Cost</h3>
-          <p className="text-2xl font-bold">${parseFloat(data.estimatedCost || 0).toFixed(2)}</p>
+
+        {/* Client Details */}
+        <div className="border p-4 rounded-md shadow-sm">
+          <h3 className="text-lg font-semibold text-primary mb-2">Client Details</h3>
+          <Table>
+            <TableBody>
+              <TableRow>
+                <TableCell className="font-medium">Client Name:</TableCell>
+                <TableCell>{data.clientName || 'N/A'}</TableCell>
+                <TableCell className="font-medium">Client Phone:</TableCell>
+                <TableCell>{data.clientPhone || 'N/A'}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-medium">Client Email:</TableCell>
+                <TableCell>{data.clientEmail || 'N/A'}</TableCell>
+                <TableCell className="font-medium">Order Received By:</TableCell>
+                <TableCell>{data.orderReceivedBy || 'N/A'}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-medium">Work Location:</TableCell>
+                <TableCell colSpan={3} className="whitespace-pre-wrap">{data.workLocation || 'N/A'}</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
         </div>
-      </div>
-    </CardContent>
-    <CardFooter className="p-6 bg-muted/50 rounded-b-lg text-sm text-muted-foreground">
-      <p>Thank you for your business! Payment is due upon completion unless otherwise specified.</p>
-    </CardFooter>
-  </Card>
-);
+        
+        {/* General Work Description */}
+        {data.generalWorkDescription && (
+          <div className="border p-4 rounded-md shadow-sm">
+            <h3 className="text-lg font-semibold text-primary mb-2">Overall Work Description</h3>
+            <p className="whitespace-pre-wrap text-sm">{data.generalWorkDescription}</p>
+          </div>
+        )}
+
+        {/* Detailed Work Description Table */}
+        {data.includeWorkDescriptionTable && workItems.length > 0 && (
+          <div className="border p-4 rounded-md shadow-sm">
+            <h3 className="text-lg font-semibold text-primary mb-3">Detailed Work Items</h3>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Work Description</TableHead>
+                  <TableHead className="text-right">Area (Sq. ft.)</TableHead>
+                  <TableHead className="text-right">Rate ({formatCurrency(0).charAt(0)})</TableHead>
+                  <TableHead className="text-right">Amount ({formatCurrency(0).charAt(0)})</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {workItems.map((item, index) => (
+                  <TableRow key={`work-${index}`}>
+                    <TableCell className="whitespace-pre-wrap">{item.description}</TableCell>
+                    <TableCell className="text-right">{item.area.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(item.rate, '')}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(item.amount, '')}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+              <UiTableFooter>
+                <TableRow className="bg-muted/50">
+                  <TableCell colSpan={3} className="text-right font-bold text-primary">Subtotal Work Description</TableCell>
+                  <TableCell className="text-right font-bold">{formatCurrency(subtotalWorkDescription)}</TableCell>
+                </TableRow>
+              </UiTableFooter>
+            </Table>
+          </div>
+        )}
+
+        {/* Material Description Table */}
+        {data.includeMaterialTable && materialItems.length > 0 && (
+          <div className="border p-4 rounded-md shadow-sm">
+            <h3 className="text-lg font-semibold text-primary mb-3">Materials Used</h3>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Material Name</TableHead>
+                  <TableHead>Unit</TableHead>
+                  <TableHead className="text-right">Quantity</TableHead>
+                  <TableHead className="text-right">Price/Unit ({formatCurrency(0).charAt(0)})</TableHead>
+                  <TableHead className="text-right">Amount ({formatCurrency(0).charAt(0)})</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {materialItems.map((item, index) => (
+                  <TableRow key={`material-${index}`}>
+                    <TableCell>{item.name}</TableCell>
+                    <TableCell>{item.unit}</TableCell>
+                    <TableCell className="text-right">{item.quantity}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(item.pricePerUnit, '')}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(item.amount, '')}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+              <UiTableFooter>
+                <TableRow className="bg-muted/50">
+                  <TableCell colSpan={4} className="text-right font-bold text-primary">Subtotal Materials</TableCell>
+                  <TableCell className="text-right font-bold">{formatCurrency(subtotalMaterial)}</TableCell>
+                </TableRow>
+              </UiTableFooter>
+            </Table>
+          </div>
+        )}
+
+        {/* Labor Description Table */}
+        {data.includeLaborTable && laborItems.length > 0 && (
+          <div className="border p-4 rounded-md shadow-sm">
+            <h3 className="text-lg font-semibold text-primary mb-3">Labor Charges</h3>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Team Name / Description</TableHead>
+                  <TableHead className="text-right">No. of Persons</TableHead>
+                  <TableHead className="text-right">Amount ({formatCurrency(0).charAt(0)})</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {laborItems.map((item, index) => (
+                  <TableRow key={`labor-${index}`}>
+                    <TableCell>{item.teamName}</TableCell>
+                    <TableCell className="text-right">{item.numPersons}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(item.amount, '')}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+              <UiTableFooter>
+                <TableRow className="bg-muted/50">
+                  <TableCell colSpan={2} className="text-right font-bold text-primary">Subtotal Labor</TableCell>
+                  <TableCell className="text-right font-bold">{formatCurrency(subtotalLabor)}</TableCell>
+                </TableRow>
+              </UiTableFooter>
+            </Table>
+          </div>
+        )}
+        
+        {/* Terms of Service */}
+        {data.termsOfService && (
+           <div className="border p-4 rounded-md shadow-sm">
+            <h3 className="text-lg font-semibold text-primary mb-2">Terms of Service</h3>
+            <p className="whitespace-pre-wrap text-sm">{data.termsOfService}</p>
+          </div>
+        )}
+
+        {/* Final Amount Section */}
+        <Separator />
+        <div className="flex justify-end">
+          <div className="w-full md:w-2/5 space-y-1">
+            {(data.includeWorkDescriptionTable || data.includeMaterialTable || data.includeLaborTable) && (
+                <div className="flex justify-between">
+                  <span className="font-medium">Total Items Subtotal:</span>
+                  <span>{formatCurrency(subtotalWorkDescription + subtotalMaterial + subtotalLabor)}</span>
+                </div>
+            )}
+            {typeof data.otherCosts === 'number' && data.otherCosts > 0 && (
+                 <div className="flex justify-between">
+                    <span className="font-medium">Other Costs:</span>
+                    <span>{formatCurrency(data.otherCosts)}</span>
+                </div>
+            )}
+            <div className="flex justify-between">
+              <span className="font-medium">Grand Subtotal:</span>
+              <span>{formatCurrency(grandSubtotal)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="font-medium">Tax ({data.taxRatePercentage || 0}%):</span>
+              <span>{formatCurrency(taxAmount)}</span>
+            </div>
+            <Separator className="my-2 bg-primary/50"/>
+            <div className="flex justify-between text-xl font-bold text-primary">
+              <span>Final Total Amount:</span>
+              <span>{formatCurrency(finalTotalAmount)}</span>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+
+      {/* Footer Section */}
+      <CardFooter className="p-6 bg-muted/30 rounded-b-lg text-sm text-muted-foreground border-t">
+        <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <p className="font-semibold">Approved By:</p>
+                <p className="mt-4 border-b border-foreground/50 pb-1 min-h-[24px]">{data.approvedByName || ''}</p>
+                <p className="text-xs">(Signature & Name)</p>
+            </div>
+            <div className="text-left md:text-right">
+                <p className="font-semibold">Date of Approval:</p>
+                <p className="mt-1">{formatDate(data.dateOfApproval)}</p>
+            </div>
+        </div>
+      </CardFooter>
+    </Card>
+  );
+};
+
 
 const LetterheadPreview = (data: FormData) => (
   <Card className="w-full max-w-3xl mx-auto shadow-lg p-8 border-primary/50 print-friendly-letterhead" data-ai-hint="stationery paper">
@@ -184,24 +441,90 @@ const InvoicePreview = (data: FormData) => (
   </Card>
 );
 
+const workOrderFields: TemplateField[] = [
+  // Header Section
+  { id: 'businessName', label: 'Business Name', type: 'text', placeholder: 'Your Company Name', required: true, defaultValue: "ABC Constructions" },
+  { id: 'businessAddress', label: 'Business Address', type: 'textarea', placeholder: '123 Business St, City, State, PIN', required: true, defaultValue: "123 Main Street, Anytown, ST 12345" },
+  { id: 'businessContactNumber', label: 'Business Contact Number', type: 'text', placeholder: '9876543210', required: true, defaultValue: "555-123-4567" },
+  { id: 'businessEmail', label: 'Business Email', type: 'email', placeholder: 'contact@business.com', required: true, defaultValue: "contact@abcconstructions.com" },
+  { id: 'businessLogoUrl', label: 'Business Logo URL (Optional)', type: 'text', placeholder: 'https://placehold.co/120x60.png', defaultValue: 'https://placehold.co/120x60.png' },
+
+  // Work Order Details
+  { id: 'orderNumber', label: 'Order Number', type: 'text', placeholder: `WO-${Date.now().toString().slice(-6)}`, defaultValue: `WO-${Date.now().toString().slice(-5)}`, required: true },
+  { id: 'orderDate', label: 'Order Date', type: 'date', required: true },
+  { id: 'expectedStartDate', label: 'Expected Start Date', type: 'date', required: true },
+  { id: 'expectedEndDate', label: 'Expected End Date', type: 'date', required: true },
+  
+  // Client Details
+  { id: 'clientName', label: 'Client Name', type: 'text', placeholder: 'Mr. John Doe', required: true },
+  { id: 'clientPhone', label: 'Client Phone', type: 'text', placeholder: '9998887770' },
+  { id: 'clientEmail', label: 'Client Email', type: 'email', placeholder: 'client@example.com' },
+  { id: 'workLocation', label: 'Work Location / Site Address', type: 'textarea', placeholder: 'Full address of the work site', required: true },
+  { id: 'orderReceivedBy', label: 'Order Received By (Your Staff)', type: 'text', placeholder: 'Employee Name' },
+
+  // Main Sections
+  { id: 'generalWorkDescription', label: 'Overall Work Description', type: 'textarea', placeholder: 'Summarize the work to be done', rows: 3 },
+  { id: 'termsOfService', label: 'Terms of Service', type: 'textarea', placeholder: 'Payment terms, warranty, etc.', rows: 4, defaultValue: "1. All payments are due upon completion of work unless otherwise agreed in writing.\n2. Any changes to the scope of work must be documented and may incur additional charges.\n3. Warranty for services performed is 30 days from completion date." },
+
+  // Work Description Table Toggle
+  { id: 'includeWorkDescriptionTable', label: 'Include Detailed Work Items Table?', type: 'boolean', defaultValue: true, placeholder: "Show/hide the table for specific work items, area, and rates." },
+  // Work Items (Fixed 3 for now)
+  { id: 'workItem1Description', label: 'Work Item 1: Description', type: 'textarea', placeholder: 'E.g., Interior Painting - Living Room', rows: 2 },
+  { id: 'workItem1Area', label: 'Work Item 1: Area (Sq. ft.)', type: 'number', placeholder: '250' },
+  { id: 'workItem1Rate', label: 'Work Item 1: Rate (₹ per Sq. ft.)', type: 'number', placeholder: '15' },
+  { id: 'workItem2Description', label: 'Work Item 2: Description', type: 'textarea', placeholder: 'E.g., Kitchen Cabinet Installation', rows: 2 },
+  { id: 'workItem2Area', label: 'Work Item 2: Area (Sq. ft.)', type: 'number', placeholder: 'N/A or 0' },
+  { id: 'workItem2Rate', label: 'Work Item 2: Rate (₹, or total for item)', type: 'number', placeholder: '5000' },
+  { id: 'workItem3Description', label: 'Work Item 3: Description', type: 'textarea', rows: 2 },
+  { id: 'workItem3Area', label: 'Work Item 3: Area (Sq. ft.)', type: 'number' },
+  { id: 'workItem3Rate', label: 'Work Item 3: Rate (₹)', type: 'number' },
+
+  // Material Description Table Toggle
+  { id: 'includeMaterialTable', label: 'Include Materials Table?', type: 'boolean', defaultValue: true, placeholder: "Show/hide table for materials, units, and prices." },
+  // Material Items
+  { id: 'materialItem1Name', label: 'Material 1: Name', type: 'text', placeholder: 'E.g., Emulsion Paint' },
+  { id: 'materialItem1Unit', label: 'Material 1: Unit', type: 'text', placeholder: 'Litre / Kg / Pcs' },
+  { id: 'materialItem1Quantity', label: 'Material 1: Quantity', type: 'number', placeholder: '10' },
+  { id: 'materialItem1PricePerUnit', label: 'Material 1: Price per Unit (₹)', type: 'number', placeholder: '450' },
+  { id: 'materialItem2Name', label: 'Material 2: Name', type: 'text' },
+  { id: 'materialItem2Unit', label: 'Material 2: Unit', type: 'text' },
+  { id: 'materialItem2Quantity', label: 'Material 2: Quantity', type: 'number' },
+  { id: 'materialItem2PricePerUnit', label: 'Material 2: Price per Unit (₹)', type: 'number' },
+  { id: 'materialItem3Name', label: 'Material 3: Name', type: 'text' },
+  { id: 'materialItem3Unit', label: 'Material 3: Unit', type: 'text' },
+  { id: 'materialItem3Quantity', label: 'Material 3: Quantity', type: 'number' },
+  { id: 'materialItem3PricePerUnit', label: 'Material 3: Price per Unit (₹)', type: 'number' },
+  
+  // Labor Description Table Toggle
+  { id: 'includeLaborTable', label: 'Include Labor Charges Table?', type: 'boolean', defaultValue: true, placeholder: "Show/hide table for labor teams and costs." },
+  // Labor Items
+  { id: 'laborItem1TeamName', label: 'Labor 1: Team/Description', type: 'text', placeholder: 'E.g., Painting Team A' },
+  { id: 'laborItem1NumPersons', label: 'Labor 1: No. of Persons', type: 'number', placeholder: '2' },
+  { id: 'laborItem1Amount', label: 'Labor 1: Amount (₹)', type: 'number', placeholder: '8000' },
+  { id: 'laborItem2TeamName', label: 'Labor 2: Team/Description', type: 'text' },
+  { id: 'laborItem2NumPersons', label: 'Labor 2: No. of Persons', type: 'number' },
+  { id: 'laborItem2Amount', label: 'Labor 2: Amount (₹)', type: 'number' },
+  { id: 'laborItem3TeamName', label: 'Labor 3: Team/Description', type: 'text' },
+  { id: 'laborItem3NumPersons', label: 'Labor 3: No. of Persons', type: 'number' },
+  { id: 'laborItem3Amount', label: 'Labor 3: Amount (₹)', type: 'number' },
+
+  // Final Amount Section
+  { id: 'otherCosts', label: 'Other Costs (₹, e.g., Transportation)', type: 'number', placeholder: '500', defaultValue: 0 },
+  { id: 'taxRatePercentage', label: 'Tax Rate (%)', type: 'number', placeholder: '18', defaultValue: 18 },
+
+  // Footer Section
+  { id: 'approvedByName', label: 'Approved By (Name)', type: 'text', placeholder: 'Project Manager Name' },
+  { id: 'dateOfApproval', label: 'Date of Approval', type: 'date' },
+];
+
 
 export const templates: Template[] = [
   {
     id: 'work-order',
     name: 'Work Order',
-    description: 'Generate detailed work orders for services.',
+    description: 'Generate detailed work orders for services, including itemized work, materials, and labor.',
     icon: Briefcase,
-    fields: [
-      { id: 'orderId', label: 'Order ID', type: 'text', placeholder: `WO-${Date.now().toString().slice(-6)}`, defaultValue: `WO-${Date.now().toString().slice(-6)}` },
-      { id: 'clientName', label: 'Client Name', type: 'text', placeholder: 'John Doe', required: true },
-      { id: 'clientContact', label: 'Client Contact (Email/Phone)', type: 'text', placeholder: 'john.doe@example.com / 555-1234' },
-      { id: 'clientAddress', label: 'Client Address', type: 'textarea', placeholder: '123 Main St, Anytown, USA', required: true },
-      { id: 'companyName', label: 'Your Company Name', type: 'text', placeholder: 'Your Company LLC', defaultValue: 'Your Company LLC' },
-      { id: 'technicianName', label: 'Technician Name', type: 'text', placeholder: 'Jane Smith' },
-      { id: 'workDescription', label: 'Description of Work', type: 'textarea', placeholder: 'Detailed description of tasks and services provided.', required: true },
-      { id: 'scheduledDate', label: 'Scheduled Date', type: 'date', required: true },
-      { id: 'estimatedCost', label: 'Estimated Cost ($)', type: 'number', placeholder: '150.00' },
-    ],
+    fields: workOrderFields,
     previewLayout: WorkOrderPreview,
   },
   {
@@ -221,7 +544,7 @@ export const templates: Template[] = [
       { id: 'recipientName', label: 'Recipient Name', type: 'text', placeholder: 'Mr. John Smith', required: true },
       { id: 'recipientAddress', label: 'Recipient Address', type: 'textarea', placeholder: '456 Client Ave\nClient City, State ZIP', required: true },
       { id: 'subject', label: 'Subject (optional)', type: 'text', placeholder: 'Regarding Your Recent Inquiry' },
-      { id: 'bodyContent', label: 'Letter Body', type: 'textarea', placeholder: 'Dear Mr. Smith,\n\n...', required: true, defaultValue: 'Dear [Recipient Name],\n\n\n\nSincerely,\n[Your Name]' },
+      { id: 'bodyContent', label: 'Letter Body', type: 'textarea', placeholder: 'Dear Mr. Smith,\n\n...', required: true, defaultValue: 'Dear [Recipient Name],\n\n\n\nSincerely,\n[Your Name]', rows: 10 },
     ],
     previewLayout: LetterheadPreview,
   },
