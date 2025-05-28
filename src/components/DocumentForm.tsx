@@ -21,7 +21,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye } from 'lucide-react';
-import { useToast } from "@/hooks/use-toast"; // Added for toast notifications
+import { useToast } from "@/hooks/use-toast";
 
 interface DocumentFormProps {
   template: DocumentFormPropsTemplate;
@@ -44,17 +44,15 @@ function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
       case 'textarea':
         validator = z.string().min(field.required ? 1 : 0, { message: `${field.label} is required` });
         if (field.required && validator instanceof z.ZodString) {
-            validator = validator.min(10, { message: 'Must be at least 10 characters' });
+            // For required textareas, a more substantial minimum might be desired, adjust as needed.
+            // validator = validator.min(10, { message: 'Must be at least 10 characters' });
         }
         break;
       case 'boolean':
         validator = z.boolean();
         break;
       case 'file':
-        // For file inputs, we expect a FileList. react-hook-form handles this.
-        // Basic validation can be done here, or more complex in onSubmit.
-        // For now, z.any() allows FileList or undefined.
-        validator = z.any().optional();
+        validator = z.any().optional(); // Allows FileList, undefined. Specific validation in onSubmit.
         break;
       case 'text':
       default:
@@ -64,7 +62,8 @@ function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
     if (field.required && field.type !== 'boolean' && field.type !== 'file') { 
         if (validator instanceof z.ZodString) {
             validator = validator.min(1, { message: `${field.label} is required` });
-        } else if (validator instanceof z.ZodNumber || validator instanceof z.ZodNullable && validator.unwrap() instanceof z.ZodNumber) {
+        } else if (validator instanceof z.ZodNumber || (validator instanceof z.ZodNullable && validator.unwrap() instanceof z.ZodNumber)) {
+            // Ensure required numbers are actually provided
             validator = z.coerce.number({required_error: `${field.label} is required`, invalid_type_error: 'Must be a number'});
         }
     } else if (field.type !== 'boolean' && field.type !== 'file') {
@@ -91,7 +90,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
     } else if (field.type === 'boolean') {
       defaultValues[field.id] = false; 
     } else if (field.type === 'file') {
-      defaultValues[field.id] = undefined; // File inputs should not have string default values
+      defaultValues[field.id] = undefined; 
     } else {
       defaultValues[field.id] = '';
     }
@@ -102,92 +101,98 @@ export function DocumentForm({ template }: DocumentFormProps) {
     defaultValues,
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    const processedValues = { ...values };
-  
-    const logoFileField = template.fields.find(f => f.id === 'businessLogoUrl' && f.type === 'file');
-  
-    if (logoFileField && values.businessLogoUrl && values.businessLogoUrl instanceof FileList && values.businessLogoUrl.length > 0) {
-      const file = values.businessLogoUrl[0];
-  
-      if (!file.type.startsWith('image/')) {
-        toast({
-          variant: 'destructive',
-          title: 'Invalid File Type',
-          description: 'Please upload an image file for the logo (e.g., PNG, JPG).',
-        });
-        return; 
+  async function onSubmit(rawValues: z.infer<typeof formSchema>) {
+    // Use a mutable record for values that will be stringified and sent.
+    const submissionValues: Record<string, any> = { ...rawValues };
+
+    // Handle businessLogoUrl specifically
+    const logoFieldDefinition = template.fields.find(f => f.id === 'businessLogoUrl' && f.type === 'file');
+    if (logoFieldDefinition) {
+      const logoValueFromForm = rawValues.businessLogoUrl; // This is 'any' due to z.any()
+
+      if (logoValueFromForm instanceof FileList && logoValueFromForm.length > 0) {
+        const file = logoValueFromForm[0];
+        let isValidFile = true;
+
+        if (!file.type.startsWith('image/')) {
+          toast({
+            variant: 'destructive',
+            title: 'Invalid File Type',
+            description: 'Please upload an image file for the logo (e.g., PNG, JPG).',
+          });
+          isValidFile = false;
+        } else if (file.size > 5 * 1024 * 1024) { // 5MB limit
+          toast({
+            variant: 'destructive',
+            title: 'File Too Large',
+            description: 'Logo image should be less than 5MB.',
+          });
+          isValidFile = false;
+        }
+
+        if (isValidFile) {
+          try {
+            const dataUri = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = (event) => {
+                if (event.target && typeof event.target.result === 'string') {
+                  resolve(event.target.result);
+                } else {
+                  reject(new Error('Failed to read file.'));
+                }
+              };
+              reader.onerror = (error) => reject(error);
+              reader.readAsDataURL(file);
+            });
+            submissionValues.businessLogoUrl = dataUri;
+          } catch (error) {
+            console.error("Error converting file to data URI:", error);
+            toast({
+              variant: "destructive",
+              title: "Logo Upload Failed",
+              description: "Could not process the logo file. Please try again.",
+            });
+            submissionValues.businessLogoUrl = ''; 
+          }
+        } else {
+          submissionValues.businessLogoUrl = ''; // Set to empty if validation failed
+        }
+      } else if (typeof logoValueFromForm === 'string' && logoValueFromForm.startsWith('data:image')) {
+        // Already a data URI (e.g., from an edit flow that pre-filled the form), keep it.
+        submissionValues.businessLogoUrl = logoValueFromForm;
+      } else {
+        // No file selected, or FileList is empty, or it's an unrecognized type.
+        submissionValues.businessLogoUrl = '';
       }
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        toast({
-          variant: 'destructive',
-          title: 'File Too Large',
-          description: 'Logo image should be less than 5MB.',
-        });
-        return; 
-      }
-  
-      try {
-        const dataUri = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            if (event.target && typeof event.target.result === 'string') {
-              resolve(event.target.result);
-            } else {
-              reject(new Error('Failed to read file.'));
-            }
-          };
-          reader.onerror = (error) => {
-            reject(error);
-          };
-          reader.readAsDataURL(file);
-        });
-        processedValues.businessLogoUrl = dataUri;
-      } catch (error) {
-        console.error("Error converting file to data URI:", error);
-        toast({
-          variant: "destructive",
-          title: "Logo Upload Failed",
-          description: "Could not process the logo file. Please try again.",
-        });
-        processedValues.businessLogoUrl = ''; 
-      }
-    } else if (logoFileField && values.businessLogoUrl instanceof FileList && values.businessLogoUrl.length === 0) {
-      // No new file selected, retain existing value if any, or set to empty
-       if (typeof defaultValues.businessLogoUrl === 'string' && defaultValues.businessLogoUrl.startsWith('http')) {
-         // This case is less likely now that default is undefined for file, but good for robustness if form re-initializes
-         processedValues.businessLogoUrl = defaultValues.businessLogoUrl;
-       } else {
-         processedValues.businessLogoUrl = ''; 
-       }
     }
-    // If businessLogoUrl is already a string (e.g. data URI or HTTP URL from a previous state/edit), it passes through
     
-    const formDataString = encodeURIComponent(JSON.stringify(processedValues));
+    const formDataString = encodeURIComponent(JSON.stringify(submissionValues));
     router.push(`/templates/${template.id}/preview?data=${formDataString}`);
   }
 
-  const renderField = (field: TemplateField, formField: any) => {
+  const renderField = (field: TemplateField, formFieldControllerProps: any) => {
     switch (field.type) {
       case 'textarea':
-        return <Textarea placeholder={field.placeholder} {...formField} rows={field.rows || 5} />;
+        return <Textarea placeholder={field.placeholder} {...formFieldControllerProps} rows={field.rows || 5} />;
       case 'number':
-        return <Input type="number" placeholder={field.placeholder} {...formField} step="any" />;
+        return <Input type="number" placeholder={field.placeholder} {...formFieldControllerProps} step="any" />;
       case 'date':
-        return <Input type="date" placeholder={field.placeholder} {...formField} />;
+        return <Input type="date" placeholder={field.placeholder} {...formFieldControllerProps} />;
       case 'email':
-        return <Input type="email" placeholder={field.placeholder} {...formField} />;
+        return <Input type="email" placeholder={field.placeholder} {...formFieldControllerProps} />;
       case 'file':
-        // react-hook-form handles FileList object. We convert to data URI in onSubmit.
-        // Unregister previous value when file input changes to avoid issues with mixed types.
-        const { ref, ...restOfFormField } = formField; // Exclude ref for direct input control
+        // Exclude 'ref' from being passed to the DOM element if it's part of formFieldControllerProps from RHF Controller
+        const { ref, ...restProps } = formFieldControllerProps;
         return (
           <Input
             type="file"
             accept="image/*"
-            onChange={(e) => formHookField.onChange(e.target.files)} // Pass FileList to RHF
-            {...restOfFormField} // Pass other RHF props like name, onBlur (value is controlled by RHF)
-            className="pt-2" // Add some padding for better appearance
+            onChange={(e) => formFieldControllerProps.onChange(e.target.files)} // Pass FileList to RHF
+            // value is managed by react-hook-form; don't set it directly on the input
+            // ref is handled by Controller
+            name={formFieldControllerProps.name}
+            onBlur={formFieldControllerProps.onBlur}
+            className="pt-2" 
           />
         );
       case 'boolean':
@@ -195,8 +200,8 @@ export function DocumentForm({ template }: DocumentFormProps) {
           <FormItem className="flex flex-row items-center space-x-3 space-y-0 py-2">
             <FormControl>
               <Checkbox
-                checked={formField.value}
-                onCheckedChange={formField.onChange}
+                checked={formFieldControllerProps.value}
+                onCheckedChange={formFieldControllerProps.onChange}
                 id={field.id}
               />
             </FormControl>
@@ -214,10 +219,9 @@ export function DocumentForm({ template }: DocumentFormProps) {
         );
       case 'text':
       default:
-        return <Input type="text" placeholder={field.placeholder} {...formField} />;
+        return <Input type="text" placeholder={field.placeholder} {...formFieldControllerProps} />;
     }
   };
-  const formHookField = form.register("businessLogoUrl"); // Example for direct register, but Controller is used below
 
   return (
     <Card className="shadow-lg">
@@ -232,7 +236,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
                 key={field.id}
                 control={form.control}
                 name={field.id as keyof z.infer<typeof formSchema>}
-                render={({ field: formHookFieldRenderProps }) => ( // Renamed to avoid conflict
+                render={({ field: formHookFieldRenderProps }) => ( 
                   field.type === 'boolean' ? (
                      renderField(field, formHookFieldRenderProps) 
                   ) : (
@@ -272,3 +276,4 @@ export function DocumentForm({ template }: DocumentFormProps) {
     </Card>
   );
 }
+
