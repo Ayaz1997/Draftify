@@ -37,19 +37,23 @@ function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
         validator = z.string().email({ message: 'Invalid email address' });
         break;
       case 'number':
-        validator = z.coerce.number({ invalid_type_error: 'Must be a number' }).nullable();
+        // Keep coerce.number, but allow optional if not required.
+        validator = z.coerce.number({ invalid_type_error: 'Must be a number' });
+        if (!field.required) {
+          validator = validator.optional().nullable(); // Allow empty string to become null or undefined after coercion
+        }
         break;
       case 'date':
         validator = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'Date must be YYYY-MM-DD' });
         break;
       case 'textarea':
-        validator = z.string().min(field.required ? 1 : 0, { message: `${field.label} is required` });
-        if (field.required && validator instanceof z.ZodString) {
-            // validator = validator.min(10, { message: 'Must be at least 10 characters' });
+        validator = z.string();
+        if (field.required) {
+            validator = validator.min(1, { message: `${field.label} is required` });
         }
         break;
       case 'boolean':
-        validator = z.boolean();
+        validator = z.boolean().default(field.defaultValue === true);
         break;
       case 'file':
         validator = z.any().optional(); 
@@ -59,13 +63,11 @@ function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
         validator = z.string();
         break;
     }
-    if (field.required && field.type !== 'boolean' && field.type !== 'file') { 
+    if (field.required && field.type !== 'boolean' && field.type !== 'file' && field.type !== 'number') { 
         if (validator instanceof z.ZodString) {
             validator = validator.min(1, { message: `${field.label} is required` });
-        } else if (validator instanceof z.ZodNumber || (validator instanceof z.ZodNullable && validator.unwrap() instanceof z.ZodNumber)) {
-            validator = z.coerce.number({required_error: `${field.label} is required`, invalid_type_error: 'Must be a number'});
         }
-    } else if (field.type !== 'boolean' && field.type !== 'file') {
+    } else if (field.type !== 'boolean' && field.type !== 'file' && field.type !== 'number' && !field.required) {
       validator = validator.optional();
     }
     
@@ -92,40 +94,45 @@ export function DocumentForm({ template }: DocumentFormProps) {
                 sessionStorage.removeItem(editDataKey); 
                 
                 template.fields.forEach(field => {
-                    if (!(field.id in initialValues)) {
+                    if (!(field.id in initialValues)) { // If a field from template is not in stored data
                         if (field.defaultValue !== undefined) {
                             initialValues[field.id] = field.defaultValue;
+                        } else if (field.type === 'date') {
+                            initialValues[field.id] = new Date().toISOString().split('T')[0];
                         } else if (field.type === 'number') {
                             initialValues[field.id] = undefined;
                         } else if (field.type === 'boolean') {
-                            initialValues[field.id] = false;
+                            initialValues[field.id] = field.defaultValue === true; // Use defaultValue if specified, else false
                         } else if (field.type === 'file') {
-                            initialValues[field.id] = initialValues[field.id] || undefined;
+                            initialValues[field.id] = undefined;
                         } else {
                             initialValues[field.id] = '';
                         }
                     } else if (field.type === 'file' && typeof initialValues[field.id] === 'string' && initialValues[field.id].startsWith('data:image')) {
-                        // File input cannot be pre-filled with data URI. User must re-select.
-                        // Keep the dataURI in form state for resubmission if not changed.
+                        // File input cannot be pre-filled with data URI for display, but keep dataURI in form state for resubmission if not changed.
                     }
                 });
                 return initialValues;
             }
         } catch (e) {
             console.error("Failed to load or parse edit data from session storage:", e);
+            // Fall through to default initialization if session storage fails
         }
     }
 
+    // This part runs if no sessionStorage data was found or if sessionStorage is not available / failed
     template.fields.forEach(field => {
         if (field.defaultValue !== undefined) {
             initialValues[field.id] = field.defaultValue;
+        } else if (field.type === 'date') {
+            initialValues[field.id] = new Date().toISOString().split('T')[0];
         } else if (field.type === 'number') {
-            initialValues[field.id] = undefined;
+            initialValues[field.id] = undefined; // Will render as empty in input, Zod coerces
         } else if (field.type === 'boolean') {
-            initialValues[field.id] = false;
+             initialValues[field.id] = field.defaultValue === true; // Explicitly use defaultValue or false
         } else if (field.type === 'file') {
             initialValues[field.id] = undefined;
-        } else {
+        } else { // text, textarea, email
             initialValues[field.id] = '';
         }
     });
@@ -138,12 +145,8 @@ export function DocumentForm({ template }: DocumentFormProps) {
   });
 
   useEffect(() => {
-    // This effect ensures that if the template.id changes or fields change,
-    // the form is re-initialized with the correct default/sessionStorage values.
-    // This is particularly useful if DocumentForm is part of a layout that persists
-    // while template.id changes.
     form.reset(getInitialValues());
-  }, [getInitialValues, form, template.id]); // Added template.id to ensure re-evaluation if it changes
+  }, [getInitialValues, form, template.id]); 
 
   async function onSubmit(rawValues: z.infer<typeof formSchema>) {
     const submissionValues: Record<string, any> = { ...rawValues };
@@ -201,10 +204,14 @@ export function DocumentForm({ template }: DocumentFormProps) {
           submissionValues[logoFieldId] = ''; 
         }
       } else if (typeof logoValueFromForm === 'string' && logoValueFromForm.startsWith('data:image')) {
+        // If it's already a data URI (e.g., from editing session storage), keep it
         submissionValues[logoFieldId] = logoValueFromForm;
       } else {
+         // No new file uploaded, and not an existing data URI (e.g. form reset or invalid initial data)
         submissionValues[logoFieldId] = '';
       }
+    } else if (logoFieldId) {
+        submissionValues[logoFieldId] = ''; // Ensure it's empty if no value was ever provided
     }
     
     if (typeof window !== 'undefined' && window.sessionStorage) {
@@ -229,24 +236,27 @@ export function DocumentForm({ template }: DocumentFormProps) {
   }
 
   const renderField = (field: TemplateField, formFieldControllerProps: any) => {
+    // For number inputs, ensure value is number or empty string for display, not undefined
+    const value = field.type === 'number' && formFieldControllerProps.value === undefined ? '' : formFieldControllerProps.value;
+
     switch (field.type) {
       case 'textarea':
-        return <Textarea placeholder={field.placeholder} {...formFieldControllerProps} rows={field.rows || 5} />;
+        return <Textarea placeholder={field.placeholder} {...formFieldControllerProps} value={formFieldControllerProps.value || ''} rows={field.rows || 5} />;
       case 'number':
-        return <Input type="number" placeholder={field.placeholder} {...formFieldControllerProps} step="any" />;
+        return <Input type="number" placeholder={field.placeholder} {...formFieldControllerProps} value={value} step="any" />;
       case 'date':
-        return <Input type="date" placeholder={field.placeholder} {...formFieldControllerProps} />;
+        return <Input type="date" placeholder={field.placeholder} {...formFieldControllerProps} value={formFieldControllerProps.value || ''} />;
       case 'email':
-        return <Input type="email" placeholder={field.placeholder} {...formFieldControllerProps} />;
+        return <Input type="email" placeholder={field.placeholder} {...formFieldControllerProps} value={formFieldControllerProps.value || ''} />;
       case 'file':
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { value, ...restFileProps } = formFieldControllerProps; // Exclude 'value'
+        const { value: fileValue, ...restFileProps } = formFieldControllerProps; 
         return (
           <Input
             type="file"
             accept="image/*"
             onChange={(e) => formFieldControllerProps.onChange(e.target.files)} 
-            {...restFileProps} // Pass name, onBlur, ref
+            {...restFileProps} 
             className="pt-2" 
           />
         );
@@ -274,7 +284,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
         );
       case 'text':
       default:
-        return <Input type="text" placeholder={field.placeholder} {...formFieldControllerProps} />;
+        return <Input type="text" placeholder={field.placeholder} {...formFieldControllerProps} value={formFieldControllerProps.value || ''} />;
     }
   };
 
