@@ -490,16 +490,39 @@ const workOrderFields: TemplateField[] = [
   // Work Order Specifics - Material Table Toggle & Fields
   { id: 'includeMaterialTable', label: 'Materials', type: 'boolean', defaultValue: true, placeholder: "Toggle visibility of the materials table in the previewed document." },
   { id: 'materialItem1Name', label: 'Material name 1', type: 'text', placeholder: 'E.g., Emulsion Paint' },
-  { id: 'materialItem1Unit', label: 'Unit', type: 'text', placeholder: 'Litre / Kg / Pcs' },
   { id: 'materialItem1Quantity', label: 'Quantity', type: 'number', placeholder: '10' },
+  {
+    id: 'materialItem1Unit',
+    label: 'Unit',
+    type: 'select',
+    options: [ { value: 'Pcs', label: 'Pcs' }, { value: 'Litre', label: 'Litre' }, { value: 'Kg', label: 'Kg' } ],
+    defaultValue: 'Pcs',
+    placeholder: 'Select unit'
+  },
   { id: 'materialItem1PricePerUnit', label: 'Price per Unit (₹)', type: 'number', placeholder: '450' },
+
   { id: 'materialItem2Name', label: 'Material name 2', type: 'text' },
-  { id: 'materialItem2Unit', label: 'Unit', type: 'text' },
   { id: 'materialItem2Quantity', label: 'Quantity', type: 'number' },
+  {
+    id: 'materialItem2Unit',
+    label: 'Unit',
+    type: 'select',
+    options: [ { value: 'Pcs', label: 'Pcs' }, { value: 'Litre', label: 'Litre' }, { value: 'Kg', label: 'Kg' } ],
+    defaultValue: 'Pcs',
+    placeholder: 'Select unit'
+  },
   { id: 'materialItem2PricePerUnit', label: 'Price per Unit (₹)', type: 'number' },
+
   { id: 'materialItem3Name', label: 'Material name 3', type: 'text' },
-  { id: 'materialItem3Unit', label: 'Unit', type: 'text' },
   { id: 'materialItem3Quantity', label: 'Quantity', type: 'number' },
+  {
+    id: 'materialItem3Unit',
+    label: 'Unit',
+    type: 'select',
+    options: [ { value: 'Pcs', label: 'Pcs' }, { value: 'Litre', label: 'Litre' }, { value: 'Kg', label: 'Kg' } ],
+    defaultValue: 'Pcs',
+    placeholder: 'Select unit'
+  },
   { id: 'materialItem3PricePerUnit', label: 'Price per Unit (₹)', type: 'number' },
 
   // Work Order Specifics - Labor Table Toggle & Fields
@@ -577,6 +600,3 @@ export const templates: Template[] = [
     previewLayout: InvoicePreview,
   },
 ];
-
-
-    
