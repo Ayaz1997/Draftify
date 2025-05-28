@@ -39,7 +39,7 @@ function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
       case 'number':
         validator = z.coerce.number({ invalid_type_error: 'Must be a number' });
         if (!field.required) {
-          validator = validator.optional().nullable(); 
+          validator = validator.optional().nullable();
         }
         break;
       case 'date':
@@ -55,30 +55,35 @@ function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
         validator = z.boolean().default(field.defaultValue === true);
         break;
       case 'file':
-        validator = z.any().optional(); 
+        validator = z.any().optional();
         break;
       case 'text':
       default:
         validator = z.string();
         break;
     }
-    if (field.required && field.type !== 'boolean' && field.type !== 'file' && field.type !== 'number') { 
+    if (field.required && field.type !== 'boolean' && field.type !== 'file' && field.type !== 'number') {
         if (validator instanceof z.ZodString) {
             validator = validator.min(1, { message: `${field.label} is required` });
         }
     } else if (field.type !== 'boolean' && field.type !== 'file' && field.type !== 'number' && !field.required) {
-      validator = validator.optional();
+      // For non-boolean, non-file, non-number types that are not required, make them optional
+      // This was previously only handling string types; extend to others if necessary
+      if (validator instanceof z.ZodString || validator instanceof z.ZodDate || validator instanceof z.ZodDefault) {
+           validator = validator.optional();
+      }
     }
-    
-    // Make all fields optional if not explicitly required (requirement removed for testing)
+
     if (!field.required) {
       if (field.type === 'number') {
-        // For optional numbers, allow them to be undefined or null after coercion
         validator = z.coerce.number().optional().nullable();
       } else if (field.type === 'boolean') {
-        // Optional booleans can be undefined
         validator = z.boolean().optional().default(field.defaultValue === true);
+      } else if (field.type === 'file') {
+        validator = z.any().optional(); // Already optional
       } else {
+        // Ensure other non-required types are also optional
+        // This might be redundant if previous block handles it, but ensures coverage
         validator = validator.optional();
       }
     }
@@ -102,10 +107,10 @@ export function DocumentForm({ template }: DocumentFormProps) {
             const storedEditData = sessionStorage.getItem(editDataKey);
             if (storedEditData) {
                 initialValues = JSON.parse(storedEditData);
-                sessionStorage.removeItem(editDataKey); 
-                
+                sessionStorage.removeItem(editDataKey);
+
                 template.fields.forEach(field => {
-                    if (!(field.id in initialValues)) { 
+                    if (!(field.id in initialValues)) {
                         if (field.defaultValue !== undefined) {
                             initialValues[field.id] = field.defaultValue;
                         } else if (field.type === 'date') {
@@ -113,7 +118,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
                         } else if (field.type === 'number') {
                             initialValues[field.id] = undefined;
                         } else if (field.type === 'boolean') {
-                            initialValues[field.id] = field.defaultValue === true; 
+                            initialValues[field.id] = field.defaultValue === true;
                         } else if (field.type === 'file') {
                             initialValues[field.id] = undefined;
                         } else {
@@ -121,7 +126,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
                         }
                     } else if (field.type === 'file' && typeof initialValues[field.id] === 'string' && initialValues[field.id].startsWith('data:image')) {
                         // File input cannot be pre-filled for display, but keep dataURI in form state
-                    } else if (field.type === 'date' && !initialValues[field.id]) { // If stored date is empty, default to current
+                    } else if (field.type === 'date' && (!initialValues[field.id] || typeof initialValues[field.id] !== 'string' || !initialValues[field.id].match(/^\d{4}-\d{2}-\d{2}$/))) {
                         initialValues[field.id] = new Date().toISOString().split('T')[0];
                     }
                 });
@@ -138,18 +143,18 @@ export function DocumentForm({ template }: DocumentFormProps) {
         } else if (field.type === 'date') {
             initialValues[field.id] = new Date().toISOString().split('T')[0];
         } else if (field.type === 'number') {
-            initialValues[field.id] = undefined; 
+            initialValues[field.id] = undefined;
         } else if (field.type === 'boolean') {
-             initialValues[field.id] = field.defaultValue === true; 
+             initialValues[field.id] = field.defaultValue === true;
         } else if (field.type === 'file') {
             initialValues[field.id] = undefined;
-        } else { 
+        } else {
             initialValues[field.id] = '';
         }
     });
     return initialValues;
   }, [template.id, template.fields]);
-  
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: getInitialValues(),
@@ -157,7 +162,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
 
   useEffect(() => {
     form.reset(getInitialValues());
-  }, [getInitialValues, form, template.id]); 
+  }, [getInitialValues, form, template.id]);
 
   async function onSubmit(rawValues: z.infer<typeof formSchema>) {
     const submissionValues: Record<string, any> = { ...rawValues };
@@ -165,12 +170,11 @@ export function DocumentForm({ template }: DocumentFormProps) {
     const logoFieldId = logoFieldDefinition?.id;
 
     if (logoFieldId) {
-      // Initialize to empty string, will be overwritten if logo is valid and processed
-      submissionValues[logoFieldId] = ''; 
+      submissionValues[logoFieldId] = ''; // Initialize/ensure it's an empty string
 
       const logoValueFromForm = rawValues[logoFieldId];
 
-      if (logoValueFromForm) { // Check if there's any value (FileList or existing data URI string)
+      if (logoValueFromForm) {
         if (logoValueFromForm instanceof FileList && logoValueFromForm.length > 0) {
           const file = logoValueFromForm[0];
           let isValidFile = true;
@@ -179,7 +183,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
             toast({
               variant: 'destructive',
               title: 'Invalid File Type',
-              description: 'Please upload an image file for the logo (e.g., PNG, JPG).',
+              description: 'Please upload an image file for the logo (e.g., PNG, JPG, GIF).',
             });
             isValidFile = false;
           } else if (file.size > 5 * 1024 * 1024) { // 5MB limit
@@ -199,32 +203,32 @@ export function DocumentForm({ template }: DocumentFormProps) {
                   if (event.target && typeof event.target.result === 'string') {
                     resolve(event.target.result);
                   } else {
-                    reject(new Error('Failed to read file.'));
+                    reject(new Error('FileReader did not return a string result.'));
                   }
                 };
-                reader.onerror = (error) => reject(error);
+                reader.onerror = (error) => reject(error || new Error('FileReader error event.'));
                 reader.readAsDataURL(file);
               });
-              submissionValues[logoFieldId] = dataUri; // Set on successful conversion
+              submissionValues[logoFieldId] = dataUri;
             } catch (error) {
-              console.error("Error converting file to data URI:", error);
+              console.error("CRITICAL: Error converting file to data URI:", error);
               toast({
                 variant: "destructive",
                 title: "Logo Upload Failed",
-                description: "Could not process the logo file. Please try again.",
+                description: `Could not process the logo file. Details: ${error instanceof Error ? error.message : String(error)}. Please try again.`,
               });
-              // submissionValues[logoFieldId] remains '' due to initialization
+              // submissionValues[logoFieldId] remains ''
             }
-          } // else: isValidFile is false, submissionValues[logoFieldId] remains ''
+          }
+          // If !isValidFile, submissionValues[logoFieldId] remains ''
         } else if (typeof logoValueFromForm === 'string' && logoValueFromForm.startsWith('data:image')) {
-          // If it's already a data URI (e.g., from editing session storage), keep it
-          submissionValues[logoFieldId] = logoValueFromForm;
+          submissionValues[logoFieldId] = logoValueFromForm; // Preserve existing data URI from edit
         }
-        // If logoValueFromForm was something else (e.g. empty FileList, empty string not data URI), it remains ''
+        // If logoValueFromForm is something else (e.g. empty FileList), it remains ''
       }
-      // If rawValues[logoFieldId] was undefined/null, it remains ''
+      // If rawValues[logoFieldId] was undefined/null, submissionValues[logoFieldId] is already ''
     }
-    
+
     if (typeof window !== 'undefined' && window.sessionStorage) {
         try {
             sessionStorage.setItem(`docuFormPreviewData-${template.id}`, JSON.stringify(submissionValues));
@@ -255,19 +259,30 @@ export function DocumentForm({ template }: DocumentFormProps) {
       case 'number':
         return <Input type="number" placeholder={field.placeholder} {...formFieldControllerProps} value={value} step="any" />;
       case 'date':
-        return <Input type="date" placeholder={field.placeholder} {...formFieldControllerProps} value={formFieldControllerProps.value || ''} />;
+        // Ensure date value is in YYYY-MM-DD format for the input
+        let dateValue = formFieldControllerProps.value || '';
+        if (dateValue && typeof dateValue === 'string' && !dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            try {
+                dateValue = new Date(dateValue).toISOString().split('T')[0];
+            } catch {
+                dateValue = new Date().toISOString().split('T')[0]; // Fallback
+            }
+        } else if (!dateValue) {
+            dateValue = new Date().toISOString().split('T')[0];
+        }
+        return <Input type="date" placeholder={field.placeholder} {...formFieldControllerProps} value={dateValue} />;
       case 'email':
         return <Input type="email" placeholder={field.placeholder} {...formFieldControllerProps} value={formFieldControllerProps.value || ''} />;
       case 'file':
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { value: fileValue, ...restFileProps } = formFieldControllerProps; 
+        const { value: fileValue, onChange: onFileChange, ...restFileProps } = formFieldControllerProps;
         return (
           <Input
             type="file"
             accept="image/*"
-            onChange={(e) => formFieldControllerProps.onChange(e.target.files)} 
-            {...restFileProps} 
-            className="pt-2" 
+            onChange={(e) => onFileChange(e.target.files)}
+            {...restFileProps}
+            className="pt-2"
           />
         );
       case 'boolean':
@@ -281,7 +296,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
               />
             </FormControl>
             <div className="space-y-1 leading-none">
-              <FormLabel htmlFor={field.id} className="font-normal"> 
+              <FormLabel htmlFor={field.id} className="font-normal">
                 {field.label}
               </FormLabel>
               {field.placeholder && (
@@ -311,16 +326,16 @@ export function DocumentForm({ template }: DocumentFormProps) {
                 key={field.id}
                 control={form.control}
                 name={field.id as keyof z.infer<typeof formSchema>}
-                render={({ field: formHookFieldRenderProps }) => ( 
+                render={({ field: formHookFieldRenderProps }) => (
                   field.type === 'boolean' ? (
-                     renderField(field, formHookFieldRenderProps) 
+                     renderField(field, formHookFieldRenderProps)
                   ) : (
                     <FormItem>
                       <FormLabel className="font-semibold text-foreground/90">{field.label}{field.required && <span className="text-destructive ml-1">*</span>}</FormLabel>
                       <FormControl>
                         {renderField(field, formHookFieldRenderProps)}
                       </FormControl>
-                      {field.placeholder && !field.type.includes('area') && field.type !== 'boolean' && field.type !== 'file' && ( 
+                      {field.placeholder && !field.type.includes('area') && field.type !== 'boolean' && field.type !== 'file' && (
                         <FormDescription className="text-xs text-muted-foreground">
                           Example: {field.placeholder}
                         </FormDescription>
@@ -351,5 +366,3 @@ export function DocumentForm({ template }: DocumentFormProps) {
     </Card>
   );
 }
-
-    

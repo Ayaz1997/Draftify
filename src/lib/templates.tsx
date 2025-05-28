@@ -9,14 +9,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFoo
 
 const formatDate = (dateString?: string) => {
   if (!dateString) return 'N/A';
-  // Ensure the date string is treated as UTC to avoid timezone issues if it's just a date without time
   if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
     return new Date(dateString + 'T00:00:00Z').toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
   }
   try {
     return new Date(dateString).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
   } catch (e) {
-    return dateString; // Fallback if date is invalid
+    return dateString;
   }
 };
 
@@ -50,7 +49,7 @@ const WorkOrderPreview = (data: FormData) => {
   if (data.includeMaterialTable) {
     for (let i = 1; i <= 3; i++) {
       if (data[`materialItem${i}Name`]) {
-        const quantity = parseFloat(data[`materialItem${i}Quantity`] || 1); // Assuming quantity if not specified
+        const quantity = parseFloat(data[`materialItem${i}Quantity`] || 1);
         const pricePerUnit = parseFloat(data[`materialItem${i}PricePerUnit`] || 0);
         const amount = quantity * pricePerUnit;
         materialItems.push({
@@ -87,13 +86,15 @@ const WorkOrderPreview = (data: FormData) => {
   const taxAmount = grandSubtotal * taxRate;
   const finalTotalAmount = grandSubtotal + taxAmount;
 
-  const logoSrc = data.businessLogoUrl as string;
-  const canDisplayLogo = logoSrc && typeof logoSrc === 'string' && logoSrc.startsWith('data:image');
+  const logoUrlFromData = data.businessLogoUrl;
+  // Ensure logoSrc is a string. If logoUrlFromData is not a string (e.g. undefined, null), logoSrc becomes ''.
+  const logoSrc = typeof logoUrlFromData === 'string' ? logoUrlFromData : '';
+  // A logo is displayable if logoSrc is a non-empty string that starts with "data:image"
+  const canDisplayLogo = logoSrc && logoSrc.startsWith('data:image');
 
 
   return (
     <Card className="w-full max-w-4xl mx-auto shadow-xl border-primary/30 printable-area">
-      {/* Header Section */}
       <CardHeader className="bg-muted/30 p-6 rounded-t-lg">
         <div className="flex justify-between items-start">
           <div>
@@ -103,14 +104,14 @@ const WorkOrderPreview = (data: FormData) => {
               Contact: {data.businessContactNumber || 'N/A'} | Email: {data.businessEmail || 'N/A'}
             </p>
           </div>
-          <div className="w-[120px] h-[60px] flex items-center justify-center">
+          <div className="w-[120px] h-[60px] flex items-center justify-center border rounded bg-gray-50">
             {canDisplayLogo ? (
-              <Image src={logoSrc} alt="Business Logo" width={120} height={60} className="object-contain rounded shadow" data-ai-hint="company brand" />
+              <Image src={logoSrc} alt="Business Logo" width={120} height={60} className="object-contain" data-ai-hint="company brand" />
             ) : (
-              logoSrc ? // If there was an attempt (businessLogoUrl is not empty/undefined) but it's not displayable
-                <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground text-xs rounded border p-2 text-center">Invalid logo data</div>
-              : // If businessLogoUrl was empty or not provided
-                <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground text-xs rounded border p-2 text-center">No Logo</div>
+              logoUrlFromData && typeof logoUrlFromData === 'string' && logoUrlFromData.trim() !== '' ?
+                <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs p-2 text-center">Invalid logo data</div>
+              :
+                <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs p-2 text-center">No Logo Provided</div>
             )}
           </div>
         </div>
@@ -122,7 +123,6 @@ const WorkOrderPreview = (data: FormData) => {
       </CardHeader>
 
       <CardContent className="p-6 space-y-6">
-        {/* Work Order Details */}
         <div className="border p-4 rounded-md shadow-sm">
           <h3 className="text-lg font-semibold text-primary mb-2">Order Details</h3>
           <Table>
@@ -143,7 +143,6 @@ const WorkOrderPreview = (data: FormData) => {
           </Table>
         </div>
 
-        {/* Client Details */}
         <div className="border p-4 rounded-md shadow-sm">
           <h3 className="text-lg font-semibold text-primary mb-2">Client Details</h3>
           <Table>
@@ -167,8 +166,7 @@ const WorkOrderPreview = (data: FormData) => {
             </TableBody>
           </Table>
         </div>
-        
-        {/* General Work Description */}
+
         {data.generalWorkDescription && (
           <div className="border p-4 rounded-md shadow-sm">
             <h3 className="text-lg font-semibold text-primary mb-2">Overall Work Description</h3>
@@ -176,7 +174,6 @@ const WorkOrderPreview = (data: FormData) => {
           </div>
         )}
 
-        {/* Detailed Work Description Table */}
         {data.includeWorkDescriptionTable && workItems.length > 0 && (
           <div className="border p-4 rounded-md shadow-sm">
             <h3 className="text-lg font-semibold text-primary mb-3">Detailed Work Items</h3>
@@ -209,7 +206,6 @@ const WorkOrderPreview = (data: FormData) => {
           </div>
         )}
 
-        {/* Material Description Table */}
         {data.includeMaterialTable && materialItems.length > 0 && (
           <div className="border p-4 rounded-md shadow-sm">
             <h3 className="text-lg font-semibold text-primary mb-3">Materials Used</h3>
@@ -244,7 +240,6 @@ const WorkOrderPreview = (data: FormData) => {
           </div>
         )}
 
-        {/* Labor Description Table */}
         {data.includeLaborTable && laborItems.length > 0 && (
           <div className="border p-4 rounded-md shadow-sm">
             <h3 className="text-lg font-semibold text-primary mb-3">Labor Charges</h3>
@@ -274,8 +269,7 @@ const WorkOrderPreview = (data: FormData) => {
             </Table>
           </div>
         )}
-        
-        {/* Terms of Service */}
+
         {data.termsOfService && (
            <div className="border p-4 rounded-md shadow-sm">
             <h3 className="text-lg font-semibold text-primary mb-2">Terms of Service</h3>
@@ -283,7 +277,6 @@ const WorkOrderPreview = (data: FormData) => {
           </div>
         )}
 
-        {/* Final Amount Section */}
         <Separator />
         <div className="flex justify-end">
           <div className="w-full md:w-2/5 space-y-1">
@@ -316,7 +309,6 @@ const WorkOrderPreview = (data: FormData) => {
         </div>
       </CardContent>
 
-      {/* Footer Section */}
       <CardFooter className="p-6 bg-muted/30 rounded-b-lg text-sm text-muted-foreground border-t">
         <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -338,15 +330,17 @@ const WorkOrderPreview = (data: FormData) => {
 const LetterheadPreview = (data: FormData) => (
   <Card className="w-full max-w-3xl mx-auto shadow-lg p-8 border-primary/50 print-friendly-letterhead" data-ai-hint="stationery paper">
     <header className="mb-12 text-center border-b-2 border-primary pb-6">
-      {data.logoUrl ? (
-        <Image src={data.logoUrl as string} alt="Company Logo" width={150} height={75} className="mx-auto mb-4 object-contain" data-ai-hint="company logo" />
+      {data.logoUrl && typeof data.logoUrl === 'string' && data.logoUrl.startsWith('data:image') ? (
+        <Image src={data.logoUrl} alt="Company Logo" width={150} height={75} className="mx-auto mb-4 object-contain" data-ai-hint="company logo" />
+      ) : data.logoUrl && typeof data.logoUrl === 'string' ? ( // It's a string but not a data URI (e.g. external URL)
+         <Image src={data.logoUrl} alt="Company Logo (External)" width={150} height={75} className="mx-auto mb-4 object-contain" data-ai-hint="company logo" />
       ) : (
-        <div className="h-16 w-32 bg-muted mx-auto mb-4 flex items-center justify-center text-muted-foreground rounded">Logo Placeholder</div>
+        <div className="h-16 w-32 bg-muted mx-auto mb-4 flex items-center justify-center text-muted-foreground rounded text-xs p-1">Logo Placeholder</div>
       )}
       <h1 className="text-4xl font-bold text-primary">{data.companyName || 'Your Company Name'}</h1>
       <p className="text-muted-foreground mt-1">{data.companySlogan || 'Your Company Slogan/Tagline'}</p>
     </header>
-    
+
     <section className="mb-8">
       <p className="text-right mb-4">{formatDate(data.date)}</p>
       <p className="mb-2"><strong>{data.recipientName || 'Recipient Name'}</strong></p>
@@ -453,38 +447,32 @@ const InvoicePreview = (data: FormData) => (
 );
 
 const workOrderFields: TemplateField[] = [
-  // Header Section
   { id: 'businessName', label: 'Business Name', type: 'text', placeholder: 'Your Company Name', defaultValue: "ABC Constructions" },
   { id: 'businessAddress', label: 'Business Address', type: 'textarea', placeholder: '123 Business St, City, State, PIN', defaultValue: "123 Main Street, Anytown, ST 12345" },
   { id: 'businessContactNumber', label: 'Business Contact Number', type: 'text', placeholder: '9876543210', defaultValue: "555-123-4567" },
   { id: 'businessEmail', label: 'Business Email', type: 'email', placeholder: 'contact@business.com', defaultValue: "contact@abcconstructions.com" },
-  { 
-    id: 'businessLogoUrl', 
-    label: 'Business Logo', 
-    type: 'file', 
-    placeholder: 'Recommended: <1MB, PNG/JPG. Ideal aspect ratio e.g., 2:1 (240x120px).' 
+  {
+    id: 'businessLogoUrl',
+    label: 'Business Logo',
+    type: 'file',
+    placeholder: 'Recommended: <1MB, PNG/JPG/GIF. Ideal aspect ratio e.g., 2:1 (240x120px).'
   },
 
-  // Work Order Details
   { id: 'orderNumber', label: 'Order Number', type: 'text', placeholder: `WO-${Date.now().toString().slice(-6)}`, defaultValue: `WO-${Date.now().toString().slice(-5)}` },
   { id: 'orderDate', label: 'Order Date', type: 'date' },
   { id: 'expectedStartDate', label: 'Expected Start Date', type: 'date' },
   { id: 'expectedEndDate', label: 'Expected End Date', type: 'date' },
-  
-  // Client Details
+
   { id: 'clientName', label: 'Client Name', type: 'text', placeholder: 'Mr. John Doe' },
   { id: 'clientPhone', label: 'Client Phone', type: 'text', placeholder: '9998887770' },
   { id: 'clientEmail', label: 'Client Email', type: 'email', placeholder: 'client@example.com' },
   { id: 'workLocation', label: 'Work Location / Site Address', type: 'textarea', placeholder: 'Full address of the work site' },
   { id: 'orderReceivedBy', label: 'Order Received By (Your Staff)', type: 'text', placeholder: 'Employee Name' },
 
-  // Main Sections
   { id: 'generalWorkDescription', label: 'Overall Work Description', type: 'textarea', placeholder: 'Summarize the work to be done', rows: 3 },
   { id: 'termsOfService', label: 'Terms of Service', type: 'textarea', placeholder: 'Payment terms, warranty, etc.', rows: 4, defaultValue: "1. All payments are due upon completion of work unless otherwise agreed in writing.\n2. Any changes to the scope of work must be documented and may incur additional charges.\n3. Warranty for services performed is 30 days from completion date." },
 
-  // Work Description Table Toggle
   { id: 'includeWorkDescriptionTable', label: 'Include Detailed Work Items Table?', type: 'boolean', defaultValue: true, placeholder: "Show/hide the table for specific work items, area, and rates." },
-  // Work Items (Fixed 3 for now)
   { id: 'workItem1Description', label: 'Work Item 1: Description', type: 'textarea', placeholder: 'E.g., Interior Painting - Living Room', rows: 2 },
   { id: 'workItem1Area', label: 'Work Item 1: Area (Sq. ft.)', type: 'number', placeholder: '250' },
   { id: 'workItem1Rate', label: 'Work Item 1: Rate (₹ per Sq. ft.)', type: 'number', placeholder: '15' },
@@ -495,9 +483,7 @@ const workOrderFields: TemplateField[] = [
   { id: 'workItem3Area', label: 'Work Item 3: Area (Sq. ft.)', type: 'number' },
   { id: 'workItem3Rate', label: 'Work Item 3: Rate (₹)', type: 'number' },
 
-  // Material Description Table Toggle
   { id: 'includeMaterialTable', label: 'Include Materials Table?', type: 'boolean', defaultValue: true, placeholder: "Show/hide table for materials, units, and prices." },
-  // Material Items
   { id: 'materialItem1Name', label: 'Material 1: Name', type: 'text', placeholder: 'E.g., Emulsion Paint' },
   { id: 'materialItem1Unit', label: 'Material 1: Unit', type: 'text', placeholder: 'Litre / Kg / Pcs' },
   { id: 'materialItem1Quantity', label: 'Material 1: Quantity', type: 'number', placeholder: '10' },
@@ -510,10 +496,8 @@ const workOrderFields: TemplateField[] = [
   { id: 'materialItem3Unit', label: 'Material 3: Unit', type: 'text' },
   { id: 'materialItem3Quantity', label: 'Material 3: Quantity', type: 'number' },
   { id: 'materialItem3PricePerUnit', label: 'Material 3: Price per Unit (₹)', type: 'number' },
-  
-  // Labor Description Table Toggle
+
   { id: 'includeLaborTable', label: 'Include Labor Charges Table?', type: 'boolean', defaultValue: true, placeholder: "Show/hide table for labor teams and costs." },
-  // Labor Items
   { id: 'laborItem1TeamName', label: 'Labor 1: Team/Description', type: 'text', placeholder: 'E.g., Painting Team A' },
   { id: 'laborItem1NumPersons', label: 'Labor 1: No. of Persons', type: 'number', placeholder: '2' },
   { id: 'laborItem1Amount', label: 'Labor 1: Amount (₹)', type: 'number', placeholder: '8000' },
@@ -524,11 +508,9 @@ const workOrderFields: TemplateField[] = [
   { id: 'laborItem3NumPersons', label: 'Labor 3: No. of Persons', type: 'number' },
   { id: 'laborItem3Amount', label: 'Labor 3: Amount (₹)', type: 'number' },
 
-  // Final Amount Section
   { id: 'otherCosts', label: 'Other Costs (₹, e.g., Transportation)', type: 'number', placeholder: '500', defaultValue: 0 },
   { id: 'taxRatePercentage', label: 'Tax Rate (%)', type: 'number', placeholder: '18', defaultValue: 18 },
 
-  // Footer Section
   { id: 'approvedByName', label: 'Approved By (Name)', type: 'text', placeholder: 'Project Manager Name' },
   { id: 'dateOfApproval', label: 'Date of Approval', type: 'date' },
 ];
@@ -549,7 +531,7 @@ export const templates: Template[] = [
     description: 'Create professional letterheads for official correspondence.',
     icon: Scroll,
     fields: [
-      { id: 'logoUrl', label: 'Company Logo URL (optional)', type: 'text', placeholder: 'https://placehold.co/150x75.png' , defaultValue: 'https://placehold.co/150x75.png' },
+      { id: 'logoUrl', label: 'Company Logo', type: 'file', placeholder: 'Upload your company logo' }, // Changed to file type
       { id: 'companyName', label: 'Company Name', type: 'text', placeholder: 'Your Company Inc.', defaultValue: 'Your Company Inc.' },
       { id: 'companySlogan', label: 'Company Slogan (optional)', type: 'text', placeholder: 'Quality Service Since 1999' },
       { id: 'companyAddress', label: 'Company Full Address', type: 'textarea', placeholder: '123 Business Rd, Suite 100, City, State, Zip', defaultValue: '123 Business Rd, Suite 100, City, State, Zip' },
