@@ -37,10 +37,9 @@ function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
         validator = z.string().email({ message: 'Invalid email address' });
         break;
       case 'number':
-        // Keep coerce.number, but allow optional if not required.
         validator = z.coerce.number({ invalid_type_error: 'Must be a number' });
         if (!field.required) {
-          validator = validator.optional().nullable(); // Allow empty string to become null or undefined after coercion
+          validator = validator.optional().nullable(); 
         }
         break;
       case 'date':
@@ -71,6 +70,18 @@ function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
       validator = validator.optional();
     }
     
+    // Make all fields optional if not explicitly required (requirement removed for testing)
+    if (!field.required) {
+      if (field.type === 'number') {
+        // For optional numbers, allow them to be undefined or null after coercion
+        validator = z.coerce.number().optional().nullable();
+      } else if (field.type === 'boolean') {
+        // Optional booleans can be undefined
+        validator = z.boolean().optional().default(field.defaultValue === true);
+      } else {
+        validator = validator.optional();
+      }
+    }
     shape[field.id] = validator;
   });
   return z.object(shape);
@@ -94,7 +105,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
                 sessionStorage.removeItem(editDataKey); 
                 
                 template.fields.forEach(field => {
-                    if (!(field.id in initialValues)) { // If a field from template is not in stored data
+                    if (!(field.id in initialValues)) { 
                         if (field.defaultValue !== undefined) {
                             initialValues[field.id] = field.defaultValue;
                         } else if (field.type === 'date') {
@@ -102,37 +113,37 @@ export function DocumentForm({ template }: DocumentFormProps) {
                         } else if (field.type === 'number') {
                             initialValues[field.id] = undefined;
                         } else if (field.type === 'boolean') {
-                            initialValues[field.id] = field.defaultValue === true; // Use defaultValue if specified, else false
+                            initialValues[field.id] = field.defaultValue === true; 
                         } else if (field.type === 'file') {
                             initialValues[field.id] = undefined;
                         } else {
                             initialValues[field.id] = '';
                         }
                     } else if (field.type === 'file' && typeof initialValues[field.id] === 'string' && initialValues[field.id].startsWith('data:image')) {
-                        // File input cannot be pre-filled with data URI for display, but keep dataURI in form state for resubmission if not changed.
+                        // File input cannot be pre-filled for display, but keep dataURI in form state
+                    } else if (field.type === 'date' && !initialValues[field.id]) { // If stored date is empty, default to current
+                        initialValues[field.id] = new Date().toISOString().split('T')[0];
                     }
                 });
                 return initialValues;
             }
         } catch (e) {
             console.error("Failed to load or parse edit data from session storage:", e);
-            // Fall through to default initialization if session storage fails
         }
     }
 
-    // This part runs if no sessionStorage data was found or if sessionStorage is not available / failed
     template.fields.forEach(field => {
         if (field.defaultValue !== undefined) {
             initialValues[field.id] = field.defaultValue;
         } else if (field.type === 'date') {
             initialValues[field.id] = new Date().toISOString().split('T')[0];
         } else if (field.type === 'number') {
-            initialValues[field.id] = undefined; // Will render as empty in input, Zod coerces
+            initialValues[field.id] = undefined; 
         } else if (field.type === 'boolean') {
-             initialValues[field.id] = field.defaultValue === true; // Explicitly use defaultValue or false
+             initialValues[field.id] = field.defaultValue === true; 
         } else if (field.type === 'file') {
             initialValues[field.id] = undefined;
-        } else { // text, textarea, email
+        } else { 
             initialValues[field.id] = '';
         }
     });
@@ -153,65 +164,65 @@ export function DocumentForm({ template }: DocumentFormProps) {
     const logoFieldDefinition = template.fields.find(f => f.id === 'businessLogoUrl' && f.type === 'file');
     const logoFieldId = logoFieldDefinition?.id;
 
-    if (logoFieldId && rawValues[logoFieldId]) {
+    if (logoFieldId) {
+      // Initialize to empty string, will be overwritten if logo is valid and processed
+      submissionValues[logoFieldId] = ''; 
+
       const logoValueFromForm = rawValues[logoFieldId];
 
-      if (logoValueFromForm instanceof FileList && logoValueFromForm.length > 0) {
-        const file = logoValueFromForm[0];
-        let isValidFile = true;
+      if (logoValueFromForm) { // Check if there's any value (FileList or existing data URI string)
+        if (logoValueFromForm instanceof FileList && logoValueFromForm.length > 0) {
+          const file = logoValueFromForm[0];
+          let isValidFile = true;
 
-        if (!file.type.startsWith('image/')) {
-          toast({
-            variant: 'destructive',
-            title: 'Invalid File Type',
-            description: 'Please upload an image file for the logo (e.g., PNG, JPG).',
-          });
-          isValidFile = false;
-        } else if (file.size > 5 * 1024 * 1024) { // 5MB limit
-          toast({
-            variant: 'destructive',
-            title: 'File Too Large',
-            description: 'Logo image should be less than 5MB.',
-          });
-          isValidFile = false;
-        }
-
-        if (isValidFile) {
-          try {
-            const dataUri = await new Promise<string>((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onload = (event) => {
-                if (event.target && typeof event.target.result === 'string') {
-                  resolve(event.target.result);
-                } else {
-                  reject(new Error('Failed to read file.'));
-                }
-              };
-              reader.onerror = (error) => reject(error);
-              reader.readAsDataURL(file);
-            });
-            submissionValues[logoFieldId] = dataUri;
-          } catch (error) {
-            console.error("Error converting file to data URI:", error);
+          if (!file.type.startsWith('image/')) {
             toast({
-              variant: "destructive",
-              title: "Logo Upload Failed",
-              description: "Could not process the logo file. Please try again.",
+              variant: 'destructive',
+              title: 'Invalid File Type',
+              description: 'Please upload an image file for the logo (e.g., PNG, JPG).',
             });
-            submissionValues[logoFieldId] = ''; 
+            isValidFile = false;
+          } else if (file.size > 5 * 1024 * 1024) { // 5MB limit
+            toast({
+              variant: 'destructive',
+              title: 'File Too Large',
+              description: 'Logo image should be less than 5MB.',
+            });
+            isValidFile = false;
           }
-        } else {
-          submissionValues[logoFieldId] = ''; 
+
+          if (isValidFile) {
+            try {
+              const dataUri = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                  if (event.target && typeof event.target.result === 'string') {
+                    resolve(event.target.result);
+                  } else {
+                    reject(new Error('Failed to read file.'));
+                  }
+                };
+                reader.onerror = (error) => reject(error);
+                reader.readAsDataURL(file);
+              });
+              submissionValues[logoFieldId] = dataUri; // Set on successful conversion
+            } catch (error) {
+              console.error("Error converting file to data URI:", error);
+              toast({
+                variant: "destructive",
+                title: "Logo Upload Failed",
+                description: "Could not process the logo file. Please try again.",
+              });
+              // submissionValues[logoFieldId] remains '' due to initialization
+            }
+          } // else: isValidFile is false, submissionValues[logoFieldId] remains ''
+        } else if (typeof logoValueFromForm === 'string' && logoValueFromForm.startsWith('data:image')) {
+          // If it's already a data URI (e.g., from editing session storage), keep it
+          submissionValues[logoFieldId] = logoValueFromForm;
         }
-      } else if (typeof logoValueFromForm === 'string' && logoValueFromForm.startsWith('data:image')) {
-        // If it's already a data URI (e.g., from editing session storage), keep it
-        submissionValues[logoFieldId] = logoValueFromForm;
-      } else {
-         // No new file uploaded, and not an existing data URI (e.g. form reset or invalid initial data)
-        submissionValues[logoFieldId] = '';
+        // If logoValueFromForm was something else (e.g. empty FileList, empty string not data URI), it remains ''
       }
-    } else if (logoFieldId) {
-        submissionValues[logoFieldId] = ''; // Ensure it's empty if no value was ever provided
+      // If rawValues[logoFieldId] was undefined/null, it remains ''
     }
     
     if (typeof window !== 'undefined' && window.sessionStorage) {
@@ -236,7 +247,6 @@ export function DocumentForm({ template }: DocumentFormProps) {
   }
 
   const renderField = (field: TemplateField, formFieldControllerProps: any) => {
-    // For number inputs, ensure value is number or empty string for display, not undefined
     const value = field.type === 'number' && formFieldControllerProps.value === undefined ? '' : formFieldControllerProps.value;
 
     switch (field.type) {
@@ -341,3 +351,5 @@ export function DocumentForm({ template }: DocumentFormProps) {
     </Card>
   );
 }
+
+    
