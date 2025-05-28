@@ -10,12 +10,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFoo
 const formatDate = (dateString?: string) => {
   if (!dateString) return 'N/A';
   if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    // Ensures date string is treated as UTC to avoid timezone shifts if only date is provided
     return new Date(dateString + 'T00:00:00Z').toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
   }
   try {
+    // For full ISO strings or other parsable date strings
     return new Date(dateString).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
   } catch (e) {
-    return dateString;
+    return dateString; // Fallback if date is invalid
   }
 };
 
@@ -87,9 +89,7 @@ const WorkOrderPreview = (data: FormData) => {
   const finalTotalAmount = grandSubtotal + taxAmount;
 
   const logoUrlFromData = data.businessLogoUrl;
-  // Ensure logoSrc is a string. If logoUrlFromData is not a string (e.g. undefined, null), logoSrc becomes ''.
   const logoSrc = typeof logoUrlFromData === 'string' ? logoUrlFromData : '';
-  // A logo is displayable if logoSrc is a non-empty string that starts with "data:image"
   const canDisplayLogo = logoSrc && logoSrc.startsWith('data:image');
 
 
@@ -104,13 +104,12 @@ const WorkOrderPreview = (data: FormData) => {
               Contact: {data.businessContactNumber || 'N/A'} | Email: {data.businessEmail || 'N/A'}
             </p>
           </div>
-          <div className="w-[120px] h-[60px] flex items-center justify-center border rounded bg-gray-50">
+          <div className="w-[120px] h-[60px] flex items-center justify-center border rounded bg-gray-50 overflow-hidden">
             {canDisplayLogo ? (
               <Image src={logoSrc} alt="Business Logo" width={120} height={60} className="object-contain" data-ai-hint="company brand" />
+            ) : logoUrlFromData && typeof logoUrlFromData === 'string' && logoUrlFromData.trim() !== '' && !logoUrlFromData.startsWith('data:image') ? (
+                <div className="w-full h-full flex items-center justify-center text-destructive text-xs p-2 text-center">Invalid logo data (not a data URI)</div>
             ) : (
-              logoUrlFromData && typeof logoUrlFromData === 'string' && logoUrlFromData.trim() !== '' ?
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs p-2 text-center">Invalid logo data</div>
-              :
                 <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs p-2 text-center">No Logo Provided</div>
             )}
           </div>
@@ -286,7 +285,7 @@ const WorkOrderPreview = (data: FormData) => {
                   <span>{formatCurrency(subtotalWorkDescription + subtotalMaterial + subtotalLabor)}</span>
                 </div>
             )}
-            {typeof data.otherCosts === 'number' && data.otherCosts > 0 && (
+            {typeof data.otherCosts === 'number' && data.otherCosts > 0 || (typeof data.otherCosts === 'string' && parseFloat(data.otherCosts) > 0)  && (
                  <div className="flex justify-between">
                     <span className="font-medium">Other Costs:</span>
                     <span>{formatCurrency(data.otherCosts)}</span>
@@ -332,7 +331,7 @@ const LetterheadPreview = (data: FormData) => (
     <header className="mb-12 text-center border-b-2 border-primary pb-6">
       {data.logoUrl && typeof data.logoUrl === 'string' && data.logoUrl.startsWith('data:image') ? (
         <Image src={data.logoUrl} alt="Company Logo" width={150} height={75} className="mx-auto mb-4 object-contain" data-ai-hint="company logo" />
-      ) : data.logoUrl && typeof data.logoUrl === 'string' ? ( // It's a string but not a data URI (e.g. external URL)
+      ) : data.logoUrl && typeof data.logoUrl === 'string' ? ( 
          <Image src={data.logoUrl} alt="Company Logo (External)" width={150} height={75} className="mx-auto mb-4 object-contain" data-ai-hint="company logo" />
       ) : (
         <div className="h-16 w-32 bg-muted mx-auto mb-4 flex items-center justify-center text-muted-foreground rounded text-xs p-1">Logo Placeholder</div>
@@ -447,6 +446,7 @@ const InvoicePreview = (data: FormData) => (
 );
 
 const workOrderFields: TemplateField[] = [
+  // Business Details
   { id: 'businessName', label: 'Business Name', type: 'text', placeholder: 'Your Company Name', defaultValue: "ABC Constructions" },
   { id: 'businessAddress', label: 'Business Address', type: 'textarea', placeholder: '123 Business St, City, State, PIN', defaultValue: "123 Main Street, Anytown, ST 12345" },
   { id: 'businessContactNumber', label: 'Business Contact Number', type: 'text', placeholder: '9876543210', defaultValue: "555-123-4567" },
@@ -455,35 +455,40 @@ const workOrderFields: TemplateField[] = [
     id: 'businessLogoUrl',
     label: 'Business Logo',
     type: 'file',
-    placeholder: 'Recommended: <1MB, PNG/JPG/GIF. Ideal aspect ratio e.g., 2:1 (240x120px).'
+    placeholder: 'Recommended: <1MB, PNG/JPG. Ideal: 240x120px (2:1 ratio).'
   },
 
+  // Order Details
   { id: 'orderNumber', label: 'Order Number', type: 'text', placeholder: `WO-${Date.now().toString().slice(-6)}`, defaultValue: `WO-${Date.now().toString().slice(-5)}` },
   { id: 'orderDate', label: 'Order Date', type: 'date' },
   { id: 'expectedStartDate', label: 'Expected Start Date', type: 'date' },
   { id: 'expectedEndDate', label: 'Expected End Date', type: 'date' },
 
+  // Client Details
   { id: 'clientName', label: 'Client Name', type: 'text', placeholder: 'Mr. John Doe' },
   { id: 'clientPhone', label: 'Client Phone', type: 'text', placeholder: '9998887770' },
   { id: 'clientEmail', label: 'Client Email', type: 'email', placeholder: 'client@example.com' },
   { id: 'workLocation', label: 'Work Location / Site Address', type: 'textarea', placeholder: 'Full address of the work site' },
   { id: 'orderReceivedBy', label: 'Order Received By (Your Staff)', type: 'text', placeholder: 'Employee Name' },
 
+  // Work Order Specifics - General
   { id: 'generalWorkDescription', label: 'Overall Work Description', type: 'textarea', placeholder: 'Summarize the work to be done', rows: 3 },
   { id: 'termsOfService', label: 'Terms of Service', type: 'textarea', placeholder: 'Payment terms, warranty, etc.', rows: 4, defaultValue: "1. All payments are due upon completion of work unless otherwise agreed in writing.\n2. Any changes to the scope of work must be documented and may incur additional charges.\n3. Warranty for services performed is 30 days from completion date." },
 
-  { id: 'includeWorkDescriptionTable', label: 'Include Detailed Work Items Table?', type: 'boolean', defaultValue: true, placeholder: "Show/hide the table for specific work items, area, and rates." },
+  // Work Order Specifics - Work Items Table Toggle & Fields
+  { id: 'includeWorkDescriptionTable', label: 'Work Items', type: 'boolean', defaultValue: true, placeholder: "Toggle visibility of the detailed work items table in the preview." },
   { id: 'workItem1Description', label: 'Work Item 1: Description', type: 'textarea', placeholder: 'E.g., Interior Painting - Living Room', rows: 2 },
   { id: 'workItem1Area', label: 'Work Item 1: Area (Sq. ft.)', type: 'number', placeholder: '250' },
   { id: 'workItem1Rate', label: 'Work Item 1: Rate (₹ per Sq. ft.)', type: 'number', placeholder: '15' },
   { id: 'workItem2Description', label: 'Work Item 2: Description', type: 'textarea', placeholder: 'E.g., Kitchen Cabinet Installation', rows: 2 },
-  { id: 'workItem2Area', label: 'Work Item 2: Area (Sq. ft.)', type: 'number', placeholder: 'N/A or 0' },
+  { id: 'workItem2Area', label: 'Work Item 2: Area (Sq. ft.)', type: 'number', placeholder: '0' }, // Default to 0 if N/A
   { id: 'workItem2Rate', label: 'Work Item 2: Rate (₹, or total for item)', type: 'number', placeholder: '5000' },
   { id: 'workItem3Description', label: 'Work Item 3: Description', type: 'textarea', rows: 2 },
   { id: 'workItem3Area', label: 'Work Item 3: Area (Sq. ft.)', type: 'number' },
   { id: 'workItem3Rate', label: 'Work Item 3: Rate (₹)', type: 'number' },
 
-  { id: 'includeMaterialTable', label: 'Include Materials Table?', type: 'boolean', defaultValue: true, placeholder: "Show/hide table for materials, units, and prices." },
+  // Work Order Specifics - Material Table Toggle & Fields
+  { id: 'includeMaterialTable', label: 'Materials', type: 'boolean', defaultValue: true, placeholder: "Toggle visibility of the materials table in the preview." },
   { id: 'materialItem1Name', label: 'Material 1: Name', type: 'text', placeholder: 'E.g., Emulsion Paint' },
   { id: 'materialItem1Unit', label: 'Material 1: Unit', type: 'text', placeholder: 'Litre / Kg / Pcs' },
   { id: 'materialItem1Quantity', label: 'Material 1: Quantity', type: 'number', placeholder: '10' },
@@ -497,7 +502,8 @@ const workOrderFields: TemplateField[] = [
   { id: 'materialItem3Quantity', label: 'Material 3: Quantity', type: 'number' },
   { id: 'materialItem3PricePerUnit', label: 'Material 3: Price per Unit (₹)', type: 'number' },
 
-  { id: 'includeLaborTable', label: 'Include Labor Charges Table?', type: 'boolean', defaultValue: true, placeholder: "Show/hide table for labor teams and costs." },
+  // Work Order Specifics - Labor Table Toggle & Fields
+  { id: 'includeLaborTable', label: 'Labour Charges', type: 'boolean', defaultValue: true, placeholder: "Toggle visibility of the labor charges table in the preview." },
   { id: 'laborItem1TeamName', label: 'Labor 1: Team/Description', type: 'text', placeholder: 'E.g., Painting Team A' },
   { id: 'laborItem1NumPersons', label: 'Labor 1: No. of Persons', type: 'number', placeholder: '2' },
   { id: 'laborItem1Amount', label: 'Labor 1: Amount (₹)', type: 'number', placeholder: '8000' },
@@ -508,9 +514,9 @@ const workOrderFields: TemplateField[] = [
   { id: 'laborItem3NumPersons', label: 'Labor 3: No. of Persons', type: 'number' },
   { id: 'laborItem3Amount', label: 'Labor 3: Amount (₹)', type: 'number' },
 
+  // Work Order Specifics - Financials & Approval
   { id: 'otherCosts', label: 'Other Costs (₹, e.g., Transportation)', type: 'number', placeholder: '500', defaultValue: 0 },
   { id: 'taxRatePercentage', label: 'Tax Rate (%)', type: 'number', placeholder: '18', defaultValue: 18 },
-
   { id: 'approvedByName', label: 'Approved By (Name)', type: 'text', placeholder: 'Project Manager Name' },
   { id: 'dateOfApproval', label: 'Date of Approval', type: 'date' },
 ];
@@ -531,7 +537,7 @@ export const templates: Template[] = [
     description: 'Create professional letterheads for official correspondence.',
     icon: Scroll,
     fields: [
-      { id: 'logoUrl', label: 'Company Logo', type: 'file', placeholder: 'Upload your company logo' }, // Changed to file type
+      { id: 'logoUrl', label: 'Company Logo', type: 'file', placeholder: 'Upload your company logo. Recommended: <1MB, PNG/JPG.' },
       { id: 'companyName', label: 'Company Name', type: 'text', placeholder: 'Your Company Inc.', defaultValue: 'Your Company Inc.' },
       { id: 'companySlogan', label: 'Company Slogan (optional)', type: 'text', placeholder: 'Quality Service Since 1999' },
       { id: 'companyAddress', label: 'Company Full Address', type: 'textarea', placeholder: '123 Business Rd, Suite 100, City, State, Zip', defaultValue: '123 Business Rd, Suite 100, City, State, Zip' },
