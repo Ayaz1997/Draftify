@@ -87,6 +87,10 @@ const WorkOrderPreview = (data: FormData) => {
   const taxAmount = grandSubtotal * taxRate;
   const finalTotalAmount = grandSubtotal + taxAmount;
 
+  const logoSrc = data.businessLogoUrl as string;
+  const canDisplayLogo = logoSrc && typeof logoSrc === 'string' && logoSrc.startsWith('data:image');
+
+
   return (
     <Card className="w-full max-w-4xl mx-auto shadow-xl border-primary/30 printable-area">
       {/* Header Section */}
@@ -99,9 +103,16 @@ const WorkOrderPreview = (data: FormData) => {
               Contact: {data.businessContactNumber || 'N/A'} | Email: {data.businessEmail || 'N/A'}
             </p>
           </div>
-          {data.businessLogoUrl && typeof data.businessLogoUrl === 'string' && (data.businessLogoUrl.startsWith('http') || data.businessLogoUrl.startsWith('data:image')) && (
-            <Image src={data.businessLogoUrl} alt="Business Logo" width={120} height={60} className="object-contain rounded shadow" data-ai-hint="company brand" />
-          )}
+          <div className="w-[120px] h-[60px] flex items-center justify-center">
+            {canDisplayLogo ? (
+              <Image src={logoSrc} alt="Business Logo" width={120} height={60} className="object-contain rounded shadow" data-ai-hint="company brand" />
+            ) : (
+              logoSrc ? // If there was an attempt (businessLogoUrl is not empty/undefined) but it's not displayable
+                <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground text-xs rounded border p-2 text-center">Invalid logo data</div>
+              : // If businessLogoUrl was empty or not provided
+                <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground text-xs rounded border p-2 text-center">No Logo</div>
+            )}
+          </div>
         </div>
         <Separator className="my-4" />
         <div className="flex justify-between items-center">
@@ -447,7 +458,12 @@ const workOrderFields: TemplateField[] = [
   { id: 'businessAddress', label: 'Business Address', type: 'textarea', placeholder: '123 Business St, City, State, PIN', defaultValue: "123 Main Street, Anytown, ST 12345" },
   { id: 'businessContactNumber', label: 'Business Contact Number', type: 'text', placeholder: '9876543210', defaultValue: "555-123-4567" },
   { id: 'businessEmail', label: 'Business Email', type: 'email', placeholder: 'contact@business.com', defaultValue: "contact@abcconstructions.com" },
-  { id: 'businessLogoUrl', label: 'Business Logo', type: 'file' },
+  { 
+    id: 'businessLogoUrl', 
+    label: 'Business Logo', 
+    type: 'file', 
+    placeholder: 'Recommended: <1MB, PNG/JPG. Ideal aspect ratio e.g., 2:1 (240x120px).' 
+  },
 
   // Work Order Details
   { id: 'orderNumber', label: 'Order Number', type: 'text', placeholder: `WO-${Date.now().toString().slice(-6)}`, defaultValue: `WO-${Date.now().toString().slice(-5)}` },
