@@ -1,6 +1,6 @@
 
-import { templates } from '@/lib/templates.tsx'; // Ensure .tsx extension
-import type { FormData, DocumentPreviewPropsTemplateInfo } from '@/types';
+import { templates } from '@/lib/templates.tsx'; 
+import type { DocumentPreviewPropsTemplateInfo, FormData } from '@/types';
 import { DocumentPreview } from '@/components/DocumentPreview';
 import { AlertTriangle, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,23 +10,11 @@ interface PreviewPageProps {
   params: {
     templateId: string;
   };
-  searchParams: {
-    data?: string;
-  };
+  // searchParams removed as data is no longer passed via URL
 }
 
-export default function PreviewPage({ params, searchParams }: PreviewPageProps) {
+export default function PreviewPage({ params }: PreviewPageProps) {
   const template = templates.find((t) => t.id === params.templateId);
-  let formData: FormData = {};
-
-  if (searchParams.data) {
-    try {
-      formData = JSON.parse(decodeURIComponent(searchParams.data));
-    } catch (error) {
-      console.error('Failed to parse form data:', error);
-      // Error handled below if formData remains empty and data was expected
-    }
-  }
 
   if (!template) {
     return (
@@ -43,30 +31,14 @@ export default function PreviewPage({ params, searchParams }: PreviewPageProps) 
     );
   }
   
-  if (Object.keys(formData).length === 0 && searchParams.data) {
-     // This case implies data was in searchParams but failed to parse or was empty JSON
-     return (
-       <div className="flex flex-col items-center justify-center h-full text-center p-8">
-        <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
-        <h1 className="text-2xl font-semibold mb-2">Invalid Document Data</h1>
-        <p className="text-muted-foreground mb-6">There was an issue loading your document data. Please try creating it again.</p>
-        <Button asChild variant="outline">
-          <Link href={`/templates/${template.id}`}>
-            <ArrowLeft className="mr-2 h-4 w-4" /> Go Back to Form
-          </Link>
-        </Button>
-      </div>
-    );
-  }
-
-  // Prepare serializable template info for the DocumentPreview Client Component
+  // formData is now fetched by DocumentPreview from sessionStorage
   const templateInfoForPreview: DocumentPreviewPropsTemplateInfo = {
     id: template.id,
     name: template.name,
   };
 
   return (
-    <DocumentPreview templateInfo={templateInfoForPreview} formData={formData} />
+    <DocumentPreview templateInfo={templateInfoForPreview} />
   );
 }
 

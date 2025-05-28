@@ -22,6 +22,7 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import React, { useCallback, useEffect } from 'react';
 
 interface DocumentFormProps {
   template: DocumentFormPropsTemplate;
@@ -44,7 +45,6 @@ function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
       case 'textarea':
         validator = z.string().min(field.required ? 1 : 0, { message: `${field.label} is required` });
         if (field.required && validator instanceof z.ZodString) {
-            // For required textareas, a more substantial minimum might be desired, adjust as needed.
             // validator = validator.min(10, { message: 'Must be at least 10 characters' });
         }
         break;
@@ -52,7 +52,7 @@ function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
         validator = z.boolean();
         break;
       case 'file':
-        validator = z.any().optional(); // Allows FileList, undefined. Specific validation in onSubmit.
+        validator = z.any().optional(); 
         break;
       case 'text':
       default:
@@ -63,7 +63,6 @@ function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
         if (validator instanceof z.ZodString) {
             validator = validator.min(1, { message: `${field.label} is required` });
         } else if (validator instanceof z.ZodNumber || (validator instanceof z.ZodNullable && validator.unwrap() instanceof z.ZodNumber)) {
-            // Ensure required numbers are actually provided
             validator = z.coerce.number({required_error: `${field.label} is required`, invalid_type_error: 'Must be a number'});
         }
     } else if (field.type !== 'boolean' && field.type !== 'file') {
@@ -81,34 +80,78 @@ export function DocumentForm({ template }: DocumentFormProps) {
   const { toast } = useToast();
   const formSchema = createZodSchema(template.fields);
 
-  const defaultValues: Record<string, any> = {};
-  template.fields.forEach(field => {
-    if (field.defaultValue !== undefined) {
-      defaultValues[field.id] = field.defaultValue;
-    } else if (field.type === 'number') {
-      defaultValues[field.id] = undefined; 
-    } else if (field.type === 'boolean') {
-      defaultValues[field.id] = false; 
-    } else if (field.type === 'file') {
-      defaultValues[field.id] = undefined; 
-    } else {
-      defaultValues[field.id] = '';
+  const getInitialValues = useCallback(() => {
+    const editDataKey = `docuFormEditData-${template.id}`;
+    let initialValues: Record<string, any> = {};
+
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+        try {
+            const storedEditData = sessionStorage.getItem(editDataKey);
+            if (storedEditData) {
+                initialValues = JSON.parse(storedEditData);
+                sessionStorage.removeItem(editDataKey); 
+                
+                template.fields.forEach(field => {
+                    if (!(field.id in initialValues)) {
+                        if (field.defaultValue !== undefined) {
+                            initialValues[field.id] = field.defaultValue;
+                        } else if (field.type === 'number') {
+                            initialValues[field.id] = undefined;
+                        } else if (field.type === 'boolean') {
+                            initialValues[field.id] = false;
+                        } else if (field.type === 'file') {
+                            initialValues[field.id] = initialValues[field.id] || undefined;
+                        } else {
+                            initialValues[field.id] = '';
+                        }
+                    } else if (field.type === 'file' && typeof initialValues[field.id] === 'string' && initialValues[field.id].startsWith('data:image')) {
+                        // File input cannot be pre-filled with data URI. User must re-select.
+                        // Keep the dataURI in form state for resubmission if not changed.
+                    }
+                });
+                return initialValues;
+            }
+        } catch (e) {
+            console.error("Failed to load or parse edit data from session storage:", e);
+        }
     }
-  });
+
+    template.fields.forEach(field => {
+        if (field.defaultValue !== undefined) {
+            initialValues[field.id] = field.defaultValue;
+        } else if (field.type === 'number') {
+            initialValues[field.id] = undefined;
+        } else if (field.type === 'boolean') {
+            initialValues[field.id] = false;
+        } else if (field.type === 'file') {
+            initialValues[field.id] = undefined;
+        } else {
+            initialValues[field.id] = '';
+        }
+    });
+    return initialValues;
+  }, [template.id, template.fields]);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues,
+    defaultValues: getInitialValues(),
   });
 
-  async function onSubmit(rawValues: z.infer<typeof formSchema>) {
-    // Use a mutable record for values that will be stringified and sent.
-    const submissionValues: Record<string, any> = { ...rawValues };
+  useEffect(() => {
+    // This effect ensures that if the template.id changes or fields change,
+    // the form is re-initialized with the correct default/sessionStorage values.
+    // This is particularly useful if DocumentForm is part of a layout that persists
+    // while template.id changes.
+    form.reset(getInitialValues());
+  }, [getInitialValues, form, template.id]); // Added template.id to ensure re-evaluation if it changes
 
-    // Handle businessLogoUrl specifically
+  async function onSubmit(rawValues: z.infer<typeof formSchema>) {
+    const submissionValues: Record<string, any> = { ...rawValues };
     const logoFieldDefinition = template.fields.find(f => f.id === 'businessLogoUrl' && f.type === 'file');
-    if (logoFieldDefinition) {
-      const logoValueFromForm = rawValues.businessLogoUrl; // This is 'any' due to z.any()
+    const logoFieldId = logoFieldDefinition?.id;
+
+    if (logoFieldId && rawValues[logoFieldId]) {
+      const logoValueFromForm = rawValues[logoFieldId];
 
       if (logoValueFromForm instanceof FileList && logoValueFromForm.length > 0) {
         const file = logoValueFromForm[0];
@@ -144,7 +187,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
               reader.onerror = (error) => reject(error);
               reader.readAsDataURL(file);
             });
-            submissionValues.businessLogoUrl = dataUri;
+            submissionValues[logoFieldId] = dataUri;
           } catch (error) {
             console.error("Error converting file to data URI:", error);
             toast({
@@ -152,22 +195,37 @@ export function DocumentForm({ template }: DocumentFormProps) {
               title: "Logo Upload Failed",
               description: "Could not process the logo file. Please try again.",
             });
-            submissionValues.businessLogoUrl = ''; 
+            submissionValues[logoFieldId] = ''; 
           }
         } else {
-          submissionValues.businessLogoUrl = ''; // Set to empty if validation failed
+          submissionValues[logoFieldId] = ''; 
         }
       } else if (typeof logoValueFromForm === 'string' && logoValueFromForm.startsWith('data:image')) {
-        // Already a data URI (e.g., from an edit flow that pre-filled the form), keep it.
-        submissionValues.businessLogoUrl = logoValueFromForm;
+        submissionValues[logoFieldId] = logoValueFromForm;
       } else {
-        // No file selected, or FileList is empty, or it's an unrecognized type.
-        submissionValues.businessLogoUrl = '';
+        submissionValues[logoFieldId] = '';
       }
     }
     
-    const formDataString = encodeURIComponent(JSON.stringify(submissionValues));
-    router.push(`/templates/${template.id}/preview?data=${formDataString}`);
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+        try {
+            sessionStorage.setItem(`docuFormPreviewData-${template.id}`, JSON.stringify(submissionValues));
+            router.push(`/templates/${template.id}/preview`);
+        } catch (error) {
+            console.error("Error saving to session storage:", error);
+            toast({
+                variant: "destructive",
+                title: "Navigation Error",
+                description: "Could not prepare data for preview. Please try again.",
+            });
+        }
+    } else {
+        toast({
+            variant: "destructive",
+            title: "Environment Error",
+            description: "Session storage is not available. Cannot proceed to preview.",
+        });
+    }
   }
 
   const renderField = (field: TemplateField, formFieldControllerProps: any) => {
@@ -181,17 +239,14 @@ export function DocumentForm({ template }: DocumentFormProps) {
       case 'email':
         return <Input type="email" placeholder={field.placeholder} {...formFieldControllerProps} />;
       case 'file':
-        // Exclude 'ref' from being passed to the DOM element if it's part of formFieldControllerProps from RHF Controller
-        const { ref, ...restProps } = formFieldControllerProps;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { value, ...restFileProps } = formFieldControllerProps; // Exclude 'value'
         return (
           <Input
             type="file"
             accept="image/*"
-            onChange={(e) => formFieldControllerProps.onChange(e.target.files)} // Pass FileList to RHF
-            // value is managed by react-hook-form; don't set it directly on the input
-            // ref is handled by Controller
-            name={formFieldControllerProps.name}
-            onBlur={formFieldControllerProps.onBlur}
+            onChange={(e) => formFieldControllerProps.onChange(e.target.files)} 
+            {...restFileProps} // Pass name, onBlur, ref
             className="pt-2" 
           />
         );
@@ -276,4 +331,3 @@ export function DocumentForm({ template }: DocumentFormProps) {
     </Card>
   );
 }
-
