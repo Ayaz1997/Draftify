@@ -38,18 +38,12 @@ function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
         break;
       case 'number':
         validator = z.coerce.number({ invalid_type_error: 'Must be a number' });
-        if (!field.required) {
-          validator = validator.optional().nullable();
-        }
         break;
       case 'date':
         validator = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'Date must be YYYY-MM-DD' });
         break;
       case 'textarea':
         validator = z.string();
-        if (field.required) {
-            validator = validator.min(1, { message: `${field.label} is required` });
-        }
         break;
       case 'boolean':
         validator = z.boolean().default(field.defaultValue === true);
@@ -62,35 +56,39 @@ function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
         validator = z.string();
         break;
     }
-    if (field.required && field.type !== 'boolean' && field.type !== 'file' && field.type !== 'number') {
-        if (validator instanceof z.ZodString) {
-            validator = validator.min(1, { message: `${field.label} is required` });
-        }
-    } else if (field.type !== 'boolean' && field.type !== 'file' && field.type !== 'number' && !field.required) {
-      // For non-boolean, non-file, non-number types that are not required, make them optional
-      // This was previously only handling string types; extend to others if necessary
-      if (validator instanceof z.ZodString || validator instanceof z.ZodDate || validator instanceof z.ZodDefault) {
-           validator = validator.optional();
-      }
-    }
-
-    if (!field.required) {
-      if (field.type === 'number') {
-        validator = z.coerce.number().optional().nullable();
-      } else if (field.type === 'boolean') {
-        validator = z.boolean().optional().default(field.defaultValue === true);
-      } else if (field.type === 'file') {
-        validator = z.any().optional(); // Already optional
-      } else {
-        // Ensure other non-required types are also optional
-        // This might be redundant if previous block handles it, but ensures coverage
-        validator = validator.optional();
-      }
+    // All fields are optional for testing
+    if (field.type === 'number') {
+      validator = z.coerce.number().optional().nullable();
+    } else if (field.type === 'boolean') {
+      validator = z.boolean().optional().default(field.defaultValue === true);
+    } else {
+      validator = validator.optional();
     }
     shape[field.id] = validator;
   });
   return z.object(shape);
 }
+
+
+const workOrderFieldGroups: Record<string, string[]> = {
+  'Business Details': ['businessName', 'businessAddress', 'businessContactNumber', 'businessEmail', 'businessLogoUrl'],
+  'Order Details': ['orderNumber', 'orderDate', 'expectedStartDate', 'expectedEndDate'],
+  'Client Details': ['clientName', 'clientPhone', 'clientEmail', 'workLocation', 'orderReceivedBy'],
+  'Work Order Specifics': [ 
+    'generalWorkDescription', 'termsOfService', 
+    'includeWorkDescriptionTable', 'workItem1Description', 'workItem1Area', 'workItem1Rate', 
+    'workItem2Description', 'workItem2Area', 'workItem2Rate', 
+    'workItem3Description', 'workItem3Area', 'workItem3Rate',
+    'includeMaterialTable', 'materialItem1Name', 'materialItem1Unit', 'materialItem1Quantity', 'materialItem1PricePerUnit',
+    'materialItem2Name', 'materialItem2Unit', 'materialItem2Quantity', 'materialItem2PricePerUnit',
+    'materialItem3Name', 'materialItem3Unit', 'materialItem3Quantity', 'materialItem3PricePerUnit',
+    'includeLaborTable', 'laborItem1TeamName', 'laborItem1NumPersons', 'laborItem1Amount',
+    'laborItem2TeamName', 'laborItem2NumPersons', 'laborItem2Amount',
+    'laborItem3TeamName', 'laborItem3NumPersons', 'laborItem3Amount',
+    'otherCosts', 'taxRatePercentage',
+    'approvedByName', 'dateOfApproval'
+  ]
+};
 
 
 export function DocumentForm({ template }: DocumentFormProps) {
@@ -107,26 +105,28 @@ export function DocumentForm({ template }: DocumentFormProps) {
             const storedEditData = sessionStorage.getItem(editDataKey);
             if (storedEditData) {
                 initialValues = JSON.parse(storedEditData);
-                sessionStorage.removeItem(editDataKey);
+                sessionStorage.removeItem(editDataKey); // Clear after loading for edit
 
+                // Ensure all template fields have a value, defaulting if necessary
                 template.fields.forEach(field => {
-                    if (!(field.id in initialValues)) {
+                    if (!(field.id in initialValues)) { // If a new field was added to template
                         if (field.defaultValue !== undefined) {
                             initialValues[field.id] = field.defaultValue;
                         } else if (field.type === 'date') {
                             initialValues[field.id] = new Date().toISOString().split('T')[0];
                         } else if (field.type === 'number') {
-                            initialValues[field.id] = undefined;
+                            initialValues[field.id] = undefined; // Or null, depending on preference for empty number
                         } else if (field.type === 'boolean') {
-                            initialValues[field.id] = field.defaultValue === true;
+                             initialValues[field.id] = field.defaultValue === true;
                         } else if (field.type === 'file') {
-                            initialValues[field.id] = undefined;
+                            initialValues[field.id] = undefined; // File inputs cannot be pre-filled this way
                         } else {
                             initialValues[field.id] = '';
                         }
                     } else if (field.type === 'file' && typeof initialValues[field.id] === 'string' && initialValues[field.id].startsWith('data:image')) {
                         // File input cannot be pre-filled for display, but keep dataURI in form state
                     } else if (field.type === 'date' && (!initialValues[field.id] || typeof initialValues[field.id] !== 'string' || !initialValues[field.id].match(/^\d{4}-\d{2}-\d{2}$/))) {
+                        // If date from storage is invalid or missing, default to today
                         initialValues[field.id] = new Date().toISOString().split('T')[0];
                     }
                 });
@@ -134,14 +134,16 @@ export function DocumentForm({ template }: DocumentFormProps) {
             }
         } catch (e) {
             console.error("Failed to load or parse edit data from session storage:", e);
+            // Fall through to default initial values if session storage fails
         }
     }
 
+    // Default initial values for a new form
     template.fields.forEach(field => {
         if (field.defaultValue !== undefined) {
             initialValues[field.id] = field.defaultValue;
         } else if (field.type === 'date') {
-            initialValues[field.id] = new Date().toISOString().split('T')[0];
+            initialValues[field.id] = new Date().toISOString().split('T')[0]; // Default to current date
         } else if (field.type === 'number') {
             initialValues[field.id] = undefined;
         } else if (field.type === 'boolean') {
@@ -159,26 +161,29 @@ export function DocumentForm({ template }: DocumentFormProps) {
     resolver: zodResolver(formSchema),
     defaultValues: getInitialValues(),
   });
-
+  
   useEffect(() => {
+    // Reset form with initial values when template or initial values logic changes
+    // This helps ensure form is correctly populated if user navigates back/forth or template changes
     form.reset(getInitialValues());
   }, [getInitialValues, form, template.id]);
+
 
   async function onSubmit(rawValues: z.infer<typeof formSchema>) {
     const submissionValues: Record<string, any> = { ...rawValues };
     const logoFieldDefinition = template.fields.find(f => f.id === 'businessLogoUrl' && f.type === 'file');
     const logoFieldId = logoFieldDefinition?.id;
-
+  
     if (logoFieldId) {
-      submissionValues[logoFieldId] = ''; // Initialize/ensure it's an empty string
-
-      const logoValueFromForm = rawValues[logoFieldId];
-
+      submissionValues[logoFieldId] = ''; // Initialize/ensure it's an empty string for the submission if not set
+  
+      const logoValueFromForm = rawValues[logoFieldId]; // This could be FileList, string (data URI from edit), or undefined
+  
       if (logoValueFromForm) {
         if (logoValueFromForm instanceof FileList && logoValueFromForm.length > 0) {
           const file = logoValueFromForm[0];
           let isValidFile = true;
-
+  
           if (!file.type.startsWith('image/')) {
             toast({
               variant: 'destructive',
@@ -186,6 +191,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
               description: 'Please upload an image file for the logo (e.g., PNG, JPG, GIF).',
             });
             isValidFile = false;
+            submissionValues[logoFieldId] = ''; // Explicitly set to empty on validation fail
           } else if (file.size > 5 * 1024 * 1024) { // 5MB limit
             toast({
               variant: 'destructive',
@@ -193,8 +199,9 @@ export function DocumentForm({ template }: DocumentFormProps) {
               description: 'Logo image should be less than 5MB.',
             });
             isValidFile = false;
+            submissionValues[logoFieldId] = ''; // Explicitly set to empty on validation fail
           }
-
+  
           if (isValidFile) {
             try {
               const dataUri = await new Promise<string>((resolve, reject) => {
@@ -211,24 +218,27 @@ export function DocumentForm({ template }: DocumentFormProps) {
               });
               submissionValues[logoFieldId] = dataUri;
             } catch (error) {
-              console.error("CRITICAL: Error converting file to data URI:", error);
+              const errorMessage = error instanceof Error ? error.message : String(error);
+              console.error("CRITICAL: Error converting file to data URI:", errorMessage, error);
               toast({
                 variant: "destructive",
                 title: "Logo Upload Failed",
-                description: `Could not process the logo file. Details: ${error instanceof Error ? error.message : String(error)}. Please try again.`,
+                description: `Could not process the logo file. Details: ${errorMessage}. Please try again.`,
               });
-              // submissionValues[logoFieldId] remains ''
+              submissionValues[logoFieldId] = ''; // Ensure it's empty on critical error
             }
           }
-          // If !isValidFile, submissionValues[logoFieldId] remains ''
+          // If !isValidFile, submissionValues[logoFieldId] is already set to '' by validation blocks
         } else if (typeof logoValueFromForm === 'string' && logoValueFromForm.startsWith('data:image')) {
-          submissionValues[logoFieldId] = logoValueFromForm; // Preserve existing data URI from edit
+          // This is a data URI, likely from an edit flow where the image wasn't changed. Preserve it.
+          submissionValues[logoFieldId] = logoValueFromForm;
         }
-        // If logoValueFromForm is something else (e.g. empty FileList), it remains ''
+        // If logoValueFromForm is an empty FileList or something else, it means no new file / keep existing or empty.
+        // It's already initialized to '' or carries over string.
       }
-      // If rawValues[logoFieldId] was undefined/null, submissionValues[logoFieldId] is already ''
+      // If rawValues[logoFieldId] was undefined/null, submissionValues[logoFieldId] is already ''.
     }
-
+  
     if (typeof window !== 'undefined' && window.sessionStorage) {
         try {
             sessionStorage.setItem(`docuFormPreviewData-${template.id}`, JSON.stringify(submissionValues));
@@ -249,6 +259,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
         });
     }
   }
+  
 
   const renderField = (field: TemplateField, formFieldControllerProps: any) => {
     const value = field.type === 'number' && formFieldControllerProps.value === undefined ? '' : formFieldControllerProps.value;
@@ -259,16 +270,15 @@ export function DocumentForm({ template }: DocumentFormProps) {
       case 'number':
         return <Input type="number" placeholder={field.placeholder} {...formFieldControllerProps} value={value} step="any" />;
       case 'date':
-        // Ensure date value is in YYYY-MM-DD format for the input
         let dateValue = formFieldControllerProps.value || '';
         if (dateValue && typeof dateValue === 'string' && !dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
             try {
                 dateValue = new Date(dateValue).toISOString().split('T')[0];
-            } catch {
-                dateValue = new Date().toISOString().split('T')[0]; // Fallback
+            } catch { // Fallback if conversion fails
+                dateValue = new Date().toISOString().split('T')[0];
             }
-        } else if (!dateValue) {
-            dateValue = new Date().toISOString().split('T')[0];
+        } else if (!dateValue) { // If value is empty, default to today
+             dateValue = new Date().toISOString().split('T')[0];
         }
         return <Input type="date" placeholder={field.placeholder} {...formFieldControllerProps} value={dateValue} />;
       case 'email':
@@ -279,10 +289,10 @@ export function DocumentForm({ template }: DocumentFormProps) {
         return (
           <Input
             type="file"
-            accept="image/*"
-            onChange={(e) => onFileChange(e.target.files)}
+            accept="image/*" // Only accept image files
+            onChange={(e) => onFileChange(e.target.files)} // Pass FileList to react-hook-form
             {...restFileProps}
-            className="pt-2"
+            className="pt-2" // Some padding for file input
           />
         );
       case 'boolean':
@@ -313,6 +323,38 @@ export function DocumentForm({ template }: DocumentFormProps) {
     }
   };
 
+  const renderFormField = (field: TemplateField) => (
+    <FormField
+      key={field.id}
+      control={form.control}
+      name={field.id as keyof z.infer<typeof formSchema>}
+      render={({ field: formHookFieldRenderProps }) => (
+        field.type === 'boolean' ? (
+           renderField(field, formHookFieldRenderProps)
+        ) : (
+          <FormItem>
+            <FormLabel className="font-semibold text-foreground/90">{field.label}{field.required && <span className="text-destructive ml-1">*</span>}</FormLabel>
+            <FormControl>
+              {renderField(field, formHookFieldRenderProps)}
+            </FormControl>
+            {field.placeholder && !field.type.includes('area') && field.type !== 'boolean' && field.type !== 'file' && (
+              <FormDescription className="text-xs text-muted-foreground">
+                Example: {field.placeholder}
+              </FormDescription>
+            )}
+             {field.type === 'file' && field.placeholder && (
+              <FormDescription className="text-xs text-muted-foreground">
+                {field.placeholder}
+              </FormDescription>
+            )}
+            <FormMessage />
+          </FormItem>
+        )
+      )}
+    />
+  );
+
+
   return (
     <Card className="shadow-lg">
       <CardHeader>
@@ -321,36 +363,24 @@ export function DocumentForm({ template }: DocumentFormProps) {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <CardContent className="space-y-6">
-            {template.fields.map((field) => (
-              <FormField
-                key={field.id}
-                control={form.control}
-                name={field.id as keyof z.infer<typeof formSchema>}
-                render={({ field: formHookFieldRenderProps }) => (
-                  field.type === 'boolean' ? (
-                     renderField(field, formHookFieldRenderProps)
-                  ) : (
-                    <FormItem>
-                      <FormLabel className="font-semibold text-foreground/90">{field.label}{field.required && <span className="text-destructive ml-1">*</span>}</FormLabel>
-                      <FormControl>
-                        {renderField(field, formHookFieldRenderProps)}
-                      </FormControl>
-                      {field.placeholder && !field.type.includes('area') && field.type !== 'boolean' && field.type !== 'file' && (
-                        <FormDescription className="text-xs text-muted-foreground">
-                          Example: {field.placeholder}
-                        </FormDescription>
-                      )}
-                       {field.type === 'file' && field.placeholder && (
-                        <FormDescription className="text-xs text-muted-foreground">
-                          {field.placeholder}
-                        </FormDescription>
-                      )}
-                      <FormMessage />
-                    </FormItem>
-                  )
-                )}
-              />
-            ))}
+            {template.id === 'work-order' ? (
+              <>
+                {Object.entries(workOrderFieldGroups).map(([sectionTitle, fieldIds], sectionIndex) => (
+                  <div key={sectionTitle} className="space-y-6"> {/* Wrap section in a div for consistent spacing */}
+                    <h2 className={`text-xl font-semibold text-primary ${sectionIndex > 0 ? 'mt-8' : 'mt-0'} pb-2 border-b border-border`}>
+                      {sectionTitle}
+                    </h2>
+                    {fieldIds.map(fieldId => {
+                      const field = template.fields.find(f => f.id === fieldId);
+                      if (!field) return null;
+                      return renderFormField(field);
+                    })}
+                  </div>
+                ))}
+              </>
+            ) : (
+              template.fields.map((field) => renderFormField(field))
+            )}
           </CardContent>
           <CardFooter className="flex justify-end gap-3 border-t pt-6">
              <Button type="button" variant="outline" onClick={() => router.back()}>
@@ -366,3 +396,5 @@ export function DocumentForm({ template }: DocumentFormProps) {
     </Card>
   );
 }
+
+    
