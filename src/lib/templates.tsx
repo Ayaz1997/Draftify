@@ -104,7 +104,7 @@ const WorkOrderPreview = (data: FormData) => {
               Contact: {data.businessContactNumber || 'N/A'} | Email: {data.businessEmail || 'N/A'}
             </p>
           </div>
-          <div className="w-[120px] h-[60px] flex items-center justify-center border rounded bg-gray-50 overflow-hidden">
+           <div className="w-[120px] h-[60px] flex items-center justify-center border rounded bg-gray-50 overflow-hidden">
             {canDisplayLogo ? (
               <Image src={logoSrc} alt="Business Logo" width={120} height={60} className="object-contain" data-ai-hint="company brand" />
             ) : logoUrlFromData && typeof logoUrlFromData === 'string' && logoUrlFromData.trim() !== '' && !logoUrlFromData.startsWith('data:image') ? (
@@ -331,7 +331,7 @@ const LetterheadPreview = (data: FormData) => (
     <header className="mb-12 text-center border-b-2 border-primary pb-6">
       {data.logoUrl && typeof data.logoUrl === 'string' && data.logoUrl.startsWith('data:image') ? (
         <Image src={data.logoUrl} alt="Company Logo" width={150} height={75} className="mx-auto mb-4 object-contain" data-ai-hint="company logo" />
-      ) : data.logoUrl && typeof data.logoUrl === 'string' ? ( 
+      ) : data.logoUrl && typeof data.logoUrl === 'string' ? (
          <Image src={data.logoUrl} alt="Company Logo (External)" width={150} height={75} className="mx-auto mb-4 object-contain" data-ai-hint="company logo" />
       ) : (
         <div className="h-16 w-32 bg-muted mx-auto mb-4 flex items-center justify-center text-muted-foreground rounded text-xs p-1">Logo Placeholder</div>
@@ -477,13 +477,13 @@ const workOrderFields: TemplateField[] = [
 
   // Work Order Specifics - Work Items Table Toggle & Fields
   { id: 'includeWorkDescriptionTable', label: 'Work Items', type: 'boolean', defaultValue: true, placeholder: "Toggle visibility of the detailed work items table in the previewed document." },
-  { id: 'workItem1Description', label: 'Work description 1', type: 'textarea', placeholder: 'E.g., Interior Painting - Living Room', rows: 2 },
+  { id: 'workItem1Description', label: 'Work description 1', type: 'text', placeholder: 'E.g., Interior Painting - Living Room'},
   { id: 'workItem1Area', label: 'Area (Sq. ft.)', type: 'number', placeholder: '250' },
   { id: 'workItem1Rate', label: 'Rate (₹ per Sq. ft.)', type: 'number', placeholder: '15' },
-  { id: 'workItem2Description', label: 'Work description 2', type: 'textarea', placeholder: 'E.g., Kitchen Cabinet Installation', rows: 2 },
+  { id: 'workItem2Description', label: 'Work description 2', type: 'text', placeholder: 'E.g., Kitchen Cabinet Installation'},
   { id: 'workItem2Area', label: 'Area (Sq. ft.)', type: 'number', placeholder: '0' },
   { id: 'workItem2Rate', label: 'Rate (₹, or total for item)', type: 'number', placeholder: '5000' },
-  { id: 'workItem3Description', label: 'Work description 3', type: 'textarea', rows: 2 },
+  { id: 'workItem3Description', label: 'Work description 3', type: 'text' },
   { id: 'workItem3Area', label: 'Area (Sq. ft.)', type: 'number' },
   { id: 'workItem3Rate', label: 'Rate (₹)', type: 'number' },
 
@@ -577,3 +577,6 @@ export const templates: Template[] = [
     previewLayout: InvoicePreview,
   },
 ];
+
+
+    
