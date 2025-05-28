@@ -24,6 +24,7 @@ import { Eye } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import React, { useCallback } from 'react';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
+import * as AccordionPrimitive from "@radix-ui/react-accordion";
 
 interface DocumentFormProps {
   template: DocumentFormPropsTemplate;
@@ -70,6 +71,23 @@ function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
         break;
       }
     }
+    if (!field.required) {
+        // For optional fields, ensure zod handles empty strings for text-based inputs correctly if needed
+        if (field.type === 'text' || field.type === 'textarea' || field.type === 'email' || field.type === 'date') {
+            // validator = validator.or(z.literal(''));
+        } else if (field.type === 'number') {
+            // validator = validator.nullable(); // already handled by coerce.number().optional().nullable()
+        }
+    } else {
+        // Add non-empty checks for required string-like fields, or more specific messages
+        if (field.type === 'text' || field.type === 'textarea' || field.type === 'email') {
+            validator = validator.min(1, { message: `${field.label} is required.` });
+        } else if (field.type === 'date') {
+             validator = validator.min(1, { message: `${field.label} is required.` })
+                                .regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'Date must be YYYY-MM-DD' });
+        }
+        // Required numbers, booleans, files are intrinsically handled by their presence or Zod's base types
+    }
     shape[field.id] = validator;
   });
   return z.object(shape);
@@ -79,29 +97,18 @@ const workOrderSectionStructure: Record<string, string[]> = {
   'Business Details': ['businessName', 'businessAddress', 'businessContactNumber', 'businessEmail', 'businessLogoUrl'],
   'Order Details': ['orderNumber', 'orderDate', 'expectedStartDate', 'expectedEndDate'],
   'Client Details': ['clientName', 'clientPhone', 'clientEmail', 'workLocation', 'orderReceivedBy'],
-  'Work Order Specifics': [ // This section will be handled specially for accordions
-    'generalWorkDescription', 'termsOfService',
-    // Accordion toggles and their related fields will be managed by a different structure
-    'includeWorkDescriptionTable',
-    'workItem1Description', 'workItem1Area', 'workItem1Rate',
-    'workItem2Description', 'workItem2Area', 'workItem2Rate',
-    'workItem3Description', 'workItem3Area', 'workItem3Rate',
-    'includeMaterialTable',
-    'materialItem1Name', 'materialItem1Unit', 'materialItem1Quantity', 'materialItem1PricePerUnit',
-    'materialItem2Name', 'materialItem2Unit', 'materialItem2Quantity', 'materialItem2PricePerUnit',
-    'materialItem3Name', 'materialItem3Unit', 'materialItem3Quantity', 'materialItem3PricePerUnit',
-    'includeLaborTable',
-    'laborItem1TeamName', 'laborItem1NumPersons', 'laborItem1Amount',
-    'laborItem2TeamName', 'laborItem2NumPersons', 'laborItem2Amount',
-    'laborItem3TeamName', 'laborItem3NumPersons', 'laborItem3Amount',
-    'otherCosts', 'taxRatePercentage',
-    'approvedByName', 'dateOfApproval'
+  'Work Order Specifics': [ 
+    'generalWorkDescription', 'termsOfService', // General fields
+    // Accordion toggle fields are handled by workOrderAccordionSubSections
+    'includeWorkDescriptionTable', 'includeMaterialTable', 'includeLaborTable',
+    // Fields within accordions are also handled by workOrderAccordionSubSections
+    // Financial and approval fields after accordions:
+    'otherCosts', 'taxRatePercentage', 'approvedByName', 'dateOfApproval'
   ]
 };
 
 interface AccordionSectionConfig {
   id: string; // for AccordionItem value
-  label: string; // The new header text (e.g., "Work Items")
   toggleFieldId: keyof FormData; // e.g., 'includeWorkDescriptionTable'
   contentFieldIds: Array<keyof FormData>;
 }
@@ -109,8 +116,7 @@ interface AccordionSectionConfig {
 const workOrderAccordionSubSections: AccordionSectionConfig[] = [
   {
     id: 'work-items-accordion',
-    label: 'Work Items', // This label comes from the toggleField's definition
-    toggleFieldId: 'includeWorkDescriptionTable',
+    toggleFieldId: 'includeWorkDescriptionTable', // Label comes from this field's definition
     contentFieldIds: [
       'workItem1Description', 'workItem1Area', 'workItem1Rate',
       'workItem2Description', 'workItem2Area', 'workItem2Rate',
@@ -119,7 +125,6 @@ const workOrderAccordionSubSections: AccordionSectionConfig[] = [
   },
   {
     id: 'materials-accordion',
-    label: 'Materials',
     toggleFieldId: 'includeMaterialTable',
     contentFieldIds: [
       'materialItem1Name', 'materialItem1Unit', 'materialItem1Quantity', 'materialItem1PricePerUnit',
@@ -129,7 +134,6 @@ const workOrderAccordionSubSections: AccordionSectionConfig[] = [
   },
   {
     id: 'labour-charges-accordion',
-    label: 'Labour Charges',
     toggleFieldId: 'includeLaborTable',
     contentFieldIds: [
       'laborItem1TeamName', 'laborItem1NumPersons', 'laborItem1Amount',
@@ -143,8 +147,7 @@ const workOrderAccordionSubSections: AccordionSectionConfig[] = [
 export function DocumentForm({ template }: DocumentFormProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const formSchema = createZodSchema(template.fields);
-
+  
   const getInitialValues = useCallback(() => {
     const editDataKey = `docuFormEditData-${template.id}`;
     const storedEditDataString = typeof window !== 'undefined' ? sessionStorage.getItem(editDataKey) : null;
@@ -172,7 +175,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
             } else if (field.type === 'boolean') {
                  initialValues[field.id] = false; 
             } else if (field.type === 'number') {
-                 initialValues[field.id] = undefined; 
+                 initialValues[field.id] = undefined; // So placeholder shows
             } else if (field.type === 'file'){
                  initialValues[field.id] = undefined; 
             }
@@ -181,22 +184,25 @@ export function DocumentForm({ template }: DocumentFormProps) {
             }
         } else if (field.type === 'date' && initialValues[field.id]) {
             try {
+                // Ensure stored date string is valid and format it to YYYY-MM-DD
                 const dateObj = new Date(initialValues[field.id]);
                 if (!isNaN(dateObj.getTime())) {
                     initialValues[field.id] = dateObj.toISOString().split('T')[0];
-                } else {
+                } else { // Fallback if stored date is invalid
                     initialValues[field.id] = new Date().toISOString().split('T')[0];
                 }
-            } catch (e) {
+            } catch (e) { // Fallback on any parsing error
                 initialValues[field.id] = new Date().toISOString().split('T')[0];
             }
         } else if (field.type === 'number' && (initialValues[field.id] === null || initialValues[field.id] === '')) {
+            // Ensure numbers are numbers or undefined for react-hook-form
             initialValues[field.id] = undefined;
         }
     });
     return initialValues;
   }, [template.id, template.fields]);
 
+  const formSchema = createZodSchema(template.fields);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: getInitialValues(),
@@ -209,7 +215,10 @@ export function DocumentForm({ template }: DocumentFormProps) {
 
     // Initialize logo field in submissionValues if it exists in template
     if (logoFieldId) {
-        submissionValues[logoFieldId] = ''; // Default to empty string
+        // submissionValues[logoFieldId] will be either from 'values' (if already a data URI) or handled below
+        if (values[logoFieldId] === undefined || !(typeof values[logoFieldId] === 'string' && (values[logoFieldId] as string).startsWith('data:image')) ) {
+          submissionValues[logoFieldId] = ''; // Default to empty string if no pre-existing data URI
+        }
     }
     
     if (logoFieldId && values[logoFieldId]) {
@@ -226,14 +235,14 @@ export function DocumentForm({ template }: DocumentFormProps) {
                     title: "Invalid File Type",
                     description: `Please upload an image (JPEG, PNG, GIF, WEBP, SVG). You uploaded: ${file.type}`,
                 });
-                // submissionValues[logoFieldId] remains ''
+                submissionValues[logoFieldId] = ''; // Explicitly set to empty on error
             } else if (file.size > MAX_FILE_SIZE) {
                 toast({
                     variant: "destructive",
                     title: "File Too Large",
                     description: `Please upload an image smaller than 5MB. Yours is ${(file.size / (1024*1024)).toFixed(2)}MB.`,
                 });
-                // submissionValues[logoFieldId] remains ''
+                submissionValues[logoFieldId] = ''; // Explicitly set to empty on error
             } else {
                 try {
                     const dataUri = await new Promise<string>((resolve, reject) => {
@@ -259,34 +268,37 @@ export function DocumentForm({ template }: DocumentFormProps) {
                         title: "Logo Upload Failed",
                         description: `Error converting file: ${error.message || 'Unknown error'}. Please try again or skip logo.`,
                     });
-                    // submissionValues[logoFieldId] remains ''
+                    submissionValues[logoFieldId] = ''; // Explicitly set to empty on error
                 }
             }
         } else if (typeof logoFileValue === 'string' && logoFileValue.startsWith('data:image')) {
             // It's an existing data URI (e.g., from edit mode), keep it
             submissionValues[logoFieldId] = logoFileValue;
-        } else if (logoFileValue) {
-             // Some other non-FileList, non-dataURI value, treat as invalid for new upload
+        } else if (logoFileValue && !(logoFileValue instanceof FileList)) { // Catch other invalid types for new upload
              toast({
                 variant: "destructive",
                 title: "Invalid Logo Input",
                 description: "The logo data was not recognized. Please re-upload if you wish to change it."
              });
-             // submissionValues[logoFieldId] remains ''
+             submissionValues[logoFieldId] = ''; // Explicitly set to empty
         }
-        // If no new file was selected and logoFileValue was undefined/null, it remains empty string or keeps previous data URI from spread values
+        // If logoFileValue was FileList but empty, or undefined/null, submissionValues[logoFieldId] remains (or was set to) ''
     } else if (logoFieldId && typeof values[logoFieldId] === 'string' && (values[logoFieldId] as string).startsWith('data:image')) {
         // Case where values already contained a valid data URI (e.g. from editing an entry that had a logo)
         submissionValues[logoFieldId] = values[logoFieldId];
+    } else if (logoFieldId && !submissionValues[logoFieldId]) {
+        // If it's a logo field and after all checks it's still not set (e.g. was never in values, or was FileList but empty)
+        submissionValues[logoFieldId] = '';
     }
 
 
     template.fields.forEach(field => {
+        // Ensure all fields have a defined value, defaulting appropriately if undefined after spread
         if (submissionValues[field.id] === undefined) {
             if (field.type === 'boolean') {
                 submissionValues[field.id] = field.defaultValue !== undefined ? field.defaultValue : false;
-            } else if (field.id !== logoFieldId) {
-                submissionValues[field.id] = values[field.id] !== undefined ? values[field.id] : (field.defaultValue !== undefined ? field.defaultValue : '');
+            } else if (field.id !== logoFieldId) { // Non-logo fields
+                 submissionValues[field.id] = field.defaultValue !== undefined ? field.defaultValue : (field.type === 'number' ? null : '');
             }
         }
     });
@@ -311,6 +323,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
 
 
   const renderField = (field: TemplateField, formFieldControllerProps: any) => {
+    // For number fields, if value is undefined or null, pass empty string to input to show placeholder
     const value = (field.type === 'number' && (formFieldControllerProps.value === undefined || formFieldControllerProps.value === null)) ? '' : formFieldControllerProps.value;
 
     switch (field.type) {
@@ -318,17 +331,19 @@ export function DocumentForm({ template }: DocumentFormProps) {
         return <Textarea placeholder={field.placeholder} {...formFieldControllerProps} value={formFieldControllerProps.value || ''} rows={field.rows || 5} />;
       }
       case 'number': {
+        // Pass the transformed value to the input
         return <Input type="number" placeholder={field.placeholder} {...formFieldControllerProps} value={value} step="any" />;
       }
       case 'date': {
         let dateValue = formFieldControllerProps.value || '';
+        // Ensure dateValue is in 'YYYY-MM-DD' if it's a valid date string but not in that format
         if (dateValue && typeof dateValue === 'string' && !dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
             try {
                 const parsed = new Date(dateValue);
                 if(!isNaN(parsed.getTime())) dateValue = parsed.toISOString().split('T')[0];
-                else dateValue = '';
+                else dateValue = ''; // Invalid date, clear it
             } catch {
-                dateValue = ''; 
+                dateValue = ''; // Error parsing, clear it
             }
         }
         return <Input type="date" placeholder={field.placeholder} {...formFieldControllerProps} value={dateValue} />;
@@ -343,9 +358,9 @@ export function DocumentForm({ template }: DocumentFormProps) {
           <Input
             type="file"
             accept="image/*"
-            onChange={(e) => onFileChange(e.target.files)} 
-            {...restFileProps} 
-            className="pt-2" 
+            onChange={(e) => onFileChange(e.target.files)} // Pass FileList to RHF
+            {...restFileProps} // RHF props like name, ref, onBlur
+            className="pt-2" // Example custom styling
           />
         );
       }
@@ -386,12 +401,18 @@ export function DocumentForm({ template }: DocumentFormProps) {
 
   const renderFormField = (field: TemplateField | undefined) => {
     if (!field) return null;
+    // For boolean fields that are part of an accordion trigger, they are rendered differently
+    if (template.id === 'work-order' && workOrderAccordionSubSections.some(s => s.toggleFieldId === field.id)) {
+        return null; // Will be rendered inside AccordionTrigger
+    }
+
     return (
         <FormField
         key={field.id}
         control={form.control}
         name={field.id as keyof z.infer<typeof formSchema>} 
         render={({ field: formHookFieldRenderProps }) => (
+            // Boolean fields not part of accordions are rendered standalone
             field.type === 'boolean' ? renderField(field, formHookFieldRenderProps) :
             <FormItem>
             <FormLabel className="font-semibold text-foreground/90">{field.label}</FormLabel>
@@ -403,7 +424,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
                 Example: {field.placeholder}
                 </FormDescription>
             )}
-            {field.type === 'file' && field.placeholder && (
+            {field.type === 'file' && field.placeholder && ( // Specific placeholder for file inputs
                 <FormDescription className="text-xs text-muted-foreground">
                 {field.placeholder}
                 </FormDescription>
@@ -431,13 +452,12 @@ export function DocumentForm({ template }: DocumentFormProps) {
                     const generalSpecificFields = ['generalWorkDescription', 'termsOfService'];
                     const financialSpecificFields = ['otherCosts', 'taxRatePercentage', 'approvedByName', 'dateOfApproval'];
                     
-                    // Default accordion items to be open
                     const defaultAccordionValues = workOrderAccordionSubSections.map(s => s.id);
 
 
                     return (
                       <div key={sectionTitle} className="space-y-4 pt-4">
-                        <h2 className={`text-xl font-semibold text-primary ${sectionIndex > 0 ? 'mt-6' : 'mt-0'} pb-2 border-b border-border`}>
+                        <h2 className={`text-xl font-semibold text-primary ${sectionIndex > 0 ? 'mt-8' : 'mt-0'} pb-2 border-b border-border`}>
                           {sectionTitle}
                         </h2>
                         <div className="space-y-4">
@@ -449,34 +469,31 @@ export function DocumentForm({ template }: DocumentFormProps) {
                               if (!toggleField || toggleField.type !== 'boolean') return null;
                               
                               return (
-                                <AccordionItem value={accordionSection.id} key={accordionSection.id} className="border border-border rounded-md px-1 shadow-sm">
-                                  <AccordionTrigger className="[&>svg]:hidden hover:no-underline py-0 data-[state=open]:border-b">
+                                <AccordionItem value={accordionSection.id} key={accordionSection.id} className="border border-border rounded-md shadow-sm">
+                                  <AccordionPrimitive.Header className="flex items-center justify-between w-full p-3 data-[state=open]:border-b">
+                                    <AccordionTrigger className="p-0 flex-grow text-left hover:no-underline [&>svg]:hidden">
+                                      <span className="text-lg font-semibold text-foreground">{toggleField.label}</span>
+                                    </AccordionTrigger>
+                                    
                                     <FormField
                                       control={form.control}
                                       name={accordionSection.toggleFieldId as any}
                                       render={({ field: checkboxCtrl }) => (
-                                        <FormItem className="flex flex-row items-center justify-between w-full p-3">
-                                          <div className="flex-grow">
-                                            <FormLabel htmlFor={checkboxCtrl.name} className="text-lg font-semibold text-foreground hover:cursor-pointer">
-                                              {toggleField.label} {/* Use label from template definition */}
-                                            </FormLabel>
-                                            <FormDescription className="text-xs">
-                                              {toggleField.placeholder}
-                                            </FormDescription>
-                                          </div>
+                                        <FormItem className="flex flex-row items-center space-x-2 pl-4">
                                           <FormControl>
                                             <Checkbox
                                               checked={checkboxCtrl.value}
                                               onCheckedChange={checkboxCtrl.onChange}
                                               id={checkboxCtrl.name}
-                                              className="ml-4"
-                                              aria-label={`Toggle ${toggleField.label} section`}
+                                              aria-label={toggleField.placeholder || `Toggle ${toggleField.label} section visibility in preview`}
                                             />
                                           </FormControl>
+                                          {/* The placeholder is now an aria-label, visual description can be added here if needed */}
+                                          {/* <FormDescription className="text-xs text-muted-foreground">{toggleField.placeholder}</FormDescription> */}
                                         </FormItem>
                                       )}
                                     />
-                                  </AccordionTrigger>
+                                  </AccordionPrimitive.Header>
                                   <AccordionContent className="pt-4 px-3 pb-3 space-y-4">
                                     {accordionSection.contentFieldIds.map(fieldId =>
                                       renderFormField(template.fields.find(f => f.id === fieldId))
@@ -495,13 +512,16 @@ export function DocumentForm({ template }: DocumentFormProps) {
                     // Render other main sections as before
                     return (
                       <div key={sectionTitle} className="space-y-4 pt-4">
-                        <h2 className={`text-xl font-semibold text-primary ${sectionIndex > 0 ? 'mt-6' : 'mt-0'} pb-2 border-b border-border`}>
+                        <h2 className={`text-xl font-semibold text-primary ${sectionIndex > 0 ? 'mt-8' : 'mt-0'} pb-2 border-b border-border`}>
                           {sectionTitle}
                         </h2>
                         <div className="space-y-4">
                           {fieldIdsInSection.map(fieldId => {
                             const field = template.fields.find(f => f.id === fieldId);
-                            if (!field || workOrderAccordionSubSections.some(s => s.contentFieldIds.includes(fieldId as keyof FormData) || s.toggleFieldId === fieldId)) return null;
+                            // Ensure fields part of accordions are not rendered again here
+                            if (!field || workOrderAccordionSubSections.some(s => s.contentFieldIds.includes(fieldId as keyof FormData) || s.toggleFieldId === fieldId)) {
+                                return null;
+                            }
                             return renderFormField(field);
                           })}
                         </div>
@@ -528,4 +548,3 @@ export function DocumentForm({ template }: DocumentFormProps) {
     </Card>
   );
 }
-
