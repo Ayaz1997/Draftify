@@ -108,7 +108,7 @@ const WorkOrderPreview = (data: FormData) => {
             {canDisplayLogo ? (
               <Image src={logoSrc} alt="Business Logo" width={120} height={60} className="object-contain" data-ai-hint="company brand" />
             ) : logoUrlFromData && typeof logoUrlFromData === 'string' && logoUrlFromData.trim() !== '' && !logoUrlFromData.startsWith('data:image') ? (
-                <div className="w-full h-full flex items-center justify-center text-destructive text-xs p-2 text-center">Invalid logo data (not a data URI)</div>
+                <div className="w-full h-full flex items-center justify-center text-destructive text-xs p-2 text-center">Invalid logo data</div>
             ) : (
                 <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs p-2 text-center">No Logo Provided</div>
             )}
@@ -476,43 +476,43 @@ const workOrderFields: TemplateField[] = [
   { id: 'termsOfService', label: 'Terms of Service', type: 'textarea', placeholder: 'Payment terms, warranty, etc.', rows: 4, defaultValue: "1. All payments are due upon completion of work unless otherwise agreed in writing.\n2. Any changes to the scope of work must be documented and may incur additional charges.\n3. Warranty for services performed is 30 days from completion date." },
 
   // Work Order Specifics - Work Items Table Toggle & Fields
-  { id: 'includeWorkDescriptionTable', label: 'Work Items', type: 'boolean', defaultValue: true, placeholder: "Toggle visibility of the detailed work items table in the preview." },
-  { id: 'workItem1Description', label: 'Work Item 1: Description', type: 'textarea', placeholder: 'E.g., Interior Painting - Living Room', rows: 2 },
-  { id: 'workItem1Area', label: 'Work Item 1: Area (Sq. ft.)', type: 'number', placeholder: '250' },
-  { id: 'workItem1Rate', label: 'Work Item 1: Rate (₹ per Sq. ft.)', type: 'number', placeholder: '15' },
-  { id: 'workItem2Description', label: 'Work Item 2: Description', type: 'textarea', placeholder: 'E.g., Kitchen Cabinet Installation', rows: 2 },
-  { id: 'workItem2Area', label: 'Work Item 2: Area (Sq. ft.)', type: 'number', placeholder: '0' }, // Default to 0 if N/A
-  { id: 'workItem2Rate', label: 'Work Item 2: Rate (₹, or total for item)', type: 'number', placeholder: '5000' },
-  { id: 'workItem3Description', label: 'Work Item 3: Description', type: 'textarea', rows: 2 },
-  { id: 'workItem3Area', label: 'Work Item 3: Area (Sq. ft.)', type: 'number' },
-  { id: 'workItem3Rate', label: 'Work Item 3: Rate (₹)', type: 'number' },
+  { id: 'includeWorkDescriptionTable', label: 'Work Items', type: 'boolean', defaultValue: true, placeholder: "Toggle visibility of the detailed work items table in the previewed document." },
+  { id: 'workItem1Description', label: 'Work description 1', type: 'textarea', placeholder: 'E.g., Interior Painting - Living Room', rows: 2 },
+  { id: 'workItem1Area', label: 'Area (Sq. ft.)', type: 'number', placeholder: '250' },
+  { id: 'workItem1Rate', label: 'Rate (₹ per Sq. ft.)', type: 'number', placeholder: '15' },
+  { id: 'workItem2Description', label: 'Work description 2', type: 'textarea', placeholder: 'E.g., Kitchen Cabinet Installation', rows: 2 },
+  { id: 'workItem2Area', label: 'Area (Sq. ft.)', type: 'number', placeholder: '0' },
+  { id: 'workItem2Rate', label: 'Rate (₹, or total for item)', type: 'number', placeholder: '5000' },
+  { id: 'workItem3Description', label: 'Work description 3', type: 'textarea', rows: 2 },
+  { id: 'workItem3Area', label: 'Area (Sq. ft.)', type: 'number' },
+  { id: 'workItem3Rate', label: 'Rate (₹)', type: 'number' },
 
   // Work Order Specifics - Material Table Toggle & Fields
-  { id: 'includeMaterialTable', label: 'Materials', type: 'boolean', defaultValue: true, placeholder: "Toggle visibility of the materials table in the preview." },
-  { id: 'materialItem1Name', label: 'Material 1: Name', type: 'text', placeholder: 'E.g., Emulsion Paint' },
-  { id: 'materialItem1Unit', label: 'Material 1: Unit', type: 'text', placeholder: 'Litre / Kg / Pcs' },
-  { id: 'materialItem1Quantity', label: 'Material 1: Quantity', type: 'number', placeholder: '10' },
-  { id: 'materialItem1PricePerUnit', label: 'Material 1: Price per Unit (₹)', type: 'number', placeholder: '450' },
-  { id: 'materialItem2Name', label: 'Material 2: Name', type: 'text' },
-  { id: 'materialItem2Unit', label: 'Material 2: Unit', type: 'text' },
-  { id: 'materialItem2Quantity', label: 'Material 2: Quantity', type: 'number' },
-  { id: 'materialItem2PricePerUnit', label: 'Material 2: Price per Unit (₹)', type: 'number' },
-  { id: 'materialItem3Name', label: 'Material 3: Name', type: 'text' },
-  { id: 'materialItem3Unit', label: 'Material 3: Unit', type: 'text' },
-  { id: 'materialItem3Quantity', label: 'Material 3: Quantity', type: 'number' },
-  { id: 'materialItem3PricePerUnit', label: 'Material 3: Price per Unit (₹)', type: 'number' },
+  { id: 'includeMaterialTable', label: 'Materials', type: 'boolean', defaultValue: true, placeholder: "Toggle visibility of the materials table in the previewed document." },
+  { id: 'materialItem1Name', label: 'Material name 1', type: 'text', placeholder: 'E.g., Emulsion Paint' },
+  { id: 'materialItem1Unit', label: 'Unit', type: 'text', placeholder: 'Litre / Kg / Pcs' },
+  { id: 'materialItem1Quantity', label: 'Quantity', type: 'number', placeholder: '10' },
+  { id: 'materialItem1PricePerUnit', label: 'Price per Unit (₹)', type: 'number', placeholder: '450' },
+  { id: 'materialItem2Name', label: 'Material name 2', type: 'text' },
+  { id: 'materialItem2Unit', label: 'Unit', type: 'text' },
+  { id: 'materialItem2Quantity', label: 'Quantity', type: 'number' },
+  { id: 'materialItem2PricePerUnit', label: 'Price per Unit (₹)', type: 'number' },
+  { id: 'materialItem3Name', label: 'Material name 3', type: 'text' },
+  { id: 'materialItem3Unit', label: 'Unit', type: 'text' },
+  { id: 'materialItem3Quantity', label: 'Quantity', type: 'number' },
+  { id: 'materialItem3PricePerUnit', label: 'Price per Unit (₹)', type: 'number' },
 
   // Work Order Specifics - Labor Table Toggle & Fields
-  { id: 'includeLaborTable', label: 'Labour Charges', type: 'boolean', defaultValue: true, placeholder: "Toggle visibility of the labor charges table in the preview." },
-  { id: 'laborItem1TeamName', label: 'Labor 1: Team/Description', type: 'text', placeholder: 'E.g., Painting Team A' },
-  { id: 'laborItem1NumPersons', label: 'Labor 1: No. of Persons', type: 'number', placeholder: '2' },
-  { id: 'laborItem1Amount', label: 'Labor 1: Amount (₹)', type: 'number', placeholder: '8000' },
-  { id: 'laborItem2TeamName', label: 'Labor 2: Team/Description', type: 'text' },
-  { id: 'laborItem2NumPersons', label: 'Labor 2: No. of Persons', type: 'number' },
-  { id: 'laborItem2Amount', label: 'Labor 2: Amount (₹)', type: 'number' },
-  { id: 'laborItem3TeamName', label: 'Labor 3: Team/Description', type: 'text' },
-  { id: 'laborItem3NumPersons', label: 'Labor 3: No. of Persons', type: 'number' },
-  { id: 'laborItem3Amount', label: 'Labor 3: Amount (₹)', type: 'number' },
+  { id: 'includeLaborTable', label: 'Labour Charges', type: 'boolean', defaultValue: true, placeholder: "Toggle visibility of the labor charges table in the previewed document." },
+  { id: 'laborItem1TeamName', label: 'Team/Description 1', type: 'text', placeholder: 'E.g., Painting Team A' },
+  { id: 'laborItem1NumPersons', label: 'No. of Persons', type: 'number', placeholder: '2' },
+  { id: 'laborItem1Amount', label: 'Amount (₹)', type: 'number', placeholder: '8000' },
+  { id: 'laborItem2TeamName', label: 'Team/Description 2', type: 'text' },
+  { id: 'laborItem2NumPersons', label: 'No. of Persons', type: 'number' },
+  { id: 'laborItem2Amount', label: 'Amount (₹)', type: 'number' },
+  { id: 'laborItem3TeamName', label: 'Team/Description 3', type: 'text' },
+  { id: 'laborItem3NumPersons', label: 'No. of Persons', type: 'number' },
+  { id: 'laborItem3Amount', label: 'Amount (₹)', type: 'number' },
 
   // Work Order Specifics - Financials & Approval
   { id: 'otherCosts', label: 'Other Costs (₹, e.g., Transportation)', type: 'number', placeholder: '500', defaultValue: 0 },
