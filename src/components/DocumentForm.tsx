@@ -21,9 +21,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye } from 'lucide-react';
+import { Eye, PlusCircle, Trash2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import { Accordion, AccordionItem, AccordionContent } from '@/components/ui/accordion';
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
 
@@ -31,6 +31,8 @@ import * as AccordionPrimitive from "@radix-ui/react-accordion";
 interface DocumentFormProps {
   template: DocumentFormPropsTemplate;
 }
+
+const MAX_ITEMS_PER_SECTION = 5;
 
 function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
   const shape: Record<string, z.ZodTypeAny> = {};
@@ -67,10 +69,10 @@ function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
           if (enumValues.length > 0) {
             validator = z.enum(enumValues).optional();
           } else {
-             validator = z.string().optional(); // Fallback if options are empty
+             validator = z.string().optional(); 
           }
         } else {
-          validator = z.string().optional(); // Fallback if no options
+          validator = z.string().optional(); 
         }
         break;
       }
@@ -85,8 +87,6 @@ function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
         break;
       }
     }
-    // 'required' is handled by making fields optional by default.
-    // If a field were truly required, its Zod validator would not have .optional()
     shape[field.id] = validator;
   });
   return z.object(shape);
@@ -96,30 +96,41 @@ const workOrderSectionStructure: Record<string, string[]> = {
   'Business Details': ['businessName', 'businessAddress', 'businessContactNumber', 'businessEmail', 'businessLogoUrl'],
   'Order Details': ['orderNumber', 'orderDate', 'expectedStartDate', 'expectedEndDate'],
   'Client Details': ['clientName', 'clientPhone', 'clientEmail', 'workLocation', 'orderReceivedBy'],
-  'Work Order Specifics': [
+  'Work Order Specifics': [ // This section is now primarily handled by accordions
     'generalWorkDescription', 'termsOfService',
-    // Toggles are part of this section but rendered in Accordion Headers
-    // Item fields are handled dynamically within accordions, not listed here directly
+    // Accordion toggle fields are implicitly part of this, but handled within the Accordion components
     'otherCosts', 'taxRatePercentage', 'approvedByName', 'dateOfApproval'
   ]
 };
 
-interface AccordionSectionConfig {
-  id: string;
-  toggleFieldId: keyof FormData;
-  itemFieldIdPatterns: {
-    description?: string;
-    area?: string;
-    rate?: string;
-    quantity?: string; // Added for materials
-    unit?: string; // Added for materials
-    pricePerUnit?: string; // Added for materials
-    numPersons?: string; // Added for labor
-    amount?: string; // Added for labor
-  }
+interface AccordionSectionItemPattern {
+  description?: string;
+  area?: string;
+  rate?: string;
+  quantity?: string;
+  unit?: string;
+  pricePerUnit?: string;
+  numPersons?: string;
+  amount?: string;
 }
 
-const workOrderAccordionSubSections: AccordionSectionConfig[] = [
+interface WorkOrderAccordionConfig {
+  id: string; // Unique ID for the accordion item
+  toggleFieldId: keyof FormData; // Field ID for the master toggle (e.g., 'includeWorkDescriptionTable')
+  itemFieldIdPatterns: AccordionSectionItemPattern;
+  countKey: keyof VisibleItemCounts; // Key in visibleItemCounts state (e.g., 'workItems')
+  addButtonLabel: string;
+  itemTitleSingular: string; // e.g. "Work Item"
+}
+
+type VisibleItemCounts = {
+  workItems: number;
+  materials: number;
+  labor: number;
+};
+
+
+const workOrderAccordionSubSectionsConfig: WorkOrderAccordionConfig[] = [
   {
     id: 'work-items-accordion',
     toggleFieldId: 'includeWorkDescriptionTable',
@@ -128,25 +139,34 @@ const workOrderAccordionSubSections: AccordionSectionConfig[] = [
       area: 'workItem#Area',
       rate: 'workItem#Rate'
     },
+    countKey: 'workItems',
+    addButtonLabel: 'Add Work Item',
+    itemTitleSingular: 'Work Item',
   },
   {
     id: 'materials-accordion',
     toggleFieldId: 'includeMaterialTable',
     itemFieldIdPatterns: {
-      description: 'materialItem#Name',
+      description: 'materialItem#Name', // Note: Suffix is Name here
       quantity: 'materialItem#Quantity',
       unit: 'materialItem#Unit',
       pricePerUnit: 'materialItem#PricePerUnit',
-    }
+    },
+    countKey: 'materials',
+    addButtonLabel: 'Add Material',
+    itemTitleSingular: 'Material',
   },
   {
     id: 'labour-charges-accordion',
     toggleFieldId: 'includeLaborTable',
     itemFieldIdPatterns: {
-      description: 'laborItem#TeamName',
+      description: 'laborItem#TeamName', // Note: Suffix is TeamName here
       numPersons: 'laborItem#NumPersons',
       amount: 'laborItem#Amount',
-    }
+    },
+    countKey: 'labor',
+    addButtonLabel: 'Add Labor Charge',
+    itemTitleSingular: 'Labor Charge',
   },
 ];
 
@@ -154,6 +174,12 @@ const workOrderAccordionSubSections: AccordionSectionConfig[] = [
 export function DocumentForm({ template }: DocumentFormProps) {
   const router = useRouter();
   const { toast } = useToast();
+
+  const [visibleItemCounts, setVisibleItemCounts] = useState<VisibleItemCounts>({
+    workItems: 1,
+    materials: 1,
+    labor: 1,
+  });
 
   const getInitialValues = useCallback(() => {
     const editDataKey = `docuFormEditData-${template.id}`;
@@ -181,35 +207,38 @@ export function DocumentForm({ template }: DocumentFormProps) {
                     if (!isNaN(dateObj.getTime())) {
                         resolvedInitialValues[field.id] = dateObj.toISOString().split('T')[0];
                     } else {
+                        // If parsing fails, or it's an empty string, set to current date
                         resolvedInitialValues[field.id] = new Date().toISOString().split('T')[0];
                     }
                 } catch (e) {
+                     // If error during date conversion, set to current date
                     resolvedInitialValues[field.id] = new Date().toISOString().split('T')[0];
                 }
             } else if (field.type === 'number' && (resolvedInitialValues[field.id] === null || resolvedInitialValues[field.id] === '')) {
-                resolvedInitialValues[field.id] = undefined;
+                resolvedInitialValues[field.id] = undefined; // Keep undefined for empty optional numbers
             } else if (field.type === 'number' && typeof resolvedInitialValues[field.id] === 'string') {
                  const numVal = parseFloat(resolvedInitialValues[field.id]);
                  resolvedInitialValues[field.id] = isNaN(numVal) ? undefined : numVal;
             }
-        } else {
+        } else { // No stored value, use defaults or generate
             if (field.type === 'date') {
-                resolvedInitialValues[field.id] = field.defaultValue && typeof field.defaultValue === 'string' && field.defaultValue.match(/^\d{4}-\d{2}-\d{2}$/)
-                    ? field.defaultValue
-                    : new Date().toISOString().split('T')[0];
+                 resolvedInitialValues[field.id] = field.defaultValue && typeof field.defaultValue === 'string' && field.defaultValue.match(/^\d{4}-\d{2}-\d{2}$/)
+                    ? field.defaultValue // Use provided default if valid format
+                    : new Date().toISOString().split('T')[0]; // Otherwise, current date
             } else if (field.defaultValue !== undefined) {
                 resolvedInitialValues[field.id] = field.defaultValue;
             } else if (field.type === 'boolean') {
-                 resolvedInitialValues[field.id] = false;
+                 resolvedInitialValues[field.id] = false; // Booleans default to false if no defaultValue
             } else if (field.type === 'number') {
-                 resolvedInitialValues[field.id] = undefined;
+                 resolvedInitialValues[field.id] = undefined; // Numbers default to undefined (for placeholder to show)
             } else if (field.type === 'file'){
+                 // For file inputs, the 'value' is managed by the browser; we don't set a default string
                  resolvedInitialValues[field.id] = undefined;
             } else if (field.type === 'select') {
-                 resolvedInitialValues[field.id] = ''; // Or handle based on options
+                 resolvedInitialValues[field.id] = ''; // Or handle based on options / first option
             }
-            else {
-                 resolvedInitialValues[field.id] = '';
+            else { // Text, textarea, email
+                 resolvedInitialValues[field.id] = ''; // Default to empty string for text-based inputs
             }
         }
     });
@@ -224,15 +253,47 @@ export function DocumentForm({ template }: DocumentFormProps) {
     defaultValues: currentInitialValues,
   });
 
+  useEffect(() => {
+    if (template.id === 'work-order' && currentInitialValues) {
+      const newCounts: VisibleItemCounts = { workItems: 0, materials: 0, labor: 0 };
+      let changed = false;
+
+      workOrderAccordionSubSectionsConfig.forEach(section => {
+        let maxPopulatedIndex = 0;
+        for (let i = 1; i <= MAX_ITEMS_PER_SECTION; i++) {
+          const firstFieldPattern = Object.values(section.itemFieldIdPatterns)[0];
+          if (firstFieldPattern) {
+            const fieldId = firstFieldPattern.replace('#', String(i));
+            if (currentInitialValues[fieldId] !== undefined && String(currentInitialValues[fieldId]).trim() !== '') {
+              maxPopulatedIndex = i;
+            }
+          }
+        }
+        const currentCount = Math.max(1, maxPopulatedIndex);
+        if (visibleItemCounts[section.countKey] !== currentCount) changed = true;
+        newCounts[section.countKey] = currentCount;
+      });
+
+      if (changed) {
+        setVisibleItemCounts(newCounts);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentInitialValues, template.id]); // Removed visibleItemCounts to avoid loop
+
  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const submissionValues: Record<string, any> = { ...values };
 
     const logoField = template.fields.find(f => f.id === 'businessLogoUrl' && f.type === 'file');
     const logoFieldId = logoField?.id;
 
-    if (logoFieldId && submissionValues[logoFieldId] === undefined) {
+    if (logoFieldId && submissionValues[logoFieldId] === undefined && currentInitialValues[logoFieldId] === undefined) {
         submissionValues[logoFieldId] = '';
+    } else if (logoFieldId && typeof currentInitialValues[logoFieldId] === 'string' && currentInitialValues[logoFieldId].startsWith('data:image') && submissionValues[logoFieldId] === undefined) {
+        // If editing and no new file uploaded, retain existing logo data URI from initialValues
+        submissionValues[logoFieldId] = currentInitialValues[logoFieldId];
     }
+
 
     if (logoFieldId && values[logoFieldId]) {
         const logoFileValue = values[logoFieldId];
@@ -248,14 +309,14 @@ export function DocumentForm({ template }: DocumentFormProps) {
                     title: "Invalid File Type",
                     description: `Please upload an image (JPEG, PNG, GIF, WEBP, SVG). You uploaded: ${file.type}`,
                 });
-                submissionValues[logoFieldId] = '';
+                submissionValues[logoFieldId] = currentInitialValues[logoFieldId]?.startsWith('data:image') ? currentInitialValues[logoFieldId] : '';
             } else if (file.size > MAX_FILE_SIZE) {
                 toast({
                     variant: "destructive",
                     title: "File Too Large",
                     description: `Please upload an image smaller than 5MB. Yours is ${(file.size / (1024*1024)).toFixed(2)}MB.`,
                 });
-                submissionValues[logoFieldId] = '';
+                submissionValues[logoFieldId] = currentInitialValues[logoFieldId]?.startsWith('data:image') ? currentInitialValues[logoFieldId] : '';
             } else {
                 try {
                     const dataUri = await new Promise<string>((resolve, reject) => {
@@ -281,7 +342,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
                         title: "Logo Upload Failed",
                         description: `Error converting file: ${error.message || 'Unknown error'}. Please try again or skip logo.`,
                     });
-                    submissionValues[logoFieldId] = '';
+                    submissionValues[logoFieldId] = currentInitialValues[logoFieldId]?.startsWith('data:image') ? currentInitialValues[logoFieldId] : '';
                 }
             }
         } else if (typeof logoFileValue === 'string' && logoFileValue.startsWith('data:image')) {
@@ -293,12 +354,12 @@ export function DocumentForm({ template }: DocumentFormProps) {
                 title: "Invalid Logo Input",
                 description: "The logo data was not recognized. Please re-upload if you wish to change it."
              });
-             submissionValues[logoFieldId] = '';
+             submissionValues[logoFieldId] = currentInitialValues[logoFieldId]?.startsWith('data:image') ? currentInitialValues[logoFieldId] : '';
         }
     } else if (logoFieldId && typeof values[logoFieldId] === 'string' && (values[logoFieldId] as string).startsWith('data:image')) {
         submissionValues[logoFieldId] = values[logoFieldId];
     } else if (logoFieldId && !submissionValues[logoFieldId]) {
-        submissionValues[logoFieldId] = '';
+         submissionValues[logoFieldId] = currentInitialValues[logoFieldId]?.startsWith('data:image') ? currentInitialValues[logoFieldId] : '';
     }
 
 
@@ -306,11 +367,29 @@ export function DocumentForm({ template }: DocumentFormProps) {
         if (submissionValues[field.id] === undefined) {
             if (field.type === 'boolean') {
                 submissionValues[field.id] = field.defaultValue !== undefined ? field.defaultValue : false;
-            } else if (field.id !== logoFieldId) {
+            } else if (field.id !== logoFieldId) { // Ensure logo field isn't overwritten if it was handled
                  submissionValues[field.id] = field.defaultValue !== undefined ? field.defaultValue : (field.type === 'number' ? null : '');
             }
         }
     });
+
+    // Clear data for non-visible items
+    if (template.id === 'work-order') {
+      workOrderAccordionSubSectionsConfig.forEach(section => {
+        const currentVisibleCount = visibleItemCounts[section.countKey];
+        for (let i = currentVisibleCount + 1; i <= MAX_ITEMS_PER_SECTION; i++) {
+          Object.values(section.itemFieldIdPatterns).forEach(pattern => {
+            if (pattern) {
+              const fieldId = pattern.replace('#', String(i));
+              if (submissionValues[fieldId] !== undefined) {
+                submissionValues[fieldId] = template.fields.find(f => f.id === fieldId)?.type === 'number' ? undefined : '';
+              }
+            }
+          });
+        }
+      });
+    }
+
 
     try {
         if (typeof window !== 'undefined' && window.sessionStorage) {
@@ -329,6 +408,61 @@ export function DocumentForm({ template }: DocumentFormProps) {
         });
     }
 };
+
+  const handleAddItem = (countKey: keyof VisibleItemCounts) => {
+    setVisibleItemCounts(prevCounts => {
+      const currentCount = prevCounts[countKey];
+      if (currentCount < MAX_ITEMS_PER_SECTION) {
+        return { ...prevCounts, [countKey]: currentCount + 1 };
+      }
+      return prevCounts;
+    });
+  };
+
+  const handleRemoveItem = (countKey: keyof VisibleItemCounts, itemIndexToRemove: number) => {
+    const currentVisibleCount = visibleItemCounts[countKey];
+    if (currentVisibleCount <= 1) return; // Should not remove the last item
+
+    const sectionConfig = workOrderAccordionSubSectionsConfig.find(s => s.countKey === countKey);
+    if (!sectionConfig) return;
+
+    // Clear fields for the item being removed
+    Object.values(sectionConfig.itemFieldIdPatterns).forEach(pattern => {
+      if (pattern) {
+        const fieldId = pattern.replace('#', String(itemIndexToRemove + 1));
+        const fieldDef = template.fields.find(f => f.id === fieldId);
+        form.setValue(fieldId as any, fieldDef?.type === 'number' ? undefined : '');
+      }
+    });
+    
+    // Shift data from subsequent items up
+    for (let i = itemIndexToRemove + 1; i < currentVisibleCount; i++) {
+      Object.values(sectionConfig.itemFieldIdPatterns).forEach(pattern => {
+        if (pattern) {
+          const sourceFieldId = pattern.replace('#', String(i + 1));
+          const targetFieldId = pattern.replace('#', String(i));
+          form.setValue(targetFieldId as any, form.getValues(sourceFieldId as any));
+        }
+      });
+    }
+
+    // Clear the last item's fields that was shifted from
+    if (currentVisibleCount > itemIndexToRemove +1 || currentVisibleCount > 1) { // check if there was a last item to clear
+         Object.values(sectionConfig.itemFieldIdPatterns).forEach(pattern => {
+            if (pattern) {
+                const fieldId = pattern.replace('#', String(currentVisibleCount));
+                const fieldDef = template.fields.find(f => f.id === fieldId);
+                form.setValue(fieldId as any, fieldDef?.type === 'number' ? undefined : '');
+            }
+        });
+    }
+
+
+    setVisibleItemCounts(prevCounts => ({
+      ...prevCounts,
+      [countKey]: currentVisibleCount - 1,
+    }));
+  };
 
 
   const renderField = (field: TemplateField, formFieldControllerProps: any) => {
@@ -397,7 +531,8 @@ export function DocumentForm({ template }: DocumentFormProps) {
         return (
           <Select
             onValueChange={formFieldControllerProps.onChange}
-            defaultValue={formFieldControllerProps.value || field.defaultValue as string || ''}
+            value={formFieldControllerProps.value || ''} // Ensure value is controlled
+            defaultValue={field.defaultValue as string || ''}
           >
             <FormControl>
               <SelectTrigger>
@@ -425,7 +560,9 @@ export function DocumentForm({ template }: DocumentFormProps) {
     }
   };
 
-  const renderFormField = (field: TemplateField | undefined) => {
+  const renderFormField = (fieldId: string | undefined) => {
+    if (!fieldId) return null;
+    const field = template.fields.find(f => f.id === fieldId);
     if (!field) return null;
 
     return (
@@ -478,7 +615,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
                     const generalSpecificFields = ['generalWorkDescription', 'termsOfService'];
                     const financialSpecificFields = ['otherCosts', 'taxRatePercentage', 'approvedByName', 'dateOfApproval'];
 
-                    const defaultAccordionValues = workOrderAccordionSubSections
+                    const defaultAccordionValues = workOrderAccordionSubSectionsConfig
                         .filter(s => {
                             const toggleFieldDef = template.fields.find(f => f.id === s.toggleFieldId);
                             return currentInitialValues[s.toggleFieldId as string] === true || toggleFieldDef?.defaultValue === true;
@@ -491,10 +628,10 @@ export function DocumentForm({ template }: DocumentFormProps) {
                           {sectionTitle}
                         </h2>
                         <div className="space-y-4">
-                          {generalSpecificFields.map(fieldId => renderFormField(template.fields.find(f => f.id === fieldId)))}
+                          {generalSpecificFields.map(fieldId => renderFormField(fieldId))}
 
                           <Accordion type="multiple" className="w-full space-y-3" defaultValue={defaultAccordionValues}>
-                            {workOrderAccordionSubSections.map((accordionSection) => {
+                            {workOrderAccordionSubSectionsConfig.map((accordionSection) => {
                               const toggleField = template.fields.find(f => f.id === accordionSection.toggleFieldId);
                               if (!toggleField || toggleField.type !== 'boolean') return null;
 
@@ -522,58 +659,79 @@ export function DocumentForm({ template }: DocumentFormProps) {
                                     />
                                   </AccordionPrimitive.Header>
                                   <AccordionContent className="pt-4 px-3 pb-3 space-y-4">
-                                    {Array.from({ length: 3 }).map((_, itemIndex) => {
+                                    {Array.from({ length: visibleItemCounts[accordionSection.countKey] }).map((_, itemIndex) => {
                                       const itemNumber = itemIndex + 1;
                                       const fieldPatterns = accordionSection.itemFieldIdPatterns;
-                                      const itemFieldsToRender: (TemplateField | undefined)[] = [];
+                                      const itemFieldsToRenderIds: string[] = [];
 
-                                      // Construct field IDs based on patterns and order for rendering
-                                      if (fieldPatterns.description) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.description!.replace('#', String(itemNumber))));
-                                      if (fieldPatterns.area) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.area!.replace('#', String(itemNumber))));
-                                      if (fieldPatterns.rate) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.rate!.replace('#', String(itemNumber))));
-
-                                      // For Materials section, ensure Quantity is before Unit
+                                      if (fieldPatterns.description) itemFieldsToRenderIds.push(fieldPatterns.description!.replace('#', String(itemNumber)));
+                                      if (fieldPatterns.area) itemFieldsToRenderIds.push(fieldPatterns.area!.replace('#', String(itemNumber)));
+                                      if (fieldPatterns.rate) itemFieldsToRenderIds.push(fieldPatterns.rate!.replace('#', String(itemNumber)));
+                                      
                                       if (accordionSection.id === 'materials-accordion') {
-                                        if (fieldPatterns.quantity) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.quantity!.replace('#', String(itemNumber))));
-                                        if (fieldPatterns.unit) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.unit!.replace('#', String(itemNumber))));
-                                        if (fieldPatterns.pricePerUnit) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.pricePerUnit!.replace('#', String(itemNumber))));
-                                      } else { // For other sections, add remaining fields if they exist in pattern
-                                        if (fieldPatterns.quantity && !itemFieldsToRender.find(f => f?.id === fieldPatterns.quantity!.replace('#', String(itemNumber)))) {
-                                            itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.quantity!.replace('#', String(itemNumber))));
+                                        if (fieldPatterns.quantity) itemFieldsToRenderIds.push(fieldPatterns.quantity!.replace('#', String(itemNumber)));
+                                        if (fieldPatterns.unit) itemFieldsToRenderIds.push(fieldPatterns.unit!.replace('#', String(itemNumber)));
+                                        if (fieldPatterns.pricePerUnit) itemFieldsToRenderIds.push(fieldPatterns.pricePerUnit!.replace('#', String(itemNumber)));
+                                      } else {
+                                        if (fieldPatterns.quantity && !itemFieldsToRenderIds.find(id => id === fieldPatterns.quantity!.replace('#', String(itemNumber)))) {
+                                            itemFieldsToRenderIds.push(fieldPatterns.quantity!.replace('#', String(itemNumber)));
                                         }
-                                        if (fieldPatterns.unit && !itemFieldsToRender.find(f => f?.id === fieldPatterns.unit!.replace('#', String(itemNumber)))) {
-                                            itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.unit!.replace('#', String(itemNumber))));
+                                        if (fieldPatterns.unit && !itemFieldsToRenderIds.find(id => id === fieldPatterns.unit!.replace('#', String(itemNumber)))) {
+                                            itemFieldsToRenderIds.push(fieldPatterns.unit!.replace('#', String(itemNumber)));
                                         }
-                                        if (fieldPatterns.pricePerUnit && !itemFieldsToRender.find(f => f?.id === fieldPatterns.pricePerUnit!.replace('#', String(itemNumber)))) {
-                                            itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.pricePerUnit!.replace('#', String(itemNumber))));
+                                        if (fieldPatterns.pricePerUnit && !itemFieldsToRenderIds.find(id => id === fieldPatterns.pricePerUnit!.replace('#', String(itemNumber)))) {
+                                            itemFieldsToRenderIds.push(fieldPatterns.pricePerUnit!.replace('#', String(itemNumber)));
                                         }
                                       }
-
-
-                                      if (fieldPatterns.numPersons) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.numPersons!.replace('#', String(itemNumber))));
-                                      if (fieldPatterns.amount) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.amount!.replace('#', String(itemNumber))));
-
-                                      const validItemFields = itemFieldsToRender.filter(Boolean) as TemplateField[];
-                                      if (validItemFields.length === 0) return null;
-                                      if (!validItemFields.some(vf => template.fields.some(tf => tf.id === vf.id))) return null;
-
+                                      if (fieldPatterns.numPersons) itemFieldsToRenderIds.push(fieldPatterns.numPersons!.replace('#', String(itemNumber)));
+                                      if (fieldPatterns.amount) itemFieldsToRenderIds.push(fieldPatterns.amount!.replace('#', String(itemNumber)));
+                                      
+                                      const actualFieldsExist = itemFieldsToRenderIds.every(id => template.fields.some(f => f.id === id));
+                                      if (!actualFieldsExist || itemFieldsToRenderIds.length === 0) return null;
 
                                       return (
-                                        <div key={`${accordionSection.id}-item-${itemNumber}`} className="space-y-4 border-b border-dashed border-border pb-4 mb-4 last:border-b-0 last:pb-0 last:mb-0">
-                                          {validItemFields.map(field => renderFormField(field))}
+                                        <div key={`${accordionSection.id}-item-${itemNumber}`} className="space-y-4 border-b border-dashed border-border pb-4 mb-4 last:border-b-0 last:pb-0 last:mb-0 relative group">
+                                          <h4 className="text-md font-medium text-muted-foreground">{accordionSection.itemTitleSingular} #{itemNumber}</h4>
+                                          {itemFieldsToRenderIds.map(fieldId => renderFormField(fieldId))}
+                                          {itemIndex > 0 && (
+                                            <Button
+                                              type="button"
+                                              variant="ghost"
+                                              size="sm"
+                                              onClick={() => handleRemoveItem(accordionSection.countKey, itemIndex)}
+                                              className="absolute top-0 right-0 text-destructive hover:text-destructive-foreground hover:bg-destructive/90 opacity-50 group-hover:opacity-100"
+                                              aria-label={`Remove ${accordionSection.itemTitleSingular} ${itemNumber}`}
+                                            >
+                                              <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                          )}
                                         </div>
                                       );
                                     })}
+                                    {visibleItemCounts[accordionSection.countKey] < MAX_ITEMS_PER_SECTION && (
+                                      <div className="flex justify-end">
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => handleAddItem(accordionSection.countKey)}
+                                          className="mt-2"
+                                        >
+                                          <PlusCircle className="mr-2 h-4 w-4" />
+                                          {accordionSection.addButtonLabel}
+                                        </Button>
+                                      </div>
+                                    )}
                                   </AccordionContent>
                                 </AccordionItem>
                               );
                             })}
                           </Accordion>
-                          {financialSpecificFields.map(fieldId => renderFormField(template.fields.find(f => f.id === fieldId)))}
+                          {financialSpecificFields.map(fieldId => renderFormField(fieldId))}
                         </div>
                       </div>
                     );
-                  } else {
+                  } else { // For sections like "Business Details", "Order Details", "Client Details"
                     return (
                       <div key={sectionTitle} className="space-y-4 pt-4">
                         <h2 className={`text-xl font-semibold text-primary ${sectionIndex > 0 ? 'mt-8' : 'mt-0'} pb-2 border-b border-border`}>
@@ -582,20 +740,25 @@ export function DocumentForm({ template }: DocumentFormProps) {
                         <div className="space-y-4">
                         {fieldIdsInSection
                             .map(fieldId => template.fields.find(f => f.id === fieldId))
-                            .filter(field => {
+                            .filter(field => { // Explicitly filter out fields managed by accordions
                               if (!field) return false;
-                              const isToggleField = workOrderAccordionSubSections.some(s => s.toggleFieldId === field.id);
-                              const isItemField = workOrderAccordionSubSections.some(accSection =>
+                              // Check if it's a toggle field for any accordion
+                              const isToggleField = workOrderAccordionSubSectionsConfig.some(s => s.toggleFieldId === field.id);
+                              if (isToggleField) return false;
+
+                              // Check if it's an item field within any accordion (for any item number up to max)
+                              const isItemField = workOrderAccordionSubSectionsConfig.some(accSection =>
                                 Object.values(accSection.itemFieldIdPatterns).some(pattern => {
                                   if (!pattern) return false;
-                                  return pattern.replace('#', '1') === field.id ||
-                                         pattern.replace('#', '2') === field.id ||
-                                         pattern.replace('#', '3') === field.id;
+                                  for (let i = 1; i <= MAX_ITEMS_PER_SECTION; i++) {
+                                    if (pattern.replace('#', String(i)) === field.id) return true;
+                                  }
+                                  return false;
                                 })
                               );
-                              return !isToggleField && !isItemField;
+                              return !isItemField;
                             })
-                            .map(field => field ? renderFormField(field) : null)
+                            .map(field => field ? renderFormField(field.id) : null)
                           }
                         </div>
                       </div>
@@ -603,8 +766,8 @@ export function DocumentForm({ template }: DocumentFormProps) {
                   }
                 })}
               </>
-            ) : (
-              template.fields.map((field) => renderFormField(field))
+            ) : ( // For templates other than work-order
+              template.fields.map((field) => renderFormField(field.id))
             )}
           </CardContent>
           <CardFooter className="flex justify-end gap-3 border-t pt-6">

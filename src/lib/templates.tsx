@@ -10,14 +10,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFoo
 const formatDate = (dateString?: string) => {
   if (!dateString) return 'N/A';
   if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-    // Ensures date string is treated as UTC to avoid timezone shifts if only date is provided
     return new Date(dateString + 'T00:00:00Z').toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
   }
   try {
-    // For full ISO strings or other parsable date strings
     return new Date(dateString).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
   } catch (e) {
-    return dateString; // Fallback if date is invalid
+    return dateString;
   }
 };
 
@@ -26,11 +24,13 @@ const formatCurrency = (amount?: number | string, currencySymbol = '₹') => {
   return `${currencySymbol}${num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
+const MAX_ITEMS_PREVIEW = 5;
+
 const WorkOrderPreview = (data: FormData) => {
   const workItems = [];
   let subtotalWorkDescription = 0;
   if (data.includeWorkDescriptionTable) {
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= MAX_ITEMS_PREVIEW; i++) {
       if (data[`workItem${i}Description`]) {
         const area = parseFloat(data[`workItem${i}Area`] || 0);
         const rate = parseFloat(data[`workItem${i}Rate`] || 0);
@@ -49,7 +49,7 @@ const WorkOrderPreview = (data: FormData) => {
   const materialItems = [];
   let subtotalMaterial = 0;
   if (data.includeMaterialTable) {
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= MAX_ITEMS_PREVIEW; i++) {
       if (data[`materialItem${i}Name`]) {
         const quantity = parseFloat(data[`materialItem${i}Quantity`] || 1);
         const pricePerUnit = parseFloat(data[`materialItem${i}PricePerUnit`] || 0);
@@ -69,7 +69,7 @@ const WorkOrderPreview = (data: FormData) => {
   const laborItems = [];
   let subtotalLabor = 0;
   if (data.includeLaborTable) {
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= MAX_ITEMS_PREVIEW; i++) {
       if (data[`laborItem${i}TeamName`]) {
         const numPersons = parseInt(data[`laborItem${i}NumPersons`] || 1);
         const amount = parseFloat(data[`laborItem${i}Amount`] || 0);
@@ -330,9 +330,9 @@ const LetterheadPreview = (data: FormData) => (
   <Card className="w-full max-w-3xl mx-auto shadow-lg p-8 border-primary/50 print-friendly-letterhead" data-ai-hint="stationery paper">
     <header className="mb-12 text-center border-b-2 border-primary pb-6">
       {data.logoUrl && typeof data.logoUrl === 'string' && data.logoUrl.startsWith('data:image') ? (
-        <Image src={data.logoUrl} alt="Company Logo" width={150} height={75} className="mx-auto mb-4 object-contain" data-ai-hint="company logo" />
+        <Image src={data.logoUrl} alt="Company Logo" width={150} height={75} className="mx-auto mb-4 object-contain" data-ai-hint="company brand"/>
       ) : data.logoUrl && typeof data.logoUrl === 'string' ? (
-         <Image src={data.logoUrl} alt="Company Logo (External)" width={150} height={75} className="mx-auto mb-4 object-contain" data-ai-hint="company logo" />
+         <Image src={data.logoUrl} alt="Company Logo (External)" width={150} height={75} className="mx-auto mb-4 object-contain" data-ai-hint="company brand"/>
       ) : (
         <div className="h-16 w-32 bg-muted mx-auto mb-4 flex items-center justify-center text-muted-foreground rounded text-xs p-1">Logo Placeholder</div>
       )}
@@ -475,57 +475,49 @@ const workOrderFields: TemplateField[] = [
   { id: 'generalWorkDescription', label: 'Overall Work Description', type: 'textarea', placeholder: 'Summarize the work to be done', rows: 3 },
   { id: 'termsOfService', label: 'Terms of Service', type: 'textarea', placeholder: 'Payment terms, warranty, etc.', rows: 4, defaultValue: "1. All payments are due upon completion of work unless otherwise agreed in writing.\n2. Any changes to the scope of work must be documented and may incur additional charges.\n3. Warranty for services performed is 30 days from completion date." },
 
-  // Work Order Specifics - Work Items Table Toggle & Fields
+  // Work Order Specifics - Work Items Table Toggle & Fields (up to 5 items)
   { id: 'includeWorkDescriptionTable', label: 'Work Items', type: 'boolean', defaultValue: true, placeholder: "Toggle visibility of the detailed work items table in the previewed document." },
   { id: 'workItem1Description', label: 'Work description 1', type: 'text', placeholder: 'E.g., Interior Painting - Living Room'},
   { id: 'workItem1Area', label: 'Area (Sq. ft.)', type: 'number', placeholder: '250' },
   { id: 'workItem1Rate', label: 'Rate (₹ per Sq. ft.)', type: 'number', placeholder: '15' },
-  { id: 'workItem2Description', label: 'Work description 2', type: 'text', placeholder: 'E.g., Kitchen Cabinet Installation'},
-  { id: 'workItem2Area', label: 'Area (Sq. ft.)', type: 'number', placeholder: '0' },
-  { id: 'workItem2Rate', label: 'Rate (₹, or total for item)', type: 'number', placeholder: '5000' },
+  { id: 'workItem2Description', label: 'Work description 2', type: 'text'},
+  { id: 'workItem2Area', label: 'Area (Sq. ft.)', type: 'number' },
+  { id: 'workItem2Rate', label: 'Rate (₹)', type: 'number' },
   { id: 'workItem3Description', label: 'Work description 3', type: 'text' },
   { id: 'workItem3Area', label: 'Area (Sq. ft.)', type: 'number' },
   { id: 'workItem3Rate', label: 'Rate (₹)', type: 'number' },
+  { id: 'workItem4Description', label: 'Work description 4', type: 'text' },
+  { id: 'workItem4Area', label: 'Area (Sq. ft.)', type: 'number' },
+  { id: 'workItem4Rate', label: 'Rate (₹)', type: 'number' },
+  { id: 'workItem5Description', label: 'Work description 5', type: 'text' },
+  { id: 'workItem5Area', label: 'Area (Sq. ft.)', type: 'number' },
+  { id: 'workItem5Rate', label: 'Rate (₹)', type: 'number' },
 
-  // Work Order Specifics - Material Table Toggle & Fields
+
+  // Work Order Specifics - Material Table Toggle & Fields (up to 5 items)
   { id: 'includeMaterialTable', label: 'Materials', type: 'boolean', defaultValue: true, placeholder: "Toggle visibility of the materials table in the previewed document." },
   { id: 'materialItem1Name', label: 'Material name 1', type: 'text', placeholder: 'E.g., Emulsion Paint' },
   { id: 'materialItem1Quantity', label: 'Quantity', type: 'number', placeholder: '10' },
-  {
-    id: 'materialItem1Unit',
-    label: 'Unit',
-    type: 'select',
-    options: [ { value: 'Pcs', label: 'Pcs' }, { value: 'Litre', label: 'Litre' }, { value: 'Kg', label: 'Kg' } ],
-    defaultValue: 'Pcs',
-    placeholder: 'Select unit'
-  },
+  { id: 'materialItem1Unit', label: 'Unit', type: 'select', options: [ { value: 'Pcs', label: 'Pcs' }, { value: 'Litre', label: 'Litre' }, { value: 'Kg', label: 'Kg' } ], defaultValue: 'Pcs', placeholder: 'Select unit' },
   { id: 'materialItem1PricePerUnit', label: 'Price per Unit (₹)', type: 'number', placeholder: '450' },
-
   { id: 'materialItem2Name', label: 'Material name 2', type: 'text' },
   { id: 'materialItem2Quantity', label: 'Quantity', type: 'number' },
-  {
-    id: 'materialItem2Unit',
-    label: 'Unit',
-    type: 'select',
-    options: [ { value: 'Pcs', label: 'Pcs' }, { value: 'Litre', label: 'Litre' }, { value: 'Kg', label: 'Kg' } ],
-    defaultValue: 'Pcs',
-    placeholder: 'Select unit'
-  },
+  { id: 'materialItem2Unit', label: 'Unit', type: 'select', options: [ { value: 'Pcs', label: 'Pcs' }, { value: 'Litre', label: 'Litre' }, { value: 'Kg', label: 'Kg' } ], defaultValue: 'Pcs', placeholder: 'Select unit' },
   { id: 'materialItem2PricePerUnit', label: 'Price per Unit (₹)', type: 'number' },
-
   { id: 'materialItem3Name', label: 'Material name 3', type: 'text' },
   { id: 'materialItem3Quantity', label: 'Quantity', type: 'number' },
-  {
-    id: 'materialItem3Unit',
-    label: 'Unit',
-    type: 'select',
-    options: [ { value: 'Pcs', label: 'Pcs' }, { value: 'Litre', label: 'Litre' }, { value: 'Kg', label: 'Kg' } ],
-    defaultValue: 'Pcs',
-    placeholder: 'Select unit'
-  },
+  { id: 'materialItem3Unit', label: 'Unit', type: 'select', options: [ { value: 'Pcs', label: 'Pcs' }, { value: 'Litre', label: 'Litre' }, { value: 'Kg', label: 'Kg' } ], defaultValue: 'Pcs', placeholder: 'Select unit' },
   { id: 'materialItem3PricePerUnit', label: 'Price per Unit (₹)', type: 'number' },
+  { id: 'materialItem4Name', label: 'Material name 4', type: 'text' },
+  { id: 'materialItem4Quantity', label: 'Quantity', type: 'number' },
+  { id: 'materialItem4Unit', label: 'Unit', type: 'select', options: [ { value: 'Pcs', label: 'Pcs' }, { value: 'Litre', label: 'Litre' }, { value: 'Kg', label: 'Kg' } ], defaultValue: 'Pcs', placeholder: 'Select unit' },
+  { id: 'materialItem4PricePerUnit', label: 'Price per Unit (₹)', type: 'number' },
+  { id: 'materialItem5Name', label: 'Material name 5', type: 'text' },
+  { id: 'materialItem5Quantity', label: 'Quantity', type: 'number' },
+  { id: 'materialItem5Unit', label: 'Unit', type: 'select', options: [ { value: 'Pcs', label: 'Pcs' }, { value: 'Litre', label: 'Litre' }, { value: 'Kg', label: 'Kg' } ], defaultValue: 'Pcs', placeholder: 'Select unit' },
+  { id: 'materialItem5PricePerUnit', label: 'Price per Unit (₹)', type: 'number' },
 
-  // Work Order Specifics - Labor Table Toggle & Fields
+  // Work Order Specifics - Labor Table Toggle & Fields (up to 5 items)
   { id: 'includeLaborTable', label: 'Labour Charges', type: 'boolean', defaultValue: true, placeholder: "Toggle visibility of the labor charges table in the previewed document." },
   { id: 'laborItem1TeamName', label: 'Team/Description 1', type: 'text', placeholder: 'E.g., Painting Team A' },
   { id: 'laborItem1NumPersons', label: 'No. of Persons', type: 'number', placeholder: '2' },
@@ -536,6 +528,12 @@ const workOrderFields: TemplateField[] = [
   { id: 'laborItem3TeamName', label: 'Team/Description 3', type: 'text' },
   { id: 'laborItem3NumPersons', label: 'No. of Persons', type: 'number' },
   { id: 'laborItem3Amount', label: 'Amount (₹)', type: 'number' },
+  { id: 'laborItem4TeamName', label: 'Team/Description 4', type: 'text' },
+  { id: 'laborItem4NumPersons', label: 'No. of Persons', type: 'number' },
+  { id: 'laborItem4Amount', label: 'Amount (₹)', type: 'number' },
+  { id: 'laborItem5TeamName', label: 'Team/Description 5', type: 'text' },
+  { id: 'laborItem5NumPersons', label: 'No. of Persons', type: 'number' },
+  { id: 'laborItem5Amount', label: 'Amount (₹)', type: 'number' },
 
   // Work Order Specifics - Financials & Approval
   { id: 'otherCosts', label: 'Other Costs (₹, e.g., Transportation)', type: 'number', placeholder: '500', defaultValue: 0 },
