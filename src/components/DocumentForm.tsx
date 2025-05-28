@@ -1,6 +1,7 @@
+
 'use client';
 
-import type { Template, TemplateField, FormData } from '@/types';
+import type { TemplateField, FormData, DocumentFormPropsTemplate } from '@/types';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -18,10 +19,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, Save } from 'lucide-react';
+import { Eye } from 'lucide-react';
 
 interface DocumentFormProps {
-  template: Template;
+  template: DocumentFormPropsTemplate; // Updated type
 }
 
 function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
@@ -36,7 +37,6 @@ function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
         validator = z.coerce.number({ invalid_type_error: 'Must be a number' });
         break;
       case 'date':
-        // Basic string validation for date, can be enhanced
         validator = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'Date must be YYYY-MM-DD' });
         break;
       case 'textarea':
@@ -67,7 +67,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
     if (field.defaultValue !== undefined) {
       defaultValues[field.id] = field.defaultValue;
     } else if (field.type === 'number') {
-      defaultValues[field.id] = undefined; // Or 0 if preferred for numbers
+      defaultValues[field.id] = undefined; 
     } else {
       defaultValues[field.id] = '';
     }
@@ -118,7 +118,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
                     <FormControl>
                       {renderField(field, formHookField)}
                     </FormControl>
-                    {field.placeholder && !field.type.includes('area') && ( // Simpler description for non-textarea
+                    {field.placeholder && !field.type.includes('area') && ( 
                       <FormDescription className="text-xs text-muted-foreground">
                         Example: {field.placeholder}
                       </FormDescription>

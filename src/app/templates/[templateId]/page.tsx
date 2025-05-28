@@ -1,6 +1,6 @@
 
-import { templates } from '@/lib/templates';
-import type { Template } from '@/types';
+import { templates } from '@/lib/templates.tsx'; // Ensure .tsx extension if not already
+import type { Template, DocumentFormPropsTemplate } from '@/types';
 import { DocumentForm } from '@/components/DocumentForm';
 import { AlertTriangle, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -36,14 +36,24 @@ export default function TemplatePage({ params }: TemplatePageProps) {
     );
   }
 
+  // Destructure the icon for use in this Server Component
+  const TemplateIcon = template.icon;
+
+  // Prepare a serializable object for the DocumentForm Client Component
+  const templateDataForForm: DocumentFormPropsTemplate = {
+    id: template.id,
+    name: template.name,
+    fields: template.fields,
+  };
+
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-8 text-center">
-        <template.icon className="h-12 w-12 text-accent mx-auto mb-3" />
+        <TemplateIcon className="h-12 w-12 text-accent mx-auto mb-3" />
         <h1 className="text-3xl font-bold text-primary">{template.name}</h1>
         <p className="text-md text-foreground/70 mt-1">{template.description}</p>
       </div>
-      <DocumentForm template={template as Template} />
+      <DocumentForm template={templateDataForForm} />
     </div>
   );
 }

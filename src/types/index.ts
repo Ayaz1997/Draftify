@@ -1,3 +1,4 @@
+
 import type { LucideIcon } from 'lucide-react';
 
 export interface TemplateField {
@@ -11,6 +12,7 @@ export interface TemplateField {
 
 export type FormData = Record<string, any>;
 
+// Full template structure, used server-side and for client-side lookup
 export interface Template {
   id: string;
   name: string;
@@ -18,4 +20,17 @@ export interface Template {
   icon: LucideIcon;
   fields: TemplateField[];
   previewLayout: (data: FormData) => React.ReactNode;
+}
+
+// Data needed by DocumentForm (Client Component)
+export interface DocumentFormPropsTemplate {
+  id: string;
+  name: string;
+  fields: TemplateField[];
+}
+
+// Basic template info for DocumentPreview (Client Component)
+export interface DocumentPreviewPropsTemplateInfo {
+  id: string;
+  name: string;
 }

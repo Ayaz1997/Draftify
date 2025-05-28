@@ -1,58 +1,48 @@
+
 'use client';
 
-import type { Template, FormData } from '@/types';
+import type { FormData, DocumentPreviewPropsTemplateInfo } from '@/types';
+import { templates } from '@/lib/templates.tsx'; // Import the full templates array for client-side lookup
 import { Button } from '@/components/ui/button';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Download, Share2, Edit3, Printer } from 'lucide-react';
+import { Download, Share2, Edit3, Printer, AlertTriangle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
 interface DocumentPreviewProps {
-  template: Template;
+  templateInfo: DocumentPreviewPropsTemplateInfo; // Use the simplified info type
   formData: FormData;
 }
 
-export function DocumentPreview({ template, formData }: DocumentPreviewProps) {
+export function DocumentPreview({ templateInfo, formData }: DocumentPreviewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
 
-  const handleEdit = () => {
-    const data = searchParams.get('data');
-    router.push(`/templates/${template.id}${data ? `?data=${data}` : ''}`);
-    // Note: For a real app, you'd pass data back to prefill the form.
-    // This can be done by updating DocumentForm to accept initialData from query params.
-    // For simplicity here, we just navigate back.
-    // A more robust solution would involve state management or encoding form data in the edit link if it's small.
-    // For now, simple navigation back to form, data won't be pre-filled from here without more logic.
-    // A better approach to "Edit" is to simply `router.back()` if the previous page was the form.
-    // router.back();
-    // However, since the `DocumentForm` now reads initial values from `searchParams`, we can construct the edit link.
-    const formDataString = encodeURIComponent(JSON.stringify(formData));
-     router.push(`/templates/${template.id}?initialData=${formDataString}`);
+  // Find the full template details (including previewLayout) on the client-side
+  const fullTemplate = templates.find(t => t.id === templateInfo.id);
 
+  const handleEdit = () => {
+    const formDataString = encodeURIComponent(JSON.stringify(formData));
+    router.push(`/templates/${templateInfo.id}/form?initialData=${formDataString}`); // Assuming form is at /form, adjust if different
+    // Or, if your form page is `/templates/[templateId]`, then:
+    // router.push(`/templates/${templateInfo.id}?initialData=${formDataString}`);
   };
 
   const handleDownloadPdf = () => {
-    // Actual PDF generation is complex. This is a placeholder.
-    // For a real app, you might use a library like jsPDF or a server-side PDF generation service.
     toast({
-      title: "Download PDF (Simulated)",
-      description: "In a real app, this would generate and download a PDF of your document.",
+      title: "Print / Save PDF",
+      description: "Use your browser's print functionality to save as PDF.",
       variant: "default",
     });
-    // Example: window.print() can be used for a basic "print to PDF" functionality
-    // For better control, specific PDF libraries are needed.
-    // Trigger browser print dialog
     window.print();
   };
 
   const handleShare = async () => {
-    // Actual sharing is complex. This is a placeholder using Web Share API if available.
     const shareData = {
-      title: `My ${template.name} Document`,
-      text: `Check out my ${template.name} document created with DocuForm!`,
-      // url: window.location.href, // Or a link to a downloadable/viewable version
+      title: `My ${templateInfo.name} Document`,
+      text: `Check out my ${templateInfo.name} document created with DocuForm!`,
+      // url: window.location.href, 
     };
     if (navigator.share) {
       try {
@@ -70,7 +60,6 @@ export function DocumentPreview({ template, formData }: DocumentPreviewProps) {
     }
   };
   
-  // Add a print-specific stylesheet
   const printStyles = `
     @media print {
       body * {
@@ -85,25 +74,35 @@ export function DocumentPreview({ template, formData }: DocumentPreviewProps) {
         top: 0;
         width: 100%;
         margin: 0;
-        padding: 20px; /* Adjust padding as needed for print */
+        padding: 20px; 
         box-shadow: none !important;
         border: none !important;
       }
       .no-print {
         display: none !important;
       }
-      /* Specific styles for letterhead printing */
       .print-friendly-letterhead {
         border: none !important;
         box-shadow: none !important;
-        padding: 0 !important; /* Remove card padding for true letterhead feel */
-        max-width: 100% !important; /* Ensure it uses full width */
+        padding: 0 !important; 
+        max-width: 100% !important; 
       }
       .print-friendly-letterhead header, .print-friendly-letterhead footer {
-         border-color: #ccc !important; /* Lighter border for print */
+         border-color: #ccc !important; 
       }
     }
   `;
+
+  if (!fullTemplate) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center p-8">
+        <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
+        <h1 className="text-2xl font-semibold mb-2">Preview Error</h1>
+        <p className="text-muted-foreground mb-6">Could not load the preview for this document type.</p>
+        <Button variant="outline" onClick={() => router.push('/')}>Go to Templates</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -111,7 +110,7 @@ export function DocumentPreview({ template, formData }: DocumentPreviewProps) {
       <Card className="max-w-4xl mx-auto no-print">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-2xl font-bold text-primary">Document Preview: {template.name}</CardTitle>
+            <CardTitle className="text-2xl font-bold text-primary">Document Preview: {templateInfo.name}</CardTitle>
             <CardDescription className="text-foreground/70">Review your generated document below.</CardDescription>
           </div>
            <div className="flex gap-2">
@@ -129,7 +128,7 @@ export function DocumentPreview({ template, formData }: DocumentPreviewProps) {
       </Card>
       
       <div className="printable-area bg-card p-0 md:p-6 rounded-lg shadow-lg border border-border">
-        {template.previewLayout(formData)}
+        {fullTemplate.previewLayout(formData)}
       </div>
 
       <div className="max-w-4xl mx-auto mt-8 flex justify-end gap-3 no-print">

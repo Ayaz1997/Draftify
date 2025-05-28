@@ -1,6 +1,6 @@
 
-import { templates } from '@/lib/templates';
-import type { Template, FormData } from '@/types';
+import { templates } from '@/lib/templates.tsx'; // Ensure .tsx extension
+import type { FormData, DocumentPreviewPropsTemplateInfo } from '@/types';
 import { DocumentPreview } from '@/components/DocumentPreview';
 import { AlertTriangle, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,7 @@ export default function PreviewPage({ params, searchParams }: PreviewPageProps) 
       formData = JSON.parse(decodeURIComponent(searchParams.data));
     } catch (error) {
       console.error('Failed to parse form data:', error);
-      // Handle error, e.g., show a message or redirect
+      // Error handled below if formData remains empty and data was expected
     }
   }
 
@@ -44,6 +44,7 @@ export default function PreviewPage({ params, searchParams }: PreviewPageProps) 
   }
   
   if (Object.keys(formData).length === 0 && searchParams.data) {
+     // This case implies data was in searchParams but failed to parse or was empty JSON
      return (
        <div className="flex flex-col items-center justify-center h-full text-center p-8">
         <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
@@ -58,9 +59,14 @@ export default function PreviewPage({ params, searchParams }: PreviewPageProps) 
     );
   }
 
+  // Prepare serializable template info for the DocumentPreview Client Component
+  const templateInfoForPreview: DocumentPreviewPropsTemplateInfo = {
+    id: template.id,
+    name: template.name,
+  };
 
   return (
-    <DocumentPreview template={template as Template} formData={formData} />
+    <DocumentPreview templateInfo={templateInfoForPreview} formData={formData} />
   );
 }
 
