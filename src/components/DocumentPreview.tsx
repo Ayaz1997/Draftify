@@ -201,10 +201,10 @@ export function DocumentPreview({ templateInfo }: DocumentPreviewProps) {
             <CardDescription className="text-foreground/70">Review your generated document below.</CardDescription>
           </div>
            <div className="flex gap-2">
-            <Button variant="outline" onClick={handleEdit} size="sm">
+            <Button variant="default" onClick={handleEdit} size="sm">
               <Edit3 className="mr-2 h-4 w-4" /> Edit
             </Button>
-            <Button variant="outline" onClick={handleDownloadPdf} size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground">
+            <Button variant="default" onClick={handleDownloadPdf} size="sm">
               <Printer className="mr-2 h-4 w-4" /> Print / Save PDF
             </Button>
             <Button variant="outline" onClick={handleShare} size="sm">
@@ -219,13 +219,13 @@ export function DocumentPreview({ templateInfo }: DocumentPreviewProps) {
       </div>
 
       <div className="max-w-4xl mx-auto mt-8 flex justify-end gap-3 no-print">
-         <Button variant="outline" onClick={handleEdit}>
+         <Button variant="default" onClick={handleEdit}>
             <Edit3 className="mr-2 h-4 w-4" /> Edit Document
           </Button>
-        <Button onClick={handleDownloadPdf} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+        <Button variant="default" onClick={handleDownloadPdf}>
           <Printer className="mr-2 h-4 w-4" /> Print / Save as PDF
         </Button>
-        <Button onClick={handleShare}>
+        <Button variant="outline" onClick={handleShare}>
           <Share2 className="mr-2 h-4 w-4" /> Share Document
         </Button>
       </div>

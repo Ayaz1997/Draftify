@@ -32,7 +32,7 @@ interface DocumentFormProps {
   template: DocumentFormPropsTemplate;
 }
 
-const MAX_ITEMS_PER_SECTION = 10; // Increased from 5 to 10
+const MAX_ITEMS_PER_SECTION = 10; 
 
 function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
   const shape: Record<string, z.ZodTypeAny> = {};
@@ -67,7 +67,7 @@ function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
         if (field.options && field.options.length > 0) {
           const enumValues = field.options.map(opt => opt.value) as [string, ...string[]];
           if (enumValues.length > 0) {
-            validator = z.enum(enumValues).optional();
+            validator = z.enum(enumValues).optional().or(z.literal(''));
           } else {
              validator = z.string().optional(); 
           }
@@ -553,7 +553,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
 
   const renderFormField = (field?: TemplateField) => {
     if (!field) return null;
-
+    
     return (
         <FormField
         key={field.id}
@@ -750,7 +750,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
              <Button type="button" variant="outline" onClick={() => router.back()}>
               Cancel
             </Button>
-            <Button type="submit" className="bg-accent hover:bg-accent/90 text-accent-foreground">
+            <Button type="submit" variant="default">
               <Eye className="mr-2 h-4 w-4" />
               Preview Document
             </Button>
@@ -760,4 +760,3 @@ export function DocumentForm({ template }: DocumentFormProps) {
     </Card>
   );
 }
-

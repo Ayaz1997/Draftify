@@ -31,7 +31,7 @@ export default function HomePage() {
                 {/* Optional: Could add a small visual preview or key fields here */}
               </CardContent>
               <CardFooter>
-                <Button asChild className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+                <Button asChild variant="default" className="w-full">
                   <Link href={`/templates/${template.id}`}>
                     Create Document
                     <ArrowRight className="ml-2 h-4 w-4" />
