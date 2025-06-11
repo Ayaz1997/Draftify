@@ -94,7 +94,7 @@ const WorkOrderPreview = (data: FormData) => {
 
 
   return (
-    <Card className="w-full max-w-4xl mx-auto shadow-xl border-primary/30 printable-area">
+    <Card className="w-full max-w-4xl mx-auto shadow-xl printable-area">
       <CardHeader className="bg-muted/30 p-6 rounded-t-lg">
         <div className="flex justify-between items-start">
           <div>
@@ -327,7 +327,7 @@ const WorkOrderPreview = (data: FormData) => {
 
 
 const LetterheadPreview = (data: FormData) => (
-  <Card className="w-full max-w-3xl mx-auto shadow-lg p-8 border-primary/50 print-friendly-letterhead" data-ai-hint="stationery paper">
+  <Card className="w-full max-w-3xl mx-auto shadow-lg p-8 print-friendly-letterhead" data-ai-hint="stationery paper">
     <header className="mb-12 text-center border-b-2 border-primary pb-6">
       {data.logoUrl && typeof data.logoUrl === 'string' && data.logoUrl.startsWith('data:image') ? (
         <Image src={data.logoUrl} alt="Company Logo" width={150} height={75} className="mx-auto mb-4 object-contain" data-ai-hint="company brand"/>
@@ -364,7 +364,7 @@ const LetterheadPreview = (data: FormData) => (
 );
 
 const InvoicePreview = (data: FormData) => (
-  <Card className="w-full max-w-3xl mx-auto shadow-lg border-primary/50">
+  <Card className="w-full max-w-3xl mx-auto shadow-lg">
     <CardHeader className="bg-primary text-primary-foreground p-6 rounded-t-lg">
       <div className="flex justify-between items-center">
         <CardTitle className="text-3xl font-bold">INVOICE</CardTitle>
