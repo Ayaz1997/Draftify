@@ -45,6 +45,6 @@ export default function PreviewPage({ params }: PreviewPageProps) {
 export function generateMetadata({ params }: PreviewPageProps) {
   const template = templates.find((t) => t.id === params.templateId);
   return {
-    title: template ? `Preview ${template.name} - DocuForm` : 'Preview Not Found - DocuForm',
+    title: template ? `Preview ${template.name} - My Biz Docs` : 'Preview Not Found - My Biz Docs',
   };
 }

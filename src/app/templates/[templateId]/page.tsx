@@ -61,6 +61,6 @@ export default function TemplatePage({ params }: TemplatePageProps) {
 export function generateMetadata({ params }: TemplatePageProps) {
   const template = templates.find((t) => t.id === params.templateId);
   return {
-    title: template ? `${template.name} - DocuForm` : 'Template Not Found - DocuForm',
+    title: template ? `${template.name} - My Biz Docs` : 'Template Not Found - My Biz Docs',
   };
 }

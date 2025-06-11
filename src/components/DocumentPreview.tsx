@@ -85,7 +85,7 @@ export function DocumentPreview({ templateInfo }: DocumentPreviewProps) {
   const handleShare = async () => {
     const shareData = {
       title: `My ${templateInfo.name} Document`,
-      text: `Check out my ${templateInfo.name} document created with DocuForm!`,
+      text: `Check out my ${templateInfo.name} document created with My Biz Docs!`,
       // url: window.location.href, // URL won't contain data anymore
     };
     if (navigator.share) {

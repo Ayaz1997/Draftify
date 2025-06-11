@@ -12,8 +12,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'DocuForm - Your Document Automation Tool',
-  description: 'Create professional documents like work orders, letterheads, and invoices with ease using DocuForm.',
+  title: 'My Biz Docs - Your Document Automation Tool',
+  description: 'Create professional documents like work orders, letterheads, and invoices with ease using My Biz Docs.',
 };
 
 export default function RootLayout({
