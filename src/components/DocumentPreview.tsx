@@ -189,7 +189,7 @@ export function DocumentPreview({ templateInfo }: DocumentPreviewProps) {
         </CardHeader>
       </Card>
       
-      <div className="printable-area bg-card p-2 sm:p-4 md:p-6 rounded-lg shadow-lg border border-border overflow-x-auto">
+      <div className="printable-area p-2 sm:p-4 overflow-x-auto">
         {/* The preview component itself may have a max-width, which is fine. The overflow-x-auto handles if its content is wider. */}
         {fullTemplate.previewLayout(formData)}
       </div>
@@ -205,3 +205,4 @@ export function DocumentPreview({ templateInfo }: DocumentPreviewProps) {
     </div>
   );
 }
+
