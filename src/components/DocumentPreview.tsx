@@ -6,14 +6,13 @@ import { templates } from '@/lib/templates.tsx';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Download, Share2, Edit3, Printer, AlertTriangle, ArrowLeft } from 'lucide-react';
+import { Edit3, Printer, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link'; // Added for "Go Back to Form" button
+import Link from 'next/link'; 
 
 interface DocumentPreviewProps {
   templateInfo: DocumentPreviewPropsTemplateInfo;
-  // formData prop removed
 }
 
 export function DocumentPreview({ templateInfo }: DocumentPreviewProps) {
@@ -34,8 +33,6 @@ export function DocumentPreview({ templateInfo }: DocumentPreviewProps) {
             if (storedDataString) {
                 const parsedData = JSON.parse(storedDataString);
                 setFormData(parsedData);
-                // Do not remove from sessionStorage here to allow page refresh
-                // sessionStorage.removeItem(dataKey); 
             } else {
                 setError('No document data found for preview. Please create the document again.');
             }
@@ -55,7 +52,7 @@ export function DocumentPreview({ templateInfo }: DocumentPreviewProps) {
     if (formData && typeof window !== 'undefined' && window.sessionStorage) {
       try {
         sessionStorage.setItem(`docuFormEditData-${templateInfo.id}`, JSON.stringify(formData));
-        router.push(`/templates/${templateInfo.id}`); // Navigate to the form page
+        router.push(`/templates/${templateInfo.id}`); 
       } catch (storageError) {
         console.error("Error saving edit data to session storage:", storageError);
         toast({
@@ -81,28 +78,6 @@ export function DocumentPreview({ templateInfo }: DocumentPreviewProps) {
     });
     window.print();
   };
-
-  const handleShare = async () => {
-    const shareData = {
-      title: `My ${templateInfo.name} Document`,
-      text: `Check out my ${templateInfo.name} document created with My Biz Docs!`,
-      // url: window.location.href, // URL won't contain data anymore
-    };
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-        toast({ title: "Document Shared", description: "Shared successfully via system dialog.", variant: "default" });
-      } catch (err) {
-        toast({ title: "Share Failed", description: `Could not share: ${err}`, variant: "destructive" });
-      }
-    } else {
-       toast({
-        title: "Share (Simulated)",
-        description: "Web Share API not available. In a real app, this would integrate with email/messaging.",
-        variant: "default",
-      });
-    }
-  };
   
   const printStyles = `
     @media print {
@@ -118,9 +93,13 @@ export function DocumentPreview({ templateInfo }: DocumentPreviewProps) {
         top: 0;
         width: 100%;
         margin: 0;
-        padding: 20px; 
+        padding: 20px !important; /* Ensure consistent padding for print */
         box-shadow: none !important;
         border: none !important;
+        overflow: visible !important; /* Allow content to expand for print */
+      }
+      .printable-area .max-w-4xl { /* Override max-width for print if needed */
+        max-width: none !important;
       }
       .no-print {
         display: none !important;
@@ -140,7 +119,6 @@ export function DocumentPreview({ templateInfo }: DocumentPreviewProps) {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8">
-        {/* You can replace this with a spinner component */}
         <svg className="animate-spin h-10 w-10 text-primary mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -192,41 +170,36 @@ export function DocumentPreview({ templateInfo }: DocumentPreviewProps) {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <style>{printStyles}</style>
       <Card className="max-w-4xl mx-auto no-print">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4">
+          <div className="flex-grow">
             <CardTitle className="text-2xl font-bold text-primary">Document Preview: {templateInfo.name}</CardTitle>
             <CardDescription className="text-foreground/70">Review your generated document below.</CardDescription>
           </div>
-           <div className="flex gap-2">
-            <Button variant="default" onClick={handleEdit} size="sm">
+           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button variant="default" onClick={handleEdit} size="sm" className="w-full sm:w-auto">
               <Edit3 className="mr-2 h-4 w-4" /> Edit
             </Button>
-            <Button variant="default" onClick={handleDownloadPdf} size="sm">
+            <Button variant="default" onClick={handleDownloadPdf} size="sm" className="w-full sm:w-auto">
               <Printer className="mr-2 h-4 w-4" /> Print / Save PDF
-            </Button>
-            <Button variant="outline" onClick={handleShare} size="sm">
-              <Share2 className="mr-2 h-4 w-4" /> Share
             </Button>
           </div>
         </CardHeader>
       </Card>
       
-      <div className="printable-area bg-card p-0 md:p-6 rounded-lg shadow-lg border border-border">
+      <div className="printable-area bg-card p-2 sm:p-4 md:p-6 rounded-lg shadow-lg border border-border overflow-x-auto">
+        {/* The preview component itself may have a max-width, which is fine. The overflow-x-auto handles if its content is wider. */}
         {fullTemplate.previewLayout(formData)}
       </div>
 
-      <div className="max-w-4xl mx-auto mt-8 flex justify-end gap-3 no-print">
-         <Button variant="default" onClick={handleEdit}>
+      <div className="max-w-4xl mx-auto mt-6 sm:mt-8 flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 no-print">
+         <Button variant="default" onClick={handleEdit} className="w-full sm:w-auto">
             <Edit3 className="mr-2 h-4 w-4" /> Edit Document
           </Button>
-        <Button variant="default" onClick={handleDownloadPdf}>
+        <Button variant="default" onClick={handleDownloadPdf} className="w-full sm:w-auto">
           <Printer className="mr-2 h-4 w-4" /> Print / Save as PDF
-        </Button>
-        <Button variant="outline" onClick={handleShare}>
-          <Share2 className="mr-2 h-4 w-4" /> Share Document
         </Button>
       </div>
     </div>

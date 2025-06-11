@@ -10,12 +10,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFoo
 const formatDate = (dateString?: string) => {
   if (!dateString) return 'N/A';
   if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    // Ensure UTC interpretation if only date is provided, to avoid timezone shifts
     return new Date(dateString + 'T00:00:00Z').toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
   }
   try {
+    // For full date-time strings, let JS parse it, then format
     return new Date(dateString).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
   } catch (e) {
-    return dateString;
+    return dateString; // Fallback if date is invalid
   }
 };
 
@@ -24,7 +26,7 @@ const formatCurrency = (amount?: number | string, currencySymbol = '₹') => {
   return `${currencySymbol}${num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
-const MAX_ITEMS_PREVIEW = 10; // Increased from 5 to 10
+const MAX_ITEMS_PREVIEW = 10;
 
 const WorkOrderPreview = (data: FormData) => {
   const workItems = [];
@@ -94,111 +96,114 @@ const WorkOrderPreview = (data: FormData) => {
 
 
   return (
-    <Card className="w-full max-w-4xl mx-auto shadow-xl printable-area">
-      <CardHeader className="bg-muted/30 p-6 rounded-t-lg">
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-bold text-primary">{data.businessName || 'Your Business Name'}</h1>
-            <p className="text-sm text-foreground/80 whitespace-pre-wrap">{data.businessAddress || '123 Business St, City, State, PIN'}</p>
-            <p className="text-sm text-foreground/80">
+    // The outer Card should be responsive by default due to Tailwind. max-w-4xl applies on larger screens.
+    // The overflow-x-auto on the parent in DocumentPreview.tsx will handle inner content overflow.
+    <Card className="w-full max-w-4xl mx-auto shadow-xl"> {/* Removed border-primary/50 */}
+      <CardHeader className="bg-muted/30 p-4 sm:p-6 rounded-t-lg">
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+          <div className="flex-grow">
+            <h1 className="text-2xl sm:text-3xl font-bold text-primary">{data.businessName || 'Your Business Name'}</h1>
+            <p className="text-xs sm:text-sm text-foreground/80 whitespace-pre-wrap">{data.businessAddress || '123 Business St, City, State, PIN'}</p>
+            <p className="text-xs sm:text-sm text-foreground/80">
               Contact: {data.businessContactNumber || 'N/A'} | Email: {data.businessEmail || 'N/A'}
             </p>
           </div>
-           <div className="w-[120px] h-[60px] flex items-center justify-center border rounded bg-gray-50 overflow-hidden">
+           <div className="w-[100px] h-[50px] sm:w-[120px] sm:h-[60px] flex items-center justify-center border rounded bg-gray-50 overflow-hidden self-start sm:self-center">
             {canDisplayLogo ? (
               <Image src={logoSrc} alt="Business Logo" width={120} height={60} className="object-contain" data-ai-hint="company brand" />
             ) : logoUrlFromData && typeof logoUrlFromData === 'string' && logoUrlFromData.trim() !== '' && !logoUrlFromData.startsWith('data:image') ? (
                 <div className="w-full h-full flex items-center justify-center text-destructive text-xs p-2 text-center">Invalid logo data</div>
             ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs p-2 text-center">No Logo Provided</div>
+                <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs p-1 sm:p-2 text-center">No Logo Provided</div>
             )}
           </div>
         </div>
-        <Separator className="my-4" />
+        <Separator className="my-3 sm:my-4" />
         <div className="flex justify-between items-center">
-          <CardTitle className="text-2xl font-semibold text-accent">Work Order</CardTitle>
-          <Briefcase className="h-8 w-8 text-accent" />
+          <CardTitle className="text-xl sm:text-2xl font-semibold text-accent">Work Order</CardTitle>
+          <Briefcase className="h-7 w-7 sm:h-8 sm:w-8 text-accent" />
         </div>
       </CardHeader>
 
-      <CardContent className="p-6 space-y-6">
-        <div className="border p-4 rounded-md shadow-sm">
-          <h3 className="text-lg font-semibold text-primary mb-2">Order Details</h3>
+      <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+        {/* Sections below will benefit from the parent's overflow-x-auto if tables get too wide */}
+        <div className="border p-3 sm:p-4 rounded-md shadow-sm">
+          <h3 className="text-md sm:text-lg font-semibold text-primary mb-2">Order Details</h3>
           <Table>
             <TableBody>
               <TableRow>
-                <TableCell className="font-medium">Order Number:</TableCell>
-                <TableCell>{data.orderNumber || `WO-${Date.now().toString().slice(-6)}`}</TableCell>
-                <TableCell className="font-medium">Order Date:</TableCell>
-                <TableCell>{formatDate(data.orderDate)}</TableCell>
+                <TableCell className="font-medium py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Order Number:</TableCell>
+                <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{data.orderNumber || `WO-${Date.now().toString().slice(-6)}`}</TableCell>
+                <TableCell className="font-medium py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Order Date:</TableCell>
+                <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatDate(data.orderDate)}</TableCell>
               </TableRow>
               <TableRow>
-                <TableCell className="font-medium">Expected Start Date:</TableCell>
-                <TableCell>{formatDate(data.expectedStartDate)}</TableCell>
-                <TableCell className="font-medium">Expected End Date:</TableCell>
-                <TableCell>{formatDate(data.expectedEndDate)}</TableCell>
+                <TableCell className="font-medium py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Expected Start Date:</TableCell>
+                <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatDate(data.expectedStartDate)}</TableCell>
+                <TableCell className="font-medium py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Expected End Date:</TableCell>
+                <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatDate(data.expectedEndDate)}</TableCell>
               </TableRow>
             </TableBody>
           </Table>
         </div>
 
-        <div className="border p-4 rounded-md shadow-sm">
-          <h3 className="text-lg font-semibold text-primary mb-2">Client Details</h3>
+        <div className="border p-3 sm:p-4 rounded-md shadow-sm">
+          <h3 className="text-md sm:text-lg font-semibold text-primary mb-2">Client Details</h3>
           <Table>
             <TableBody>
               <TableRow>
-                <TableCell className="font-medium">Client Name:</TableCell>
-                <TableCell>{data.clientName || 'N/A'}</TableCell>
-                <TableCell className="font-medium">Client Phone:</TableCell>
-                <TableCell>{data.clientPhone || 'N/A'}</TableCell>
+                <TableCell className="font-medium py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Client Name:</TableCell>
+                <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{data.clientName || 'N/A'}</TableCell>
+                <TableCell className="font-medium py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Client Phone:</TableCell>
+                <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{data.clientPhone || 'N/A'}</TableCell>
               </TableRow>
               <TableRow>
-                <TableCell className="font-medium">Client Email:</TableCell>
-                <TableCell>{data.clientEmail || 'N/A'}</TableCell>
-                <TableCell className="font-medium">Order Received By:</TableCell>
-                <TableCell>{data.orderReceivedBy || 'N/A'}</TableCell>
+                <TableCell className="font-medium py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Client Email:</TableCell>
+                <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{data.clientEmail || 'N/A'}</TableCell>
+                <TableCell className="font-medium py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Order Received By:</TableCell>
+                <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{data.orderReceivedBy || 'N/A'}</TableCell>
               </TableRow>
               <TableRow>
-                <TableCell className="font-medium">Work Location:</TableCell>
-                <TableCell colSpan={3} className="whitespace-pre-wrap">{data.workLocation || 'N/A'}</TableCell>
+                <TableCell className="font-medium py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Work Location:</TableCell>
+                <TableCell colSpan={3} className="whitespace-pre-wrap py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{data.workLocation || 'N/A'}</TableCell>
               </TableRow>
             </TableBody>
           </Table>
         </div>
 
         {data.generalWorkDescription && (
-          <div className="border p-4 rounded-md shadow-sm">
-            <h3 className="text-lg font-semibold text-primary mb-2">Overall Work Description</h3>
-            <p className="whitespace-pre-wrap text-sm">{data.generalWorkDescription}</p>
+          <div className="border p-3 sm:p-4 rounded-md shadow-sm">
+            <h3 className="text-md sm:text-lg font-semibold text-primary mb-2">Overall Work Description</h3>
+            <p className="whitespace-pre-wrap text-xs sm:text-sm">{data.generalWorkDescription}</p>
           </div>
         )}
 
         {data.includeWorkDescriptionTable && workItems.length > 0 && (
-          <div className="border p-4 rounded-md shadow-sm">
-            <h3 className="text-lg font-semibold text-primary mb-3">Detailed Work Items</h3>
+          <div className="border p-3 sm:p-4 rounded-md shadow-sm">
+            <h3 className="text-md sm:text-lg font-semibold text-primary mb-2 sm:mb-3">Detailed Work Items</h3>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Work Description</TableHead>
-                  <TableHead className="text-right">Area (Sq. ft.)</TableHead>
-                  <TableHead className="text-right">Rate ({formatCurrency(0).charAt(0)})</TableHead>
-                  <TableHead className="text-right">Amount ({formatCurrency(0).charAt(0)})</TableHead>
+                  <TableHead className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Work Description</TableHead>
+                  <TableHead className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Area (Sq. ft.)</TableHead>
+                  <TableHead className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Rate ({formatCurrency(0).charAt(0)})</TableHead>
+                  <TableHead className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Amount ({formatCurrency(0).charAt(0)})</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {workItems.map((item, index) => (
                   <TableRow key={`work-${index}`}>
-                    <TableCell className="whitespace-pre-wrap">{item.description}</TableCell>
-                    <TableCell className="text-right">{item.area.toFixed(2)}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(item.rate, '')}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(item.amount, '')}</TableCell>
+                    <TableCell className="whitespace-pre-wrap py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{item.description}</TableCell>
+                    <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{item.area.toFixed(2)}</TableCell>
+                    <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(item.rate, '')}</TableCell>
+                    <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(item.amount, '')}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
               <UiTableFooter>
                 <TableRow className="bg-muted/50">
-                  <TableCell colSpan={3} className="text-right font-bold text-primary">Subtotal Work Description</TableCell>
-                  <TableCell className="text-right font-bold">{formatCurrency(subtotalWorkDescription)}</TableCell>
+                  <TableCell colSpan={3} className="text-right font-bold text-primary py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Subtotal Work Description</TableCell>
+                  <TableCell className="text-right font-bold py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(subtotalWorkDescription)}</TableCell>
                 </TableRow>
               </UiTableFooter>
             </Table>
@@ -206,33 +211,33 @@ const WorkOrderPreview = (data: FormData) => {
         )}
 
         {data.includeMaterialTable && materialItems.length > 0 && (
-          <div className="border p-4 rounded-md shadow-sm">
-            <h3 className="text-lg font-semibold text-primary mb-3">Materials Used</h3>
+          <div className="border p-3 sm:p-4 rounded-md shadow-sm">
+            <h3 className="text-md sm:text-lg font-semibold text-primary mb-2 sm:mb-3">Materials Used</h3>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Material Name</TableHead>
-                  <TableHead>Unit</TableHead>
-                  <TableHead className="text-right">Quantity</TableHead>
-                  <TableHead className="text-right">Price/Unit ({formatCurrency(0).charAt(0)})</TableHead>
-                  <TableHead className="text-right">Amount ({formatCurrency(0).charAt(0)})</TableHead>
+                  <TableHead className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Material Name</TableHead>
+                  <TableHead className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Unit</TableHead>
+                  <TableHead className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Quantity</TableHead>
+                  <TableHead className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Price/Unit ({formatCurrency(0).charAt(0)})</TableHead>
+                  <TableHead className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Amount ({formatCurrency(0).charAt(0)})</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {materialItems.map((item, index) => (
                   <TableRow key={`material-${index}`}>
-                    <TableCell>{item.name}</TableCell>
-                    <TableCell>{item.unit}</TableCell>
-                    <TableCell className="text-right">{item.quantity}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(item.pricePerUnit, '')}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(item.amount, '')}</TableCell>
+                    <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{item.name}</TableCell>
+                    <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{item.unit}</TableCell>
+                    <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{item.quantity}</TableCell>
+                    <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(item.pricePerUnit, '')}</TableCell>
+                    <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(item.amount, '')}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
               <UiTableFooter>
                 <TableRow className="bg-muted/50">
-                  <TableCell colSpan={4} className="text-right font-bold text-primary">Subtotal Materials</TableCell>
-                  <TableCell className="text-right font-bold">{formatCurrency(subtotalMaterial)}</TableCell>
+                  <TableCell colSpan={4} className="text-right font-bold text-primary py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Subtotal Materials</TableCell>
+                  <TableCell className="text-right font-bold py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(subtotalMaterial)}</TableCell>
                 </TableRow>
               </UiTableFooter>
             </Table>
@@ -240,29 +245,29 @@ const WorkOrderPreview = (data: FormData) => {
         )}
 
         {data.includeLaborTable && laborItems.length > 0 && (
-          <div className="border p-4 rounded-md shadow-sm">
-            <h3 className="text-lg font-semibold text-primary mb-3">Labor Charges</h3>
+          <div className="border p-3 sm:p-4 rounded-md shadow-sm">
+            <h3 className="text-md sm:text-lg font-semibold text-primary mb-2 sm:mb-3">Labor Charges</h3>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Team Name / Description</TableHead>
-                  <TableHead className="text-right">No. of Persons</TableHead>
-                  <TableHead className="text-right">Amount ({formatCurrency(0).charAt(0)})</TableHead>
+                  <TableHead className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Team Name / Description</TableHead>
+                  <TableHead className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">No. of Persons</TableHead>
+                  <TableHead className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Amount ({formatCurrency(0).charAt(0)})</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {laborItems.map((item, index) => (
                   <TableRow key={`labor-${index}`}>
-                    <TableCell>{item.teamName}</TableCell>
-                    <TableCell className="text-right">{item.numPersons}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(item.amount, '')}</TableCell>
+                    <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{item.teamName}</TableCell>
+                    <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{item.numPersons}</TableCell>
+                    <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(item.amount, '')}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
               <UiTableFooter>
                 <TableRow className="bg-muted/50">
-                  <TableCell colSpan={2} className="text-right font-bold text-primary">Subtotal Labor</TableCell>
-                  <TableCell className="text-right font-bold">{formatCurrency(subtotalLabor)}</TableCell>
+                  <TableCell colSpan={2} className="text-right font-bold text-primary py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Subtotal Labor</TableCell>
+                  <TableCell className="text-right font-bold py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(subtotalLabor)}</TableCell>
                 </TableRow>
               </UiTableFooter>
             </Table>
@@ -270,15 +275,15 @@ const WorkOrderPreview = (data: FormData) => {
         )}
 
         {data.termsOfService && (
-           <div className="border p-4 rounded-md shadow-sm">
-            <h3 className="text-lg font-semibold text-primary mb-2">Terms of Service</h3>
-            <p className="whitespace-pre-wrap text-sm">{data.termsOfService}</p>
+           <div className="border p-3 sm:p-4 rounded-md shadow-sm">
+            <h3 className="text-md sm:text-lg font-semibold text-primary mb-2">Terms of Service</h3>
+            <p className="whitespace-pre-wrap text-xs sm:text-sm">{data.termsOfService}</p>
           </div>
         )}
 
         <Separator />
         <div className="flex justify-end">
-          <div className="w-full md:w-2/5 space-y-1">
+          <div className="w-full md:w-2/3 lg:w-1/2 xl:w-2/5 space-y-1 text-xs sm:text-sm">
             {(data.includeWorkDescriptionTable || data.includeMaterialTable || data.includeLaborTable) && (
                 <div className="flex justify-between">
                   <span className="font-medium">Total Items Subtotal:</span>
@@ -299,8 +304,8 @@ const WorkOrderPreview = (data: FormData) => {
               <span className="font-medium">Tax ({data.taxRatePercentage || 0}%):</span>
               <span>{formatCurrency(taxAmount)}</span>
             </div>
-            <Separator className="my-2 bg-primary/50"/>
-            <div className="flex justify-between text-xl font-bold text-primary">
+            <Separator className="my-1 sm:my-2 bg-primary/50"/>
+            <div className="flex justify-between text-lg sm:text-xl font-bold text-primary">
               <span>Final Total Amount:</span>
               <span>{formatCurrency(finalTotalAmount)}</span>
             </div>
@@ -308,14 +313,14 @@ const WorkOrderPreview = (data: FormData) => {
         </div>
       </CardContent>
 
-      <CardFooter className="p-6 bg-muted/30 rounded-b-lg text-sm text-muted-foreground border-t">
+      <CardFooter className="p-4 sm:p-6 bg-muted/30 rounded-b-lg text-xs sm:text-sm text-muted-foreground border-t">
         <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <p className="font-semibold">Approved By:</p>
                 <p className="mt-4 border-b border-foreground/50 pb-1 min-h-[24px]">{data.approvedByName || ''}</p>
                 <p className="text-xs">(Signature & Name)</p>
             </div>
-            <div className="text-left md:text-right">
+            <div className="text-left md:text-right mt-4 md:mt-0">
                 <p className="font-semibold">Date of Approval:</p>
                 <p className="mt-1">{formatDate(data.dateOfApproval)}</p>
             </div>
@@ -327,8 +332,8 @@ const WorkOrderPreview = (data: FormData) => {
 
 
 const LetterheadPreview = (data: FormData) => (
-  <Card className="w-full max-w-3xl mx-auto shadow-lg p-8 print-friendly-letterhead" data-ai-hint="stationery paper">
-    <header className="mb-12 text-center border-b-2 border-primary pb-6">
+  <Card className="w-full max-w-3xl mx-auto shadow-lg p-6 sm:p-8 print-friendly-letterhead" data-ai-hint="stationery paper"> {/* Removed border-primary/50 */}
+    <header className="mb-10 sm:mb-12 text-center border-b-2 border-primary pb-4 sm:pb-6">
       {data.logoUrl && typeof data.logoUrl === 'string' && data.logoUrl.startsWith('data:image') ? (
         <Image src={data.logoUrl} alt="Company Logo" width={150} height={75} className="mx-auto mb-4 object-contain" data-ai-hint="company brand"/>
       ) : data.logoUrl && typeof data.logoUrl === 'string' ? (
@@ -336,22 +341,22 @@ const LetterheadPreview = (data: FormData) => (
       ) : (
         <div className="h-16 w-32 bg-muted mx-auto mb-4 flex items-center justify-center text-muted-foreground rounded text-xs p-1">Logo Placeholder</div>
       )}
-      <h1 className="text-4xl font-bold text-primary">{data.companyName || 'Your Company Name'}</h1>
-      <p className="text-muted-foreground mt-1">{data.companySlogan || 'Your Company Slogan/Tagline'}</p>
+      <h1 className="text-3xl sm:text-4xl font-bold text-primary">{data.companyName || 'Your Company Name'}</h1>
+      <p className="text-muted-foreground text-sm sm:text-base mt-1">{data.companySlogan || 'Your Company Slogan/Tagline'}</p>
     </header>
 
-    <section className="mb-8">
+    <section className="mb-6 sm:mb-8 text-sm sm:text-base">
       <p className="text-right mb-4">{formatDate(data.date)}</p>
       <p className="mb-2"><strong>{data.recipientName || 'Recipient Name'}</strong></p>
       <p className="mb-2 whitespace-pre-wrap">{data.recipientAddress || 'Recipient Address Line 1\nRecipient Address Line 2'}</p>
-      {data.subject && <h2 className="text-xl font-semibold text-primary mt-6 mb-4">{data.subject}</h2>}
+      {data.subject && <h2 className="text-lg sm:text-xl font-semibold text-primary mt-4 sm:mt-6 mb-3 sm:mb-4">{data.subject}</h2>}
     </section>
 
-    <section className="mb-12 whitespace-pre-wrap min-h-[200px]">
+    <section className="mb-10 sm:mb-12 whitespace-pre-wrap min-h-[150px] sm:min-h-[200px] text-sm sm:text-base">
       {data.bodyContent || 'Dear [Recipient Name],\n\nThis is the main content of your letter. You can type multiple paragraphs here.\n\nSincerely,\n[Your Name]'}
     </section>
 
-    <footer className="mt-16 pt-6 border-t-2 border-primary text-center text-xs text-muted-foreground">
+    <footer className="mt-12 sm:mt-16 pt-4 sm:pt-6 border-t-2 border-primary text-center text-xs text-muted-foreground">
       <p>{data.companyAddress || '123 Business Rd, Suite 100, City, State, Zip'}</p>
       <p>
         {data.companyPhone && `Phone: ${data.companyPhone}`}
@@ -364,27 +369,27 @@ const LetterheadPreview = (data: FormData) => (
 );
 
 const InvoicePreview = (data: FormData) => (
-  <Card className="w-full max-w-3xl mx-auto shadow-lg">
-    <CardHeader className="bg-primary text-primary-foreground p-6 rounded-t-lg">
+  <Card className="w-full max-w-3xl mx-auto shadow-lg"> {/* Removed border-primary/50 */}
+    <CardHeader className="bg-primary text-primary-foreground p-4 sm:p-6 rounded-t-lg">
       <div className="flex justify-between items-center">
-        <CardTitle className="text-3xl font-bold">INVOICE</CardTitle>
-        <Receipt className="h-10 w-10" />
+        <CardTitle className="text-2xl sm:text-3xl font-bold">INVOICE</CardTitle>
+        <Receipt className="h-8 w-8 sm:h-10 sm:w-10" />
       </div>
-      <div className="flex justify-between items-end mt-2">
-        <div>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mt-2 gap-2 sm:gap-0">
+        <div className="text-xs sm:text-sm">
           <p className="text-primary-foreground/80"><strong>{data.companyName || 'Your Company LLC'}</strong></p>
-          <p className="text-sm text-primary-foreground/80 whitespace-pre-wrap">{data.companyAddress || '123 Business Rd\nCity, State ZIP'}</p>
+          <p className="text-primary-foreground/80 whitespace-pre-wrap">{data.companyAddress || '123 Business Rd\nCity, State ZIP'}</p>
         </div>
-        <div className="text-right">
+        <div className="text-left sm:text-right text-xs sm:text-sm">
           <p className="text-primary-foreground/80">Invoice #: {data.invoiceNumber || `INV-${Date.now().toString().slice(-6)}`}</p>
           <p className="text-primary-foreground/80">Date: {formatDate(data.invoiceDate)}</p>
           <p className="text-primary-foreground/80">Due Date: {formatDate(data.dueDate)}</p>
         </div>
       </div>
     </CardHeader>
-    <CardContent className="p-8 space-y-6 bg-card text-card-foreground">
+    <CardContent className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6 bg-card text-card-foreground text-xs sm:text-sm">
       <div>
-        <h3 className="text-lg font-semibold text-primary mb-2">Bill To:</h3>
+        <h3 className="text-md sm:text-lg font-semibold text-primary mb-2">Bill To:</h3>
         <p><strong>{data.clientName || 'Client Company Name'}</strong></p>
         <p className="whitespace-pre-wrap">{data.clientAddress || '456 Client Ave\nClient City, State ZIP'}</p>
       </div>
@@ -393,19 +398,19 @@ const InvoicePreview = (data: FormData) => (
         <table className="w-full">
           <thead>
             <tr className="border-b border-primary/50">
-              <th className="text-left py-2 pr-2 font-semibold text-primary">Item Description</th>
-              <th className="text-right py-2 px-2 font-semibold text-primary">Quantity</th>
-              <th className="text-right py-2 px-2 font-semibold text-primary">Unit Price</th>
-              <th className="text-right py-2 pl-2 font-semibold text-primary">Total</th>
+              <th className="text-left py-1 px-1 sm:py-2 sm:pr-2 font-semibold text-primary">Item Description</th>
+              <th className="text-right py-1 px-1 sm:py-2 sm:px-2 font-semibold text-primary">Quantity</th>
+              <th className="text-right py-1 px-1 sm:py-2 sm:px-2 font-semibold text-primary">Unit Price</th>
+              <th className="text-right py-1 px-1 sm:py-2 sm:pl-2 font-semibold text-primary">Total</th>
             </tr>
           </thead>
           <tbody>
             {(data.items && Array.isArray(data.items) ? data.items : [{ description: data.itemDescription1, quantity: data.itemQuantity1, unitPrice: data.itemPrice1 }]).map((item: any, index: number) => (
               <tr key={index} className="border-b border-muted">
-                <td className="py-2 pr-2">{item.description || 'N/A'}</td>
-                <td className="text-right py-2 px-2">{item.quantity || 1}</td>
-                <td className="text-right py-2 px-2">${parseFloat(item.unitPrice || 0).toFixed(2)}</td>
-                <td className="text-right py-2 pl-2">${(parseFloat(item.quantity || 1) * parseFloat(item.unitPrice || 0)).toFixed(2)}</td>
+                <td className="py-1 px-1 sm:py-2 sm:pr-2">{item.description || 'N/A'}</td>
+                <td className="text-right py-1 px-1 sm:py-2 sm:px-2">{item.quantity || 1}</td>
+                <td className="text-right py-1 px-1 sm:py-2 sm:px-2">${parseFloat(item.unitPrice || 0).toFixed(2)}</td>
+                <td className="text-right py-1 px-1 sm:py-2 sm:pl-2">${(parseFloat(item.quantity || 1) * parseFloat(item.unitPrice || 0)).toFixed(2)}</td>
               </tr>
             ))}
           </tbody>
@@ -413,7 +418,7 @@ const InvoicePreview = (data: FormData) => (
       </div>
       <Separator />
       <div className="flex justify-end">
-        <div className="w-full md:w-1/2 lg:w-1/3 space-y-2">
+        <div className="w-full md:w-2/3 lg:w-1/2 space-y-1 sm:space-y-2">
           <div className="flex justify-between">
             <span className="font-semibold">Subtotal:</span>
             <span>${parseFloat(data.subtotal || 0).toFixed(2)}</span>
@@ -423,7 +428,7 @@ const InvoicePreview = (data: FormData) => (
             <span>${parseFloat(data.taxAmount || 0).toFixed(2)}</span>
           </div>
           <Separator className="my-1 bg-primary/50"/>
-          <div className="flex justify-between text-xl font-bold text-primary">
+          <div className="flex justify-between text-lg sm:text-xl font-bold text-primary">
             <span>Total Due:</span>
             <span>${parseFloat(data.totalAmount || 0).toFixed(2)}</span>
           </div>
@@ -433,13 +438,13 @@ const InvoicePreview = (data: FormData) => (
         <>
           <Separator />
           <div>
-            <h3 className="text-md font-semibold text-primary mb-1">Notes:</h3>
-            <p className="text-sm whitespace-pre-wrap">{data.notes}</p>
+            <h3 className="text-sm sm:text-md font-semibold text-primary mb-1">Notes:</h3>
+            <p className="text-xs sm:text-sm whitespace-pre-wrap">{data.notes}</p>
           </div>
         </>
       )}
     </CardContent>
-    <CardFooter className="p-6 bg-muted/50 rounded-b-lg text-sm text-muted-foreground">
+    <CardFooter className="p-4 sm:p-6 bg-muted/50 rounded-b-lg text-xs sm:text-sm text-muted-foreground">
       <p>Thank you for your prompt payment. Please make all checks payable to {data.companyName || 'Your Company LLC'}.</p>
     </CardFooter>
   </Card>
@@ -650,4 +655,3 @@ export const templates: Template[] = [
     previewLayout: InvoicePreview,
   },
 ];
-
