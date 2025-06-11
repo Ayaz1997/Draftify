@@ -24,7 +24,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Eye, PlusCircle, Trash2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import React, { useCallback, useMemo, useState, useEffect } from 'react';
-import { Accordion, AccordionItem, AccordionContent } from '@/components/ui/accordion';
+import { Accordion, AccordionItem, AccordionContent, AccordionTrigger } from '@/components/ui/accordion';
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
 
 
@@ -32,7 +32,7 @@ interface DocumentFormProps {
   template: DocumentFormPropsTemplate;
 }
 
-const MAX_ITEMS_PER_SECTION = 5;
+const MAX_ITEMS_PER_SECTION = 10; // Increased from 5 to 10
 
 function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
   const shape: Record<string, z.ZodTypeAny> = {};
@@ -96,9 +96,8 @@ const workOrderSectionStructure: Record<string, string[]> = {
   'Business Details': ['businessName', 'businessAddress', 'businessContactNumber', 'businessEmail', 'businessLogoUrl'],
   'Order Details': ['orderNumber', 'orderDate', 'expectedStartDate', 'expectedEndDate'],
   'Client Details': ['clientName', 'clientPhone', 'clientEmail', 'workLocation', 'orderReceivedBy'],
-  'Work Order Specifics': [ // This section is now primarily handled by accordions
+  'Work Order Specifics': [ 
     'generalWorkDescription', 'termsOfService',
-    // Accordion toggle fields are implicitly part of this, but handled within the Accordion components
     'otherCosts', 'taxRatePercentage', 'approvedByName', 'dateOfApproval'
   ]
 };
@@ -115,12 +114,12 @@ interface AccordionSectionItemPattern {
 }
 
 interface WorkOrderAccordionConfig {
-  id: string; // Unique ID for the accordion item
-  toggleFieldId: keyof FormData; // Field ID for the master toggle (e.g., 'includeWorkDescriptionTable')
+  id: string; 
+  toggleFieldId: keyof FormData; 
   itemFieldIdPatterns: AccordionSectionItemPattern;
-  countKey: keyof VisibleItemCounts; // Key in visibleItemCounts state (e.g., 'workItems')
+  countKey: keyof VisibleItemCounts; 
   addButtonLabel: string;
-  itemTitleSingular: string; // e.g. "Work Item"
+  itemTitleSingular: string; 
 }
 
 type VisibleItemCounts = {
@@ -147,7 +146,7 @@ const workOrderAccordionSubSectionsConfig: WorkOrderAccordionConfig[] = [
     id: 'materials-accordion',
     toggleFieldId: 'includeMaterialTable',
     itemFieldIdPatterns: {
-      description: 'materialItem#Name', // Note: Suffix is Name here
+      description: 'materialItem#Name', 
       quantity: 'materialItem#Quantity',
       unit: 'materialItem#Unit',
       pricePerUnit: 'materialItem#PricePerUnit',
@@ -160,7 +159,7 @@ const workOrderAccordionSubSectionsConfig: WorkOrderAccordionConfig[] = [
     id: 'labour-charges-accordion',
     toggleFieldId: 'includeLaborTable',
     itemFieldIdPatterns: {
-      description: 'laborItem#TeamName', // Note: Suffix is TeamName here
+      description: 'laborItem#TeamName', 
       numPersons: 'laborItem#NumPersons',
       amount: 'laborItem#Amount',
     },
@@ -207,38 +206,35 @@ export function DocumentForm({ template }: DocumentFormProps) {
                     if (!isNaN(dateObj.getTime())) {
                         resolvedInitialValues[field.id] = dateObj.toISOString().split('T')[0];
                     } else {
-                        // If parsing fails, or it's an empty string, set to current date
                         resolvedInitialValues[field.id] = new Date().toISOString().split('T')[0];
                     }
                 } catch (e) {
-                     // If error during date conversion, set to current date
                     resolvedInitialValues[field.id] = new Date().toISOString().split('T')[0];
                 }
             } else if (field.type === 'number' && (resolvedInitialValues[field.id] === null || resolvedInitialValues[field.id] === '')) {
-                resolvedInitialValues[field.id] = undefined; // Keep undefined for empty optional numbers
+                resolvedInitialValues[field.id] = undefined; 
             } else if (field.type === 'number' && typeof resolvedInitialValues[field.id] === 'string') {
                  const numVal = parseFloat(resolvedInitialValues[field.id]);
                  resolvedInitialValues[field.id] = isNaN(numVal) ? undefined : numVal;
             }
-        } else { // No stored value, use defaults or generate
+        } else { 
             if (field.type === 'date') {
                  resolvedInitialValues[field.id] = field.defaultValue && typeof field.defaultValue === 'string' && field.defaultValue.match(/^\d{4}-\d{2}-\d{2}$/)
-                    ? field.defaultValue // Use provided default if valid format
-                    : new Date().toISOString().split('T')[0]; // Otherwise, current date
+                    ? field.defaultValue 
+                    : new Date().toISOString().split('T')[0]; 
             } else if (field.defaultValue !== undefined) {
                 resolvedInitialValues[field.id] = field.defaultValue;
             } else if (field.type === 'boolean') {
-                 resolvedInitialValues[field.id] = false; // Booleans default to false if no defaultValue
+                 resolvedInitialValues[field.id] = false; 
             } else if (field.type === 'number') {
-                 resolvedInitialValues[field.id] = undefined; // Numbers default to undefined (for placeholder to show)
+                 resolvedInitialValues[field.id] = undefined; 
             } else if (field.type === 'file'){
-                 // For file inputs, the 'value' is managed by the browser; we don't set a default string
                  resolvedInitialValues[field.id] = undefined;
             } else if (field.type === 'select') {
-                 resolvedInitialValues[field.id] = ''; // Or handle based on options / first option
+                 resolvedInitialValues[field.id] = ''; 
             }
-            else { // Text, textarea, email
-                 resolvedInitialValues[field.id] = ''; // Default to empty string for text-based inputs
+            else { 
+                 resolvedInitialValues[field.id] = ''; 
             }
         }
     });
@@ -279,7 +275,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentInitialValues, template.id]); // Removed visibleItemCounts to avoid loop
+  }, [currentInitialValues, template.id]); 
 
  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const submissionValues: Record<string, any> = { ...values };
@@ -290,7 +286,6 @@ export function DocumentForm({ template }: DocumentFormProps) {
     if (logoFieldId && submissionValues[logoFieldId] === undefined && currentInitialValues[logoFieldId] === undefined) {
         submissionValues[logoFieldId] = '';
     } else if (logoFieldId && typeof currentInitialValues[logoFieldId] === 'string' && currentInitialValues[logoFieldId].startsWith('data:image') && submissionValues[logoFieldId] === undefined) {
-        // If editing and no new file uploaded, retain existing logo data URI from initialValues
         submissionValues[logoFieldId] = currentInitialValues[logoFieldId];
     }
 
@@ -367,13 +362,12 @@ export function DocumentForm({ template }: DocumentFormProps) {
         if (submissionValues[field.id] === undefined) {
             if (field.type === 'boolean') {
                 submissionValues[field.id] = field.defaultValue !== undefined ? field.defaultValue : false;
-            } else if (field.id !== logoFieldId) { // Ensure logo field isn't overwritten if it was handled
+            } else if (field.id !== logoFieldId) { 
                  submissionValues[field.id] = field.defaultValue !== undefined ? field.defaultValue : (field.type === 'number' ? null : '');
             }
         }
     });
 
-    // Clear data for non-visible items
     if (template.id === 'work-order') {
       workOrderAccordionSubSectionsConfig.forEach(section => {
         const currentVisibleCount = visibleItemCounts[section.countKey];
@@ -421,12 +415,11 @@ export function DocumentForm({ template }: DocumentFormProps) {
 
   const handleRemoveItem = (countKey: keyof VisibleItemCounts, itemIndexToRemove: number) => {
     const currentVisibleCount = visibleItemCounts[countKey];
-    if (currentVisibleCount <= 1) return; // Should not remove the last item
+    if (currentVisibleCount <= 1) return; 
 
     const sectionConfig = workOrderAccordionSubSectionsConfig.find(s => s.countKey === countKey);
     if (!sectionConfig) return;
 
-    // Clear fields for the item being removed
     Object.values(sectionConfig.itemFieldIdPatterns).forEach(pattern => {
       if (pattern) {
         const fieldId = pattern.replace('#', String(itemIndexToRemove + 1));
@@ -435,7 +428,6 @@ export function DocumentForm({ template }: DocumentFormProps) {
       }
     });
     
-    // Shift data from subsequent items up
     for (let i = itemIndexToRemove + 1; i < currentVisibleCount; i++) {
       Object.values(sectionConfig.itemFieldIdPatterns).forEach(pattern => {
         if (pattern) {
@@ -446,8 +438,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
       });
     }
 
-    // Clear the last item's fields that was shifted from
-    if (currentVisibleCount > itemIndexToRemove +1 || currentVisibleCount > 1) { // check if there was a last item to clear
+    if (currentVisibleCount > itemIndexToRemove +1 || currentVisibleCount > 1) { 
          Object.values(sectionConfig.itemFieldIdPatterns).forEach(pattern => {
             if (pattern) {
                 const fieldId = pattern.replace('#', String(currentVisibleCount));
@@ -531,7 +522,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
         return (
           <Select
             onValueChange={formFieldControllerProps.onChange}
-            value={formFieldControllerProps.value || ''} // Ensure value is controlled
+            value={formFieldControllerProps.value || ''} 
             defaultValue={field.defaultValue as string || ''}
           >
             <FormControl>
@@ -560,9 +551,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
     }
   };
 
-  const renderFormField = (fieldId: string | undefined) => {
-    if (!fieldId) return null;
-    const field = template.fields.find(f => f.id === fieldId);
+  const renderFormField = (field?: TemplateField) => {
     if (!field) return null;
 
     return (
@@ -612,8 +601,8 @@ export function DocumentForm({ template }: DocumentFormProps) {
               <>
                 {Object.entries(workOrderSectionStructure).map(([sectionTitle, fieldIdsInSection], sectionIndex) => {
                   if (sectionTitle === 'Work Order Specifics') {
-                    const generalSpecificFields = ['generalWorkDescription', 'termsOfService'];
-                    const financialSpecificFields = ['otherCosts', 'taxRatePercentage', 'approvedByName', 'dateOfApproval'];
+                    const generalSpecificFields = template.fields.filter(f => ['generalWorkDescription', 'termsOfService'].includes(f.id));
+                    const financialSpecificFields = template.fields.filter(f => ['otherCosts', 'taxRatePercentage', 'approvedByName', 'dateOfApproval'].includes(f.id));
 
                     const defaultAccordionValues = workOrderAccordionSubSectionsConfig
                         .filter(s => {
@@ -628,7 +617,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
                           {sectionTitle}
                         </h2>
                         <div className="space-y-4">
-                          {generalSpecificFields.map(fieldId => renderFormField(fieldId))}
+                          {generalSpecificFields.map(field => renderFormField(field))}
 
                           <Accordion type="multiple" className="w-full space-y-3" defaultValue={defaultAccordionValues}>
                             {workOrderAccordionSubSectionsConfig.map((accordionSection) => {
@@ -637,7 +626,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
 
                               return (
                                 <AccordionItem value={accordionSection.id} key={accordionSection.id} className="border border-border rounded-md shadow-sm">
-                                  <AccordionPrimitive.Header className="flex items-center justify-between w-full p-3 data-[state=open]:border-b">
+                                   <AccordionPrimitive.Header className="flex items-center justify-between w-full p-3 data-[state=open]:border-b">
                                     <AccordionPrimitive.Trigger className="p-0 flex-grow text-left hover:no-underline [&>svg]:hidden">
                                       <span className="text-lg font-semibold text-foreground">{toggleField.label}</span>
                                     </AccordionPrimitive.Trigger>
@@ -662,37 +651,26 @@ export function DocumentForm({ template }: DocumentFormProps) {
                                     {Array.from({ length: visibleItemCounts[accordionSection.countKey] }).map((_, itemIndex) => {
                                       const itemNumber = itemIndex + 1;
                                       const fieldPatterns = accordionSection.itemFieldIdPatterns;
-                                      const itemFieldsToRenderIds: string[] = [];
+                                      const itemFieldsToRender: TemplateField[] = [];
 
-                                      if (fieldPatterns.description) itemFieldsToRenderIds.push(fieldPatterns.description!.replace('#', String(itemNumber)));
-                                      if (fieldPatterns.area) itemFieldsToRenderIds.push(fieldPatterns.area!.replace('#', String(itemNumber)));
-                                      if (fieldPatterns.rate) itemFieldsToRenderIds.push(fieldPatterns.rate!.replace('#', String(itemNumber)));
+                                      if (fieldPatterns.description) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.description!.replace('#', String(itemNumber)))!);
+                                      if (fieldPatterns.area) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.area!.replace('#', String(itemNumber)))!);
+                                      if (fieldPatterns.rate) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.rate!.replace('#', String(itemNumber)))!);
                                       
-                                      if (accordionSection.id === 'materials-accordion') {
-                                        if (fieldPatterns.quantity) itemFieldsToRenderIds.push(fieldPatterns.quantity!.replace('#', String(itemNumber)));
-                                        if (fieldPatterns.unit) itemFieldsToRenderIds.push(fieldPatterns.unit!.replace('#', String(itemNumber)));
-                                        if (fieldPatterns.pricePerUnit) itemFieldsToRenderIds.push(fieldPatterns.pricePerUnit!.replace('#', String(itemNumber)));
-                                      } else {
-                                        if (fieldPatterns.quantity && !itemFieldsToRenderIds.find(id => id === fieldPatterns.quantity!.replace('#', String(itemNumber)))) {
-                                            itemFieldsToRenderIds.push(fieldPatterns.quantity!.replace('#', String(itemNumber)));
-                                        }
-                                        if (fieldPatterns.unit && !itemFieldsToRenderIds.find(id => id === fieldPatterns.unit!.replace('#', String(itemNumber)))) {
-                                            itemFieldsToRenderIds.push(fieldPatterns.unit!.replace('#', String(itemNumber)));
-                                        }
-                                        if (fieldPatterns.pricePerUnit && !itemFieldsToRenderIds.find(id => id === fieldPatterns.pricePerUnit!.replace('#', String(itemNumber)))) {
-                                            itemFieldsToRenderIds.push(fieldPatterns.pricePerUnit!.replace('#', String(itemNumber)));
-                                        }
-                                      }
-                                      if (fieldPatterns.numPersons) itemFieldsToRenderIds.push(fieldPatterns.numPersons!.replace('#', String(itemNumber)));
-                                      if (fieldPatterns.amount) itemFieldsToRenderIds.push(fieldPatterns.amount!.replace('#', String(itemNumber)));
+                                      if (fieldPatterns.quantity) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.quantity!.replace('#', String(itemNumber)))!);
+                                      if (fieldPatterns.unit) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.unit!.replace('#', String(itemNumber)))!);
+                                      if (fieldPatterns.pricePerUnit) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.pricePerUnit!.replace('#', String(itemNumber)))!);
                                       
-                                      const actualFieldsExist = itemFieldsToRenderIds.every(id => template.fields.some(f => f.id === id));
-                                      if (!actualFieldsExist || itemFieldsToRenderIds.length === 0) return null;
+                                      if (fieldPatterns.numPersons) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.numPersons!.replace('#', String(itemNumber)))!);
+                                      if (fieldPatterns.amount) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.amount!.replace('#', String(itemNumber)))!);
+                                      
+                                      const actualFields = itemFieldsToRender.filter(Boolean);
+                                      if (actualFields.length === 0) return null;
 
                                       return (
                                         <div key={`${accordionSection.id}-item-${itemNumber}`} className="space-y-4 border-b border-dashed border-border pb-4 mb-4 last:border-b-0 last:pb-0 last:mb-0 relative group">
                                           <h4 className="text-md font-medium text-muted-foreground">{accordionSection.itemTitleSingular} #{itemNumber}</h4>
-                                          {itemFieldsToRenderIds.map(fieldId => renderFormField(fieldId))}
+                                          {actualFields.map(field => renderFormField(field))}
                                           {itemIndex > 0 && (
                                             <Button
                                               type="button"
@@ -727,11 +705,11 @@ export function DocumentForm({ template }: DocumentFormProps) {
                               );
                             })}
                           </Accordion>
-                          {financialSpecificFields.map(fieldId => renderFormField(fieldId))}
+                          {financialSpecificFields.map(field => renderFormField(field))}
                         </div>
                       </div>
                     );
-                  } else { // For sections like "Business Details", "Order Details", "Client Details"
+                  } else { 
                     return (
                       <div key={sectionTitle} className="space-y-4 pt-4">
                         <h2 className={`text-xl font-semibold text-primary ${sectionIndex > 0 ? 'mt-8' : 'mt-0'} pb-2 border-b border-border`}>
@@ -740,13 +718,11 @@ export function DocumentForm({ template }: DocumentFormProps) {
                         <div className="space-y-4">
                         {fieldIdsInSection
                             .map(fieldId => template.fields.find(f => f.id === fieldId))
-                            .filter(field => { // Explicitly filter out fields managed by accordions
+                            .filter(field => { 
                               if (!field) return false;
-                              // Check if it's a toggle field for any accordion
                               const isToggleField = workOrderAccordionSubSectionsConfig.some(s => s.toggleFieldId === field.id);
                               if (isToggleField) return false;
 
-                              // Check if it's an item field within any accordion (for any item number up to max)
                               const isItemField = workOrderAccordionSubSectionsConfig.some(accSection =>
                                 Object.values(accSection.itemFieldIdPatterns).some(pattern => {
                                   if (!pattern) return false;
@@ -758,7 +734,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
                               );
                               return !isItemField;
                             })
-                            .map(field => field ? renderFormField(field.id) : null)
+                            .map(field => field ? renderFormField(field) : null)
                           }
                         </div>
                       </div>
@@ -766,8 +742,8 @@ export function DocumentForm({ template }: DocumentFormProps) {
                   }
                 })}
               </>
-            ) : ( // For templates other than work-order
-              template.fields.map((field) => renderFormField(field.id))
+            ) : ( 
+              template.fields.map((field) => renderFormField(field))
             )}
           </CardContent>
           <CardFooter className="flex justify-end gap-3 border-t pt-6">
@@ -784,3 +760,4 @@ export function DocumentForm({ template }: DocumentFormProps) {
     </Card>
   );
 }
+

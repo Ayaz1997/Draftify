@@ -24,7 +24,7 @@ const formatCurrency = (amount?: number | string, currencySymbol = '₹') => {
   return `${currencySymbol}${num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
-const MAX_ITEMS_PREVIEW = 5;
+const MAX_ITEMS_PREVIEW = 10; // Increased from 5 to 10
 
 const WorkOrderPreview = (data: FormData) => {
   const workItems = [];
@@ -475,7 +475,7 @@ const workOrderFields: TemplateField[] = [
   { id: 'generalWorkDescription', label: 'Overall Work Description', type: 'textarea', placeholder: 'Summarize the work to be done', rows: 3 },
   { id: 'termsOfService', label: 'Terms of Service', type: 'textarea', placeholder: 'Payment terms, warranty, etc.', rows: 4, defaultValue: "1. All payments are due upon completion of work unless otherwise agreed in writing.\n2. Any changes to the scope of work must be documented and may incur additional charges.\n3. Warranty for services performed is 30 days from completion date." },
 
-  // Work Order Specifics - Work Items Table Toggle & Fields (up to 5 items)
+  // Work Order Specifics - Work Items Table Toggle & Fields (up to 10 items)
   { id: 'includeWorkDescriptionTable', label: 'Work Items', type: 'boolean', defaultValue: true, placeholder: "Toggle visibility of the detailed work items table in the previewed document." },
   { id: 'workItem1Description', label: 'Work description 1', type: 'text', placeholder: 'E.g., Interior Painting - Living Room'},
   { id: 'workItem1Area', label: 'Area (Sq. ft.)', type: 'number', placeholder: '250' },
@@ -492,9 +492,24 @@ const workOrderFields: TemplateField[] = [
   { id: 'workItem5Description', label: 'Work description 5', type: 'text' },
   { id: 'workItem5Area', label: 'Area (Sq. ft.)', type: 'number' },
   { id: 'workItem5Rate', label: 'Rate (₹)', type: 'number' },
+  { id: 'workItem6Description', label: 'Work description 6', type: 'text' },
+  { id: 'workItem6Area', label: 'Area (Sq. ft.)', type: 'number' },
+  { id: 'workItem6Rate', label: 'Rate (₹)', type: 'number' },
+  { id: 'workItem7Description', label: 'Work description 7', type: 'text' },
+  { id: 'workItem7Area', label: 'Area (Sq. ft.)', type: 'number' },
+  { id: 'workItem7Rate', label: 'Rate (₹)', type: 'number' },
+  { id: 'workItem8Description', label: 'Work description 8', type: 'text' },
+  { id: 'workItem8Area', label: 'Area (Sq. ft.)', type: 'number' },
+  { id: 'workItem8Rate', label: 'Rate (₹)', type: 'number' },
+  { id: 'workItem9Description', label: 'Work description 9', type: 'text' },
+  { id: 'workItem9Area', label: 'Area (Sq. ft.)', type: 'number' },
+  { id: 'workItem9Rate', label: 'Rate (₹)', type: 'number' },
+  { id: 'workItem10Description', label: 'Work description 10', type: 'text' },
+  { id: 'workItem10Area', label: 'Area (Sq. ft.)', type: 'number' },
+  { id: 'workItem10Rate', label: 'Rate (₹)', type: 'number' },
 
 
-  // Work Order Specifics - Material Table Toggle & Fields (up to 5 items)
+  // Work Order Specifics - Material Table Toggle & Fields (up to 10 items)
   { id: 'includeMaterialTable', label: 'Materials', type: 'boolean', defaultValue: true, placeholder: "Toggle visibility of the materials table in the previewed document." },
   { id: 'materialItem1Name', label: 'Material name 1', type: 'text', placeholder: 'E.g., Emulsion Paint' },
   { id: 'materialItem1Quantity', label: 'Quantity', type: 'number', placeholder: '10' },
@@ -516,8 +531,29 @@ const workOrderFields: TemplateField[] = [
   { id: 'materialItem5Quantity', label: 'Quantity', type: 'number' },
   { id: 'materialItem5Unit', label: 'Unit', type: 'select', options: [ { value: 'Pcs', label: 'Pcs' }, { value: 'Litre', label: 'Litre' }, { value: 'Kg', label: 'Kg' } ], defaultValue: 'Pcs', placeholder: 'Select unit' },
   { id: 'materialItem5PricePerUnit', label: 'Price per Unit (₹)', type: 'number' },
+  { id: 'materialItem6Name', label: 'Material name 6', type: 'text' },
+  { id: 'materialItem6Quantity', label: 'Quantity', type: 'number' },
+  { id: 'materialItem6Unit', label: 'Unit', type: 'select', options: [ { value: 'Pcs', label: 'Pcs' }, { value: 'Litre', label: 'Litre' }, { value: 'Kg', label: 'Kg' } ], defaultValue: 'Pcs', placeholder: 'Select unit' },
+  { id: 'materialItem6PricePerUnit', label: 'Price per Unit (₹)', type: 'number' },
+  { id: 'materialItem7Name', label: 'Material name 7', type: 'text' },
+  { id: 'materialItem7Quantity', label: 'Quantity', type: 'number' },
+  { id: 'materialItem7Unit', label: 'Unit', type: 'select', options: [ { value: 'Pcs', label: 'Pcs' }, { value: 'Litre', label: 'Litre' }, { value: 'Kg', label: 'Kg' } ], defaultValue: 'Pcs', placeholder: 'Select unit' },
+  { id: 'materialItem7PricePerUnit', label: 'Price per Unit (₹)', type: 'number' },
+  { id: 'materialItem8Name', label: 'Material name 8', type: 'text' },
+  { id: 'materialItem8Quantity', label: 'Quantity', type: 'number' },
+  { id: 'materialItem8Unit', label: 'Unit', type: 'select', options: [ { value: 'Pcs', label: 'Pcs' }, { value: 'Litre', label: 'Litre' }, { value: 'Kg', label: 'Kg' } ], defaultValue: 'Pcs', placeholder: 'Select unit' },
+  { id: 'materialItem8PricePerUnit', label: 'Price per Unit (₹)', type: 'number' },
+  { id: 'materialItem9Name', label: 'Material name 9', type: 'text' },
+  { id: 'materialItem9Quantity', label: 'Quantity', type: 'number' },
+  { id: 'materialItem9Unit', label: 'Unit', type: 'select', options: [ { value: 'Pcs', label: 'Pcs' }, { value: 'Litre', label: 'Litre' }, { value: 'Kg', label: 'Kg' } ], defaultValue: 'Pcs', placeholder: 'Select unit' },
+  { id: 'materialItem9PricePerUnit', label: 'Price per Unit (₹)', type: 'number' },
+  { id: 'materialItem10Name', label: 'Material name 10', type: 'text' },
+  { id: 'materialItem10Quantity', label: 'Quantity', type: 'number' },
+  { id: 'materialItem10Unit', label: 'Unit', type: 'select', options: [ { value: 'Pcs', label: 'Pcs' }, { value: 'Litre', label: 'Litre' }, { value: 'Kg', label: 'Kg' } ], defaultValue: 'Pcs', placeholder: 'Select unit' },
+  { id: 'materialItem10PricePerUnit', label: 'Price per Unit (₹)', type: 'number' },
 
-  // Work Order Specifics - Labor Table Toggle & Fields (up to 5 items)
+
+  // Work Order Specifics - Labor Table Toggle & Fields (up to 10 items)
   { id: 'includeLaborTable', label: 'Labour Charges', type: 'boolean', defaultValue: true, placeholder: "Toggle visibility of the labor charges table in the previewed document." },
   { id: 'laborItem1TeamName', label: 'Team/Description 1', type: 'text', placeholder: 'E.g., Painting Team A' },
   { id: 'laborItem1NumPersons', label: 'No. of Persons', type: 'number', placeholder: '2' },
@@ -534,6 +570,22 @@ const workOrderFields: TemplateField[] = [
   { id: 'laborItem5TeamName', label: 'Team/Description 5', type: 'text' },
   { id: 'laborItem5NumPersons', label: 'No. of Persons', type: 'number' },
   { id: 'laborItem5Amount', label: 'Amount (₹)', type: 'number' },
+  { id: 'laborItem6TeamName', label: 'Team/Description 6', type: 'text' },
+  { id: 'laborItem6NumPersons', label: 'No. of Persons', type: 'number' },
+  { id: 'laborItem6Amount', label: 'Amount (₹)', type: 'number' },
+  { id: 'laborItem7TeamName', label: 'Team/Description 7', type: 'text' },
+  { id: 'laborItem7NumPersons', label: 'No. of Persons', type: 'number' },
+  { id: 'laborItem7Amount', label: 'Amount (₹)', type: 'number' },
+  { id: 'laborItem8TeamName', label: 'Team/Description 8', type: 'text' },
+  { id: 'laborItem8NumPersons', label: 'No. of Persons', type: 'number' },
+  { id: 'laborItem8Amount', label: 'Amount (₹)', type: 'number' },
+  { id: 'laborItem9TeamName', label: 'Team/Description 9', type: 'text' },
+  { id: 'laborItem9NumPersons', label: 'No. of Persons', type: 'number' },
+  { id: 'laborItem9Amount', label: 'Amount (₹)', type: 'number' },
+  { id: 'laborItem10TeamName', label: 'Team/Description 10', type: 'text' },
+  { id: 'laborItem10NumPersons', label: 'No. of Persons', type: 'number' },
+  { id: 'laborItem10Amount', label: 'Amount (₹)', type: 'number' },
+
 
   // Work Order Specifics - Financials & Approval
   { id: 'otherCosts', label: 'Other Costs (₹, e.g., Transportation)', type: 'number', placeholder: '500', defaultValue: 0 },
@@ -598,3 +650,4 @@ export const templates: Template[] = [
     previewLayout: InvoicePreview,
   },
 ];
+
