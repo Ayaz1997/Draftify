@@ -1,9 +1,10 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 body {
-  font-family: var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; /* Changed from --font-geist-sans */
 }
 
 @layer base {
@@ -17,25 +18,25 @@ body {
     --popover: 200 0% 100%;
     --popover-foreground: 200 0% 20%;
 
-    --card: 200 0% 100%; /* White for cards */
+    --card: 200 0% 100%; /* White for cards, will be used by bg-card/40 */
     --card-foreground: 200 0% 20%;
 
-    --border: 200 0% 87%; /* Light Gray */
+    --border: 200 0% 87%; /* Light Gray - less relevant for card main border now */
     --input: 200 0% 93%; /* Slightly off-white for inputs */
 
-    --primary: 210 70% 50%; /* New: Classic Blue */
+    --primary: 210 70% 50%; /* Classic Blue */
     --primary-foreground: 0 0% 100%; /* White */
 
     --secondary: 200 0% 93%; /* Light Gray */
     --secondary-foreground: 210 70% 30%; /* Darker Classic Blue */
 
-    --accent: 200 80% 60%; /* New: Lighter, vibrant cyan-blue */
+    --accent: 175 50% 50%; /* Soft Teal: #45B8AC */
     --accent-foreground: 0 0% 100%; /* White */
 
     --destructive: 0 72% 51%; /* Default Red */
     --destructive-foreground: 0 0% 98%;
 
-    --ring: 210 70% 50%; /* New: Match primary for focus rings */
+    --ring: 210 70% 50%; /* Match primary for focus rings */
 
     --radius: 0.5rem;
 
@@ -66,25 +67,25 @@ body {
     --popover: 210 30% 8%;
     --popover-foreground: 200 0% 90%;
 
-    --card: 210 30% 12%; /* Slightly lighter dark blue-gray for cards */
+    --card: 210 30% 15%; /* Darker base for cards in dark mode, used by bg-card/60 */
     --card-foreground: 200 0% 90%;
 
     --border: 210 30% 20%;
     --input: 210 30% 18%;
 
-    --primary: 210 70% 55%; /* New: Classic Blue (slightly lighter for dark mode) */
+    --primary: 210 70% 55%; /* Classic Blue (slightly lighter for dark mode) */
     --primary-foreground: 0 0% 100%; /* White */
 
     --secondary: 210 30% 25%;
     --secondary-foreground: 200 0% 90%;
 
-    --accent: 200 80% 65%; /* New: Lighter cyan-blue (slightly lighter for dark mode) */
+    --accent: 175 55% 55%; /* Soft Teal (slightly lighter for dark mode) */
     --accent-foreground: 0 0% 100%; /* White */
 
     --destructive: 0 63% 40%;
     --destructive-foreground: 0 0% 98%;
 
-    --ring: 210 70% 55%; /* New: Match primary for dark focus rings */
+    --ring: 210 70% 55%; /* Match primary for dark focus rings */
 
     /* Sidebar specific colors - dark theme */
     --sidebar-background: 210 30% 8%;
@@ -95,7 +96,7 @@ body {
     --sidebar-accent-foreground: 200 80% 80%;
     --sidebar-border: 210 30% 20%;
     --sidebar-ring: 210 70% 55%;
-    
+
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;

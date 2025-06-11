@@ -1,16 +1,13 @@
+
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Inter } from 'next/font/google'; // Changed from Geist
 import './globals.css';
 import { Header } from '@/components/Header';
 import { Toaster } from "@/components/ui/toaster";
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+// Changed from geistSans and geistMono
+const inter = Inter({
+  variable: '--font-inter',
   subsets: ['latin'],
 });
 
@@ -26,8 +23,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body 
-        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
+      <body
+        className={`${inter.variable} antialiased flex flex-col min-h-screen`} // Changed font variable
         suppressHydrationWarning={true}
       >
         <Header />
