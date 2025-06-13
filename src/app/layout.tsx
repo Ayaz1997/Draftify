@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     description: 'Create professional documents like work orders, letterheads, and invoices with ease.',
     images: [
       {
-        url: 'https://placehold.co/1200x630.png',
+        url: 'https://storage.googleapis.com/projectit-images-dev/images/a025ac38-e869-4cae-bb01-687191c370f6', // Updated image URL
         width: 1200,
         height: 630,
         alt: 'My Biz Docs - Document Creation Tool',
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'My Biz Docs - Your Business Documentation Tool',
     description: 'Create professional documents like work orders, letterheads, and invoices with ease.',
-    images: ['https://placehold.co/1200x630.png'],
+    images: ['https://storage.googleapis.com/projectit-images-dev/images/a025ac38-e869-4cae-bb01-687191c370f6'], // Updated image URL
   },
 };
 
