@@ -707,9 +707,9 @@ export function DocumentForm({ template }: DocumentFormProps) {
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)}>
                     <Tabs value={currentTab} onValueChange={handleTabChangeAttempt} className="w-full">
-                        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-4 mb-4">
+                        <TabsList className="w-full flex overflow-x-auto py-2 mb-4">
                             {WORK_ORDER_TABS_CONFIG.map(tab => (
-                                <TabsTrigger key={tab.id} value={tab.id}>
+                                <TabsTrigger key={tab.id} value={tab.id} className="whitespace-nowrap">
                                     {tab.title}
                                 </TabsTrigger>
                             ))}
