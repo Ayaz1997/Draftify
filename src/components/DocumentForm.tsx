@@ -21,12 +21,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, PlusCircle, Trash2 } from 'lucide-react';
+import { Eye, PlusCircle, Trash2, ChevronDown } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import React, { useCallback, useMemo, useState, useEffect } from 'react';
-import { Accordion, AccordionItem, AccordionContent, AccordionTrigger as ShadcnAccordionTrigger } from '@/components/ui/accordion'; // Renamed to avoid conflict
+import { Accordion, AccordionItem, AccordionContent } from '@/components/ui/accordion';
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 
 
 interface DocumentFormProps {
@@ -729,25 +730,33 @@ export function DocumentForm({ template }: DocumentFormProps) {
                                                 return (
                                                     <AccordionItem value={accordionSection.id} key={accordionSection.id} className="border border-border rounded-md shadow-sm">
                                                     <AccordionPrimitive.Header className="flex items-center justify-between w-full p-3 data-[state=open]:border-b">
-                                                        <ShadcnAccordionTrigger className="p-0 flex-grow text-left hover:no-underline [&>svg]:hidden">
-                                                        <span className="text-lg font-semibold text-foreground">{toggleField.label}</span>
-                                                        </ShadcnAccordionTrigger>
-                                                        <FormField
-                                                        control={form.control}
-                                                        name={accordionSection.toggleFieldId as any}
-                                                        render={({ field: checkboxCtrl }) => (
-                                                            <FormItem className="flex flex-row items-center space-x-2 pl-4">
-                                                            <FormControl>
-                                                                <Checkbox
-                                                                checked={checkboxCtrl.value}
-                                                                onCheckedChange={checkboxCtrl.onChange}
-                                                                id={checkboxCtrl.name}
-                                                                aria-label={toggleField.placeholder || `Toggle ${toggleField.label} section`}
-                                                                />
-                                                            </FormControl>
-                                                            </FormItem>
+                                                        <AccordionPrimitive.Trigger
+                                                        className={cn(
+                                                            "flex flex-1 items-center text-left text-lg font-semibold text-foreground hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                                                            "[&[data-state=open]>svg]:rotate-180"
                                                         )}
-                                                        />
+                                                        >
+                                                        <span className="mr-auto">{toggleField.label}</span>
+                                                        <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+                                                        </AccordionPrimitive.Trigger>
+                                                        <div className="ml-4">
+                                                            <FormField
+                                                            control={form.control}
+                                                            name={accordionSection.toggleFieldId as any}
+                                                            render={({ field: checkboxCtrl }) => (
+                                                                <FormItem className="flex flex-row items-center m-0 p-0">
+                                                                <FormControl>
+                                                                    <Checkbox
+                                                                    checked={checkboxCtrl.value}
+                                                                    onCheckedChange={checkboxCtrl.onChange}
+                                                                    id={checkboxCtrl.name}
+                                                                    aria-label={toggleField.placeholder || `Toggle ${toggleField.label} section`}
+                                                                    />
+                                                                </FormControl>
+                                                                </FormItem>
+                                                            )}
+                                                            />
+                                                        </div>
                                                     </AccordionPrimitive.Header>
                                                     <AccordionContent className="pt-4 px-3 pb-3 space-y-4">
                                                         {Array.from({ length: visibleItemCounts[accordionSection.countKey] }).map((_, itemIndex) => {
@@ -755,16 +764,24 @@ export function DocumentForm({ template }: DocumentFormProps) {
                                                         const fieldPatterns = accordionSection.itemFieldIdPatterns;
                                                         const itemFieldsToRender: TemplateField[] = [];
 
-                                                        if (fieldPatterns.description) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.description!.replace('#', String(itemNumber)))!);
-                                                        if (fieldPatterns.area) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.area!.replace('#', String(itemNumber)))!);
-                                                        if (fieldPatterns.rate) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.rate!.replace('#', String(itemNumber)))!);
-                                                        
-                                                        if (fieldPatterns.quantity) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.quantity!.replace('#', String(itemNumber)))!);
-                                                        if (fieldPatterns.unit) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.unit!.replace('#', String(itemNumber)))!);
-                                                        if (fieldPatterns.pricePerUnit) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.pricePerUnit!.replace('#', String(itemNumber)))!);
-                                                        
-                                                        if (fieldPatterns.numPersons) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.numPersons!.replace('#', String(itemNumber)))!);
-                                                        if (fieldPatterns.amount) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.amount!.replace('#', String(itemNumber)))!);
+                                                        // Corrected order for Materials to place Unit after Quantity
+                                                        if (accordionSection.id === 'materials-accordion') {
+                                                            if (fieldPatterns.description) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.description!.replace('#', String(itemNumber)))!);
+                                                            if (fieldPatterns.quantity) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.quantity!.replace('#', String(itemNumber)))!);
+                                                            if (fieldPatterns.unit) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.unit!.replace('#', String(itemNumber)))!);
+                                                            if (fieldPatterns.pricePerUnit) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.pricePerUnit!.replace('#', String(itemNumber)))!);
+                                                        } else { // Original order for other sections
+                                                            if (fieldPatterns.description) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.description!.replace('#', String(itemNumber)))!);
+                                                            if (fieldPatterns.area) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.area!.replace('#', String(itemNumber)))!);
+                                                            if (fieldPatterns.rate) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.rate!.replace('#', String(itemNumber)))!);
+                                                            
+                                                            if (fieldPatterns.quantity) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.quantity!.replace('#', String(itemNumber)))!);
+                                                            if (fieldPatterns.unit) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.unit!.replace('#', String(itemNumber)))!);
+                                                            if (fieldPatterns.pricePerUnit) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.pricePerUnit!.replace('#', String(itemNumber)))!);
+                                                            
+                                                            if (fieldPatterns.numPersons) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.numPersons!.replace('#', String(itemNumber)))!);
+                                                            if (fieldPatterns.amount) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.amount!.replace('#', String(itemNumber)))!);
+                                                        }
                                                         
                                                         const actualFields = itemFieldsToRender.filter(Boolean);
                                                         if (actualFields.length === 0) return null;
@@ -867,5 +884,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
   );
 }
 
+
+    
 
     
