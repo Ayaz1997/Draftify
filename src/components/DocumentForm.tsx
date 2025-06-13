@@ -24,8 +24,9 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Eye, PlusCircle, Trash2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import React, { useCallback, useMemo, useState, useEffect } from 'react';
-import { Accordion, AccordionItem, AccordionContent, AccordionTrigger } from '@/components/ui/accordion';
+import { Accordion, AccordionItem, AccordionContent, AccordionTrigger as ShadcnAccordionTrigger } from '@/components/ui/accordion'; // Renamed to avoid conflict
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
 interface DocumentFormProps {
@@ -44,7 +45,11 @@ function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
         break;
       }
       case 'number': {
-        validator = z.coerce.number({ invalid_type_error: 'Must be a number' }).optional().nullable();
+        // Ensure that empty strings or null are treated as undefined for optional numbers
+        validator = z.preprocess(
+          (val) => (val === "" || val === null ? undefined : val),
+          z.coerce.number({ invalid_type_error: 'Must be a number' }).optional().nullable()
+        );
         break;
       }
       case 'date': {
@@ -87,6 +92,16 @@ function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
         break;
       }
     }
+    if (field.required) {
+        if (field.type === 'boolean') {
+             // Required booleans don't make much sense unless they must be true, handle as needed
+        } else if (field.type === 'number') {
+            validator = validator.refine(val => val !== undefined && val !== null && !isNaN(val), { message: `${field.label} is required` });
+        }
+         else {
+             validator = validator.min(1, { message: `${field.label} is required` });
+        }
+    }
     shape[field.id] = validator;
   });
   return z.object(shape);
@@ -96,8 +111,9 @@ const workOrderSectionStructure: Record<string, string[]> = {
   'Business Details': ['businessName', 'businessAddress', 'businessContactNumber', 'businessEmail', 'businessLogoUrl'],
   'Order Details': ['orderNumber', 'orderDate', 'expectedStartDate', 'expectedEndDate'],
   'Client Details': ['clientName', 'clientPhone', 'clientEmail', 'workLocation', 'orderReceivedBy'],
-  'Work Order Specifics': [ 
+  'Work Order Specifics': [ // Top-level non-accordion fields for this section
     'generalWorkDescription', 'termsOfService',
+    // Accordion toggles are implicitly part of this section logic
     'otherCosts', 'taxRatePercentage', 'approvedByName', 'dateOfApproval'
   ]
 };
@@ -169,6 +185,13 @@ const workOrderAccordionSubSectionsConfig: WorkOrderAccordionConfig[] = [
   },
 ];
 
+const WORK_ORDER_TABS_CONFIG = [
+  { id: 'businessDetails', title: 'Business Details', fieldIds: workOrderSectionStructure['Business Details'] },
+  { id: 'orderDetails', title: 'Order Details', fieldIds: workOrderSectionStructure['Order Details'] },
+  { id: 'clientDetails', title: 'Client Details', fieldIds: workOrderSectionStructure['Client Details'] },
+  { id: 'workOrderSpecifics', title: 'Work Order Specifics', fieldIds: workOrderSectionStructure['Work Order Specifics'] },
+];
+
 
 export function DocumentForm({ template }: DocumentFormProps) {
   const router = useRouter();
@@ -179,6 +202,9 @@ export function DocumentForm({ template }: DocumentFormProps) {
     materials: 1,
     labor: 1,
   });
+  
+  const [currentTab, setCurrentTab] = useState(WORK_ORDER_TABS_CONFIG[0].id);
+  const currentTabIndex = WORK_ORDER_TABS_CONFIG.findIndex(tab => tab.id === currentTab);
 
   const getInitialValues = useCallback(() => {
     const editDataKey = `docuFormEditData-${template.id}`;
@@ -247,7 +273,14 @@ export function DocumentForm({ template }: DocumentFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: currentInitialValues,
+    mode: 'onChange', // Validate on change for better immediate feedback
   });
+
+  useEffect(() => {
+    form.reset(currentInitialValues); // Ensure form resets when initial values change (e.g. navigating back for edit)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentInitialValues, form.reset]);
+
 
   useEffect(() => {
     if (template.id === 'work-order' && currentInitialValues) {
@@ -420,33 +453,24 @@ export function DocumentForm({ template }: DocumentFormProps) {
     const sectionConfig = workOrderAccordionSubSectionsConfig.find(s => s.countKey === countKey);
     if (!sectionConfig) return;
 
-    Object.values(sectionConfig.itemFieldIdPatterns).forEach(pattern => {
-      if (pattern) {
-        const fieldId = pattern.replace('#', String(itemIndexToRemove + 1));
-        const fieldDef = template.fields.find(f => f.id === fieldId);
-        form.setValue(fieldId as any, fieldDef?.type === 'number' ? undefined : '');
-      }
-    });
-    
-    for (let i = itemIndexToRemove + 1; i < currentVisibleCount; i++) {
-      Object.values(sectionConfig.itemFieldIdPatterns).forEach(pattern => {
-        if (pattern) {
-          const sourceFieldId = pattern.replace('#', String(i + 1));
-          const targetFieldId = pattern.replace('#', String(i));
-          form.setValue(targetFieldId as any, form.getValues(sourceFieldId as any));
-        }
-      });
-    }
-
-    if (currentVisibleCount > itemIndexToRemove +1 || currentVisibleCount > 1) { 
-         Object.values(sectionConfig.itemFieldIdPatterns).forEach(pattern => {
+    // Clear values for the item being removed and shift subsequent items up
+    for (let i = itemIndexToRemove; i < currentVisibleCount - 1; i++) {
+        Object.values(sectionConfig.itemFieldIdPatterns).forEach(pattern => {
             if (pattern) {
-                const fieldId = pattern.replace('#', String(currentVisibleCount));
-                const fieldDef = template.fields.find(f => f.id === fieldId);
-                form.setValue(fieldId as any, fieldDef?.type === 'number' ? undefined : '');
+                const sourceFieldId = pattern.replace('#', String(i + 2)); // N+1 item data
+                const targetFieldId = pattern.replace('#', String(i + 1)); // N item data
+                form.setValue(targetFieldId as any, form.getValues(sourceFieldId as any));
             }
         });
     }
+    // Clear values for the last item that was shifted from
+    Object.values(sectionConfig.itemFieldIdPatterns).forEach(pattern => {
+        if (pattern) {
+            const fieldId = pattern.replace('#', String(currentVisibleCount));
+            const fieldDef = template.fields.find(f => f.id === fieldId);
+            form.setValue(fieldId as any, fieldDef?.type === 'number' ? undefined : '');
+        }
+    });
 
 
     setVisibleItemCounts(prevCounts => ({
@@ -522,8 +546,8 @@ export function DocumentForm({ template }: DocumentFormProps) {
         return (
           <Select
             onValueChange={formFieldControllerProps.onChange}
-            value={formFieldControllerProps.value || ''} 
-            defaultValue={field.defaultValue as string || ''}
+            value={String(formFieldControllerProps.value || '')} 
+            defaultValue={String(field.defaultValue || '')}
           >
             <FormControl>
               <SelectTrigger>
@@ -588,7 +612,236 @@ export function DocumentForm({ template }: DocumentFormProps) {
     );
   };
 
+  const handleTabChangeAttempt = async (targetTabId: string) => {
+    const targetTabIndex = WORK_ORDER_TABS_CONFIG.findIndex(t => t.id === targetTabId);
+    const currentActiveTabIndex = WORK_ORDER_TABS_CONFIG.findIndex(t => t.id === currentTab);
 
+    if (targetTabIndex > currentActiveTabIndex) { // Moving forward
+        for (let i = currentActiveTabIndex; i < targetTabIndex; i++) {
+            const tabToValidate = WORK_ORDER_TABS_CONFIG[i];
+            const fieldsToValidate = getFieldsForTabValidation(tabToValidate.id);
+            if (fieldsToValidate.length > 0) {
+                const isValid = await form.trigger(fieldsToValidate as any);
+                if (!isValid) {
+                    toast({
+                        title: "Validation Error",
+                        description: `Please correct errors in the "${tabToValidate.title}" tab.`,
+                        variant: "destructive",
+                    });
+                    setCurrentTab(tabToValidate.id); // Stay on/move to the tab with errors
+                    return; // Stop further tab changes
+                }
+            }
+        }
+    }
+    setCurrentTab(targetTabId); // Allow navigation if all intermediate/current tabs are valid or moving backward
+  };
+
+
+  const getFieldsForTabValidation = (tabId: string): string[] => {
+    const tabConfig = WORK_ORDER_TABS_CONFIG.find(t => t.id === tabId);
+    if (!tabConfig) return [];
+
+    if (tabId !== 'workOrderSpecifics') {
+        return tabConfig.fieldIds || [];
+    }
+
+    // For 'workOrderSpecifics' tab, gather all relevant fields
+    let fields: string[] = [...(tabConfig.fieldIds || [])]; // Starts with top-level fields like generalWorkDescription, etc.
+
+    workOrderAccordionSubSectionsConfig.forEach(section => {
+        fields.push(section.toggleFieldId); // Add the toggle checkbox itself
+        if (form.getValues(section.toggleFieldId)) { // Only validate items if section is active
+            for (let i = 1; i <= visibleItemCounts[section.countKey]; i++) {
+                Object.values(section.itemFieldIdPatterns).forEach(pattern => {
+                    if (pattern) fields.push(pattern.replace('#', String(i)));
+                });
+            }
+        }
+    });
+    return fields.filter(Boolean);
+  };
+
+
+  const handleNext = async () => {
+    const currentTabConfig = WORK_ORDER_TABS_CONFIG[currentTabIndex];
+    const fieldsToValidate = getFieldsForTabValidation(currentTabConfig.id);
+
+    if (fieldsToValidate.length > 0) {
+        const isValid = await form.trigger(fieldsToValidate as any); // RHF expects FieldPath<TFieldValues>[]
+        if (!isValid) {
+            toast({
+                title: "Validation Error",
+                description: `Please correct the errors on the "${currentTabConfig.title}" tab before proceeding.`,
+                variant: "destructive",
+            });
+            return;
+        }
+    }
+
+    if (currentTabIndex < WORK_ORDER_TABS_CONFIG.length - 1) {
+      setCurrentTab(WORK_ORDER_TABS_CONFIG[currentTabIndex + 1].id);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentTabIndex > 0) {
+      setCurrentTab(WORK_ORDER_TABS_CONFIG[currentTabIndex - 1].id);
+    }
+  };
+
+  if (template.id === 'work-order') {
+    const defaultAccordionOpenValues = workOrderAccordionSubSectionsConfig
+        .filter(s => {
+            const toggleFieldDef = template.fields.find(f => f.id === s.toggleFieldId);
+            return form.getValues(s.toggleFieldId as any) === true || (form.getValues(s.toggleFieldId as any) === undefined && toggleFieldDef?.defaultValue === true);
+        })
+        .map(s => s.id);
+
+    return (
+        <Card className="shadow-lg">
+            <CardHeader>
+                <CardTitle className="text-lg font-medium">Fill in the details for your {template.name}</CardTitle>
+            </CardHeader>
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)}>
+                    <Tabs value={currentTab} onValueChange={handleTabChangeAttempt} className="w-full">
+                        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-4 mb-4">
+                            {WORK_ORDER_TABS_CONFIG.map(tab => (
+                                <TabsTrigger key={tab.id} value={tab.id}>
+                                    {tab.title}
+                                </TabsTrigger>
+                            ))}
+                        </TabsList>
+
+                        {WORK_ORDER_TABS_CONFIG.map(tabInfo => (
+                            <TabsContent key={tabInfo.id} value={tabInfo.id} className="focus-visible:ring-0 focus-visible:ring-offset-0">
+                                <CardContent className="space-y-6 pt-6">
+                                    {tabInfo.id === 'workOrderSpecifics' ? (
+                                        <>
+                                            {template.fields.filter(f => ['generalWorkDescription', 'termsOfService'].includes(f.id)).map(field => renderFormField(field))}
+                                            
+                                            <Accordion type="multiple" className="w-full space-y-3" defaultValue={defaultAccordionOpenValues}>
+                                                {workOrderAccordionSubSectionsConfig.map((accordionSection) => {
+                                                const toggleField = template.fields.find(f => f.id === accordionSection.toggleFieldId);
+                                                if (!toggleField || toggleField.type !== 'boolean') return null;
+
+                                                return (
+                                                    <AccordionItem value={accordionSection.id} key={accordionSection.id} className="border border-border rounded-md shadow-sm">
+                                                    <AccordionPrimitive.Header className="flex items-center justify-between w-full p-3 data-[state=open]:border-b">
+                                                        <ShadcnAccordionTrigger className="p-0 flex-grow text-left hover:no-underline [&>svg]:hidden">
+                                                        <span className="text-lg font-semibold text-foreground">{toggleField.label}</span>
+                                                        </ShadcnAccordionTrigger>
+                                                        <FormField
+                                                        control={form.control}
+                                                        name={accordionSection.toggleFieldId as any}
+                                                        render={({ field: checkboxCtrl }) => (
+                                                            <FormItem className="flex flex-row items-center space-x-2 pl-4">
+                                                            <FormControl>
+                                                                <Checkbox
+                                                                checked={checkboxCtrl.value}
+                                                                onCheckedChange={checkboxCtrl.onChange}
+                                                                id={checkboxCtrl.name}
+                                                                aria-label={toggleField.placeholder || `Toggle ${toggleField.label} section`}
+                                                                />
+                                                            </FormControl>
+                                                            </FormItem>
+                                                        )}
+                                                        />
+                                                    </AccordionPrimitive.Header>
+                                                    <AccordionContent className="pt-4 px-3 pb-3 space-y-4">
+                                                        {Array.from({ length: visibleItemCounts[accordionSection.countKey] }).map((_, itemIndex) => {
+                                                        const itemNumber = itemIndex + 1;
+                                                        const fieldPatterns = accordionSection.itemFieldIdPatterns;
+                                                        const itemFieldsToRender: TemplateField[] = [];
+
+                                                        if (fieldPatterns.description) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.description!.replace('#', String(itemNumber)))!);
+                                                        if (fieldPatterns.area) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.area!.replace('#', String(itemNumber)))!);
+                                                        if (fieldPatterns.rate) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.rate!.replace('#', String(itemNumber)))!);
+                                                        
+                                                        if (fieldPatterns.quantity) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.quantity!.replace('#', String(itemNumber)))!);
+                                                        if (fieldPatterns.unit) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.unit!.replace('#', String(itemNumber)))!);
+                                                        if (fieldPatterns.pricePerUnit) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.pricePerUnit!.replace('#', String(itemNumber)))!);
+                                                        
+                                                        if (fieldPatterns.numPersons) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.numPersons!.replace('#', String(itemNumber)))!);
+                                                        if (fieldPatterns.amount) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.amount!.replace('#', String(itemNumber)))!);
+                                                        
+                                                        const actualFields = itemFieldsToRender.filter(Boolean);
+                                                        if (actualFields.length === 0) return null;
+
+                                                        return (
+                                                            <div key={`${accordionSection.id}-item-${itemNumber}`} className="space-y-4 border-b border-dashed border-border pb-4 mb-4 last:border-b-0 last:pb-0 last:mb-0 relative group">
+                                                            <h4 className="text-md font-medium text-muted-foreground">{accordionSection.itemTitleSingular} #{itemNumber}</h4>
+                                                            {actualFields.map(field => renderFormField(field))}
+                                                            {itemIndex > 0 && ( 
+                                                                <Button
+                                                                type="button"
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => handleRemoveItem(accordionSection.countKey, itemIndex)}
+                                                                className="absolute top-0 right-0 text-destructive hover:text-destructive-foreground hover:bg-destructive/90 opacity-50 group-hover:opacity-100"
+                                                                aria-label={`Remove ${accordionSection.itemTitleSingular} ${itemNumber}`}
+                                                                >
+                                                                <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            )}
+                                                            </div>
+                                                        );
+                                                        })}
+                                                        {visibleItemCounts[accordionSection.countKey] < MAX_ITEMS_PER_SECTION && (
+                                                        <div className="flex justify-end">
+                                                            <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => handleAddItem(accordionSection.countKey)}
+                                                            className="mt-2"
+                                                            >
+                                                            <PlusCircle className="mr-2 h-4 w-4" />
+                                                            {accordionSection.addButtonLabel}
+                                                            </Button>
+                                                        </div>
+                                                        )}
+                                                    </AccordionContent>
+                                                    </AccordionItem>
+                                                );
+                                                })}
+                                            </Accordion>
+                                            {template.fields.filter(f => ['otherCosts', 'taxRatePercentage', 'approvedByName', 'dateOfApproval'].includes(f.id)).map(field => renderFormField(field))}
+                                        </>
+                                    ) : (
+                                        tabInfo.fieldIds?.map(fieldId => {
+                                            const field = template.fields.find(f => f.id === fieldId);
+                                            return field ? renderFormField(field) : null;
+                                        })
+                                    )}
+                                </CardContent>
+                            </TabsContent>
+                        ))}
+                    </Tabs>
+
+                    <CardFooter className="flex justify-between border-t pt-6 mt-4">
+                        <Button type="button" variant="outline" onClick={handlePrevious} disabled={currentTabIndex === 0}>
+                            Previous
+                        </Button>
+                        {currentTabIndex === WORK_ORDER_TABS_CONFIG.length - 1 ? (
+                            <Button type="submit" variant="default">
+                                <Eye className="mr-2 h-4 w-4" />
+                                Preview Document
+                            </Button>
+                        ) : (
+                            <Button type="button" variant="default" onClick={handleNext}>
+                                Next
+                            </Button>
+                        )}
+                    </CardFooter>
+                </form>
+            </Form>
+        </Card>
+    );
+  }
+  
+  // Fallback for other templates (non-tabbed view)
   return (
     <Card className="shadow-lg">
       <CardHeader>
@@ -597,154 +850,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <CardContent className="space-y-6">
-            {template.id === 'work-order' ? (
-              <>
-                {Object.entries(workOrderSectionStructure).map(([sectionTitle, fieldIdsInSection], sectionIndex) => {
-                  if (sectionTitle === 'Work Order Specifics') {
-                    const generalSpecificFields = template.fields.filter(f => ['generalWorkDescription', 'termsOfService'].includes(f.id));
-                    const financialSpecificFields = template.fields.filter(f => ['otherCosts', 'taxRatePercentage', 'approvedByName', 'dateOfApproval'].includes(f.id));
-
-                    const defaultAccordionValues = workOrderAccordionSubSectionsConfig
-                        .filter(s => {
-                            const toggleFieldDef = template.fields.find(f => f.id === s.toggleFieldId);
-                            return currentInitialValues[s.toggleFieldId as string] === true || toggleFieldDef?.defaultValue === true;
-                        })
-                        .map(s => s.id);
-
-                    return (
-                      <div key={sectionTitle} className="space-y-4 pt-4">
-                        <h2 className={`text-xl font-semibold text-primary ${sectionIndex > 0 ? 'mt-8' : 'mt-0'} pb-2 border-b border-border`}>
-                          {sectionTitle}
-                        </h2>
-                        <div className="space-y-4">
-                          {generalSpecificFields.map(field => renderFormField(field))}
-
-                          <Accordion type="multiple" className="w-full space-y-3" defaultValue={defaultAccordionValues}>
-                            {workOrderAccordionSubSectionsConfig.map((accordionSection) => {
-                              const toggleField = template.fields.find(f => f.id === accordionSection.toggleFieldId);
-                              if (!toggleField || toggleField.type !== 'boolean') return null;
-
-                              return (
-                                <AccordionItem value={accordionSection.id} key={accordionSection.id} className="border border-border rounded-md shadow-sm">
-                                   <AccordionPrimitive.Header className="flex items-center justify-between w-full p-3 data-[state=open]:border-b">
-                                    <AccordionPrimitive.Trigger className="p-0 flex-grow text-left hover:no-underline [&>svg]:hidden">
-                                      <span className="text-lg font-semibold text-foreground">{toggleField.label}</span>
-                                    </AccordionPrimitive.Trigger>
-                                    <FormField
-                                      control={form.control}
-                                      name={accordionSection.toggleFieldId as any}
-                                      render={({ field: checkboxCtrl }) => (
-                                        <FormItem className="flex flex-row items-center space-x-2 pl-4">
-                                          <FormControl>
-                                            <Checkbox
-                                              checked={checkboxCtrl.value}
-                                              onCheckedChange={checkboxCtrl.onChange}
-                                              id={checkboxCtrl.name}
-                                              aria-label={toggleField.placeholder || `Toggle ${toggleField.label} section`}
-                                            />
-                                          </FormControl>
-                                        </FormItem>
-                                      )}
-                                    />
-                                  </AccordionPrimitive.Header>
-                                  <AccordionContent className="pt-4 px-3 pb-3 space-y-4">
-                                    {Array.from({ length: visibleItemCounts[accordionSection.countKey] }).map((_, itemIndex) => {
-                                      const itemNumber = itemIndex + 1;
-                                      const fieldPatterns = accordionSection.itemFieldIdPatterns;
-                                      const itemFieldsToRender: TemplateField[] = [];
-
-                                      if (fieldPatterns.description) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.description!.replace('#', String(itemNumber)))!);
-                                      if (fieldPatterns.area) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.area!.replace('#', String(itemNumber)))!);
-                                      if (fieldPatterns.rate) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.rate!.replace('#', String(itemNumber)))!);
-                                      
-                                      if (fieldPatterns.quantity) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.quantity!.replace('#', String(itemNumber)))!);
-                                      if (fieldPatterns.unit) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.unit!.replace('#', String(itemNumber)))!);
-                                      if (fieldPatterns.pricePerUnit) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.pricePerUnit!.replace('#', String(itemNumber)))!);
-                                      
-                                      if (fieldPatterns.numPersons) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.numPersons!.replace('#', String(itemNumber)))!);
-                                      if (fieldPatterns.amount) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.amount!.replace('#', String(itemNumber)))!);
-                                      
-                                      const actualFields = itemFieldsToRender.filter(Boolean);
-                                      if (actualFields.length === 0) return null;
-
-                                      return (
-                                        <div key={`${accordionSection.id}-item-${itemNumber}`} className="space-y-4 border-b border-dashed border-border pb-4 mb-4 last:border-b-0 last:pb-0 last:mb-0 relative group">
-                                          <h4 className="text-md font-medium text-muted-foreground">{accordionSection.itemTitleSingular} #{itemNumber}</h4>
-                                          {actualFields.map(field => renderFormField(field))}
-                                          {itemIndex > 0 && (
-                                            <Button
-                                              type="button"
-                                              variant="ghost"
-                                              size="sm"
-                                              onClick={() => handleRemoveItem(accordionSection.countKey, itemIndex)}
-                                              className="absolute top-0 right-0 text-destructive hover:text-destructive-foreground hover:bg-destructive/90 opacity-50 group-hover:opacity-100"
-                                              aria-label={`Remove ${accordionSection.itemTitleSingular} ${itemNumber}`}
-                                            >
-                                              <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                          )}
-                                        </div>
-                                      );
-                                    })}
-                                    {visibleItemCounts[accordionSection.countKey] < MAX_ITEMS_PER_SECTION && (
-                                      <div className="flex justify-end">
-                                        <Button
-                                          type="button"
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={() => handleAddItem(accordionSection.countKey)}
-                                          className="mt-2"
-                                        >
-                                          <PlusCircle className="mr-2 h-4 w-4" />
-                                          {accordionSection.addButtonLabel}
-                                        </Button>
-                                      </div>
-                                    )}
-                                  </AccordionContent>
-                                </AccordionItem>
-                              );
-                            })}
-                          </Accordion>
-                          {financialSpecificFields.map(field => renderFormField(field))}
-                        </div>
-                      </div>
-                    );
-                  } else { 
-                    return (
-                      <div key={sectionTitle} className="space-y-4 pt-4">
-                        <h2 className={`text-xl font-semibold text-primary ${sectionIndex > 0 ? 'mt-8' : 'mt-0'} pb-2 border-b border-border`}>
-                          {sectionTitle}
-                        </h2>
-                        <div className="space-y-4">
-                        {fieldIdsInSection
-                            .map(fieldId => template.fields.find(f => f.id === fieldId))
-                            .filter(field => { 
-                              if (!field) return false;
-                              const isToggleField = workOrderAccordionSubSectionsConfig.some(s => s.toggleFieldId === field.id);
-                              if (isToggleField) return false;
-
-                              const isItemField = workOrderAccordionSubSectionsConfig.some(accSection =>
-                                Object.values(accSection.itemFieldIdPatterns).some(pattern => {
-                                  if (!pattern) return false;
-                                  for (let i = 1; i <= MAX_ITEMS_PER_SECTION; i++) {
-                                    if (pattern.replace('#', String(i)) === field.id) return true;
-                                  }
-                                  return false;
-                                })
-                              );
-                              return !isItemField;
-                            })
-                            .map(field => field ? renderFormField(field) : null)
-                          }
-                        </div>
-                      </div>
-                    );
-                  }
-                })}
-              </>
-            ) : ( 
-              template.fields.map((field) => renderFormField(field))
-            )}
+            {template.fields.map((field) => renderFormField(field))}
           </CardContent>
           <CardFooter className="flex justify-end gap-3 border-t pt-6">
              <Button type="button" variant="outline" onClick={() => router.back()}>
@@ -760,3 +866,6 @@ export function DocumentForm({ template }: DocumentFormProps) {
     </Card>
   );
 }
+
+
+    
