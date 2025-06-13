@@ -695,14 +695,10 @@ export function DocumentForm({ template }: DocumentFormProps) {
          event.target instanceof HTMLTextAreaElement ||
          event.target instanceof HTMLSelectElement)) {
       if (currentTabIndex < WORK_ORDER_TABS_CONFIG.length - 1) {
-        // Prevent Enter from submitting the form if not on the last tab
-        // and the event target is an input-like field.
-        // Let the user explicitly click "Next" or "Preview Document".
-        if (!(event.target instanceof HTMLTextAreaElement && event.shiftKey)) { // Allow shift+enter in textarea
+        if (!(event.target instanceof HTMLTextAreaElement && event.shiftKey)) { 
           event.preventDefault();
         }
       }
-      // If on the last tab, Enter in an input field should be allowed to trigger form submission.
     }
   };
 
@@ -723,7 +719,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} onKeyDown={handleFormKeyDown}>
                     <Tabs value={currentTab} onValueChange={handleTabChangeAttempt} className="w-full">
-                        <div className="px-6">
+                         <div className="px-6">
                           <div className="overflow-x-auto">
                             <TabsList className="w-full justify-start">
                                 {WORK_ORDER_TABS_CONFIG.map(tab => (
@@ -862,7 +858,11 @@ export function DocumentForm({ template }: DocumentFormProps) {
                             Previous
                         </Button>
                         {currentTabIndex === WORK_ORDER_TABS_CONFIG.length - 1 ? (
-                            <Button type="submit" variant="default">
+                            <Button 
+                                type="button" 
+                                variant="default" 
+                                onClick={form.handleSubmit(onSubmit)}
+                            >
                                 <Eye className="mr-2 h-4 w-4" />
                                 Preview Document
                             </Button>
@@ -903,3 +903,4 @@ export function DocumentForm({ template }: DocumentFormProps) {
     </Card>
   );
 }
+
