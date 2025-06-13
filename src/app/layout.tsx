@@ -14,6 +14,25 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'My Biz Docs - Your Business Documentation Tool',
   description: 'Create professional documents like work orders, letterheads, and invoices with ease.',
+  openGraph: {
+    title: 'My Biz Docs - Your Business Documentation Tool',
+    description: 'Create professional documents like work orders, letterheads, and invoices with ease.',
+    images: [
+      {
+        url: 'https://placehold.co/1200x630.png',
+        width: 1200,
+        height: 630,
+        alt: 'My Biz Docs - Document Creation Tool',
+      },
+    ],
+    type: 'website',
+  },
+  twitter: { // Optional: Add Twitter specific card metadata
+    card: 'summary_large_image',
+    title: 'My Biz Docs - Your Business Documentation Tool',
+    description: 'Create professional documents like work orders, letterheads, and invoices with ease.',
+    images: ['https://placehold.co/1200x630.png'],
+  },
 };
 
 export default function RootLayout({
