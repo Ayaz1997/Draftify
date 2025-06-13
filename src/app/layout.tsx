@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     description: 'Create professional documents like work orders, letterheads, and invoices with ease.',
     images: [
       {
-        url: 'https://storage.googleapis.com/projectit-images-dev/images/a025ac38-e869-4cae-bb01-687191c370f6', // Updated image URL
+        url: 'https://mybusinessdoc.netlify.app/mbd-og-img.jpg', // Updated image URL
         width: 1200,
         height: 630,
         alt: 'My Biz Docs - Document Creation Tool',
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'My Biz Docs - Your Business Documentation Tool',
     description: 'Create professional documents like work orders, letterheads, and invoices with ease.',
-    images: ['https://storage.googleapis.com/projectit-images-dev/images/a025ac38-e869-4cae-bb01-687191c370f6'], // Updated image URL
+    images: ['https://mybusinessdoc.netlify.app/mbd-og-img.jpg'], // Updated image URL
   },
 };
 
