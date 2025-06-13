@@ -709,7 +709,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
                     <Tabs value={currentTab} onValueChange={handleTabChangeAttempt} className="w-full">
                         <div className="px-6">
                           <div className="overflow-x-auto">
-                            <TabsList> 
+                            <TabsList className="w-full justify-start"> 
                                 {WORK_ORDER_TABS_CONFIG.map(tab => (
                                     <TabsTrigger key={tab.id} value={tab.id} className="whitespace-nowrap">
                                         {tab.title}
@@ -887,3 +887,4 @@ export function DocumentForm({ template }: DocumentFormProps) {
     </Card>
   );
 }
+
