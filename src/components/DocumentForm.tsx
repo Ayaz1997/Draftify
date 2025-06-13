@@ -274,11 +274,11 @@ export function DocumentForm({ template }: DocumentFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: currentInitialValues,
-    mode: 'onChange', // Validate on change for better immediate feedback
+    mode: 'onChange', 
   });
 
   useEffect(() => {
-    form.reset(currentInitialValues); // Ensure form resets when initial values change (e.g. navigating back for edit)
+    form.reset(currentInitialValues); 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentInitialValues, form.reset]);
 
@@ -454,17 +454,17 @@ export function DocumentForm({ template }: DocumentFormProps) {
     const sectionConfig = workOrderAccordionSubSectionsConfig.find(s => s.countKey === countKey);
     if (!sectionConfig) return;
 
-    // Clear values for the item being removed and shift subsequent items up
+    
     for (let i = itemIndexToRemove; i < currentVisibleCount - 1; i++) {
         Object.values(sectionConfig.itemFieldIdPatterns).forEach(pattern => {
             if (pattern) {
-                const sourceFieldId = pattern.replace('#', String(i + 2)); // N+1 item data
-                const targetFieldId = pattern.replace('#', String(i + 1)); // N item data
+                const sourceFieldId = pattern.replace('#', String(i + 2)); 
+                const targetFieldId = pattern.replace('#', String(i + 1)); 
                 form.setValue(targetFieldId as any, form.getValues(sourceFieldId as any));
             }
         });
     }
-    // Clear values for the last item that was shifted from
+    
     Object.values(sectionConfig.itemFieldIdPatterns).forEach(pattern => {
         if (pattern) {
             const fieldId = pattern.replace('#', String(currentVisibleCount));
@@ -617,7 +617,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
     const targetTabIndex = WORK_ORDER_TABS_CONFIG.findIndex(t => t.id === targetTabId);
     const currentActiveTabIndex = WORK_ORDER_TABS_CONFIG.findIndex(t => t.id === currentTab);
 
-    if (targetTabIndex > currentActiveTabIndex) { // Moving forward
+    if (targetTabIndex > currentActiveTabIndex) { 
         for (let i = currentActiveTabIndex; i < targetTabIndex; i++) {
             const tabToValidate = WORK_ORDER_TABS_CONFIG[i];
             const fieldsToValidate = getFieldsForTabValidation(tabToValidate.id);
@@ -629,13 +629,13 @@ export function DocumentForm({ template }: DocumentFormProps) {
                         description: `Please correct errors in the "${tabToValidate.title}" tab.`,
                         variant: "destructive",
                     });
-                    setCurrentTab(tabToValidate.id); // Stay on/move to the tab with errors
-                    return; // Stop further tab changes
+                    setCurrentTab(tabToValidate.id); 
+                    return; 
                 }
             }
         }
     }
-    setCurrentTab(targetTabId); // Allow navigation if all intermediate/current tabs are valid or moving backward
+    setCurrentTab(targetTabId); 
   };
 
 
@@ -647,12 +647,12 @@ export function DocumentForm({ template }: DocumentFormProps) {
         return tabConfig.fieldIds || [];
     }
 
-    // For 'workOrderSpecifics' tab, gather all relevant fields
-    let fields: string[] = [...(tabConfig.fieldIds || [])]; // Starts with top-level fields like generalWorkDescription, etc.
+    
+    let fields: string[] = [...(tabConfig.fieldIds || [])]; 
 
     workOrderAccordionSubSectionsConfig.forEach(section => {
-        fields.push(section.toggleFieldId); // Add the toggle checkbox itself
-        if (form.getValues(section.toggleFieldId)) { // Only validate items if section is active
+        fields.push(section.toggleFieldId); 
+        if (form.getValues(section.toggleFieldId)) { 
             for (let i = 1; i <= visibleItemCounts[section.countKey]; i++) {
                 Object.values(section.itemFieldIdPatterns).forEach(pattern => {
                     if (pattern) fields.push(pattern.replace('#', String(i)));
@@ -669,7 +669,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
     const fieldsToValidate = getFieldsForTabValidation(currentTabConfig.id);
 
     if (fieldsToValidate.length > 0) {
-        const isValid = await form.trigger(fieldsToValidate as any); // RHF expects FieldPath<TFieldValues>[]
+        const isValid = await form.trigger(fieldsToValidate as any); 
         if (!isValid) {
             toast({
                 title: "Validation Error",
@@ -707,19 +707,21 @@ export function DocumentForm({ template }: DocumentFormProps) {
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)}>
                     <Tabs value={currentTab} onValueChange={handleTabChangeAttempt} className="w-full">
-                        <div className="w-full overflow-x-auto mb-4">
-                            <TabsList> {/* Rely on default Shadcn styles + wrapper for scroll */}
+                        <div className="px-6">
+                          <div className="overflow-x-auto">
+                            <TabsList> 
                                 {WORK_ORDER_TABS_CONFIG.map(tab => (
                                     <TabsTrigger key={tab.id} value={tab.id} className="whitespace-nowrap">
                                         {tab.title}
                                     </TabsTrigger>
                                 ))}
                             </TabsList>
+                          </div>
                         </div>
 
                         {WORK_ORDER_TABS_CONFIG.map(tabInfo => (
                             <TabsContent key={tabInfo.id} value={tabInfo.id} className="focus-visible:ring-0 focus-visible:ring-offset-0">
-                                <CardContent className="space-y-6 pt-6">
+                                <CardContent className="space-y-6 px-6 pb-6 pt-4">
                                     {tabInfo.id === 'workOrderSpecifics' ? (
                                         <>
                                             {template.fields.filter(f => ['generalWorkDescription', 'termsOfService'].includes(f.id)).map(field => renderFormField(field))}
@@ -766,13 +768,13 @@ export function DocumentForm({ template }: DocumentFormProps) {
                                                         const fieldPatterns = accordionSection.itemFieldIdPatterns;
                                                         const itemFieldsToRender: TemplateField[] = [];
 
-                                                        // Corrected order for Materials to place Unit after Quantity
+                                                        
                                                         if (accordionSection.id === 'materials-accordion') {
                                                             if (fieldPatterns.description) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.description!.replace('#', String(itemNumber)))!);
                                                             if (fieldPatterns.quantity) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.quantity!.replace('#', String(itemNumber)))!);
                                                             if (fieldPatterns.unit) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.unit!.replace('#', String(itemNumber)))!);
                                                             if (fieldPatterns.pricePerUnit) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.pricePerUnit!.replace('#', String(itemNumber)))!);
-                                                        } else { // Original order for other sections
+                                                        } else { 
                                                             if (fieldPatterns.description) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.description!.replace('#', String(itemNumber)))!);
                                                             if (fieldPatterns.area) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.area!.replace('#', String(itemNumber)))!);
                                                             if (fieldPatterns.rate) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.rate!.replace('#', String(itemNumber)))!);
@@ -839,7 +841,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
                         ))}
                     </Tabs>
 
-                    <CardFooter className="flex justify-between border-t pt-6 mt-4">
+                    <CardFooter className="flex justify-between border-t pt-6 mt-4 px-6">
                         <Button type="button" variant="outline" onClick={handlePrevious} disabled={currentTabIndex === 0}>
                             Previous
                         </Button>
@@ -860,7 +862,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
     );
   }
   
-  // Fallback for other templates (non-tabbed view)
+  
   return (
     <Card className="shadow-lg">
       <CardHeader>
@@ -885,9 +887,3 @@ export function DocumentForm({ template }: DocumentFormProps) {
     </Card>
   );
 }
-
-
-    
-
-    
-
