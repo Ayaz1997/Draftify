@@ -12,8 +12,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'My Biz Docs - Your Document Automation Tool',
-  description: 'Create professional documents like work orders, letterheads, and invoices with ease using My Biz Docs.',
+  title: 'My Biz Docs - Your Business Documentation Tool',
+  description: 'Create professional documents like work orders, letterheads, and invoices with ease.',
 };
 
 export default function RootLayout({
