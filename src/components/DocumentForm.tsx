@@ -34,7 +34,7 @@ interface DocumentFormProps {
   template: DocumentFormPropsTemplate;
 }
 
-const MAX_ITEMS_PER_SECTION = 10; 
+const MAX_ITEMS_PER_SECTION = 10;
 
 function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
   const shape: Record<string, z.ZodTypeAny> = {};
@@ -46,7 +46,6 @@ function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
         break;
       }
       case 'number': {
-        // Ensure that empty strings or null are treated as undefined for optional numbers
         validator = z.preprocess(
           (val) => (val === "" || val === null ? undefined : val),
           z.coerce.number({ invalid_type_error: 'Must be a number' }).optional().nullable()
@@ -75,10 +74,10 @@ function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
           if (enumValues.length > 0) {
             validator = z.enum(enumValues).optional().or(z.literal(''));
           } else {
-             validator = z.string().optional(); 
+             validator = z.string().optional();
           }
         } else {
-          validator = z.string().optional(); 
+          validator = z.string().optional();
         }
         break;
       }
@@ -112,9 +111,8 @@ const workOrderSectionStructure: Record<string, string[]> = {
   'Business Details': ['businessName', 'businessAddress', 'businessContactNumber', 'businessEmail', 'businessLogoUrl'],
   'Order Details': ['orderNumber', 'orderDate', 'expectedStartDate', 'expectedEndDate'],
   'Client Details': ['clientName', 'clientPhone', 'clientEmail', 'workLocation', 'orderReceivedBy'],
-  'Work Order Specifics': [ // Top-level non-accordion fields for this section
+  'Work Order Specifics': [
     'generalWorkDescription', 'termsOfService',
-    // Accordion toggles are implicitly part of this section logic
     'otherCosts', 'taxRatePercentage', 'approvedByName', 'dateOfApproval'
   ]
 };
@@ -131,12 +129,12 @@ interface AccordionSectionItemPattern {
 }
 
 interface WorkOrderAccordionConfig {
-  id: string; 
-  toggleFieldId: keyof FormData; 
+  id: string;
+  toggleFieldId: keyof FormData;
   itemFieldIdPatterns: AccordionSectionItemPattern;
-  countKey: keyof VisibleItemCounts; 
+  countKey: keyof VisibleItemCounts;
   addButtonLabel: string;
-  itemTitleSingular: string; 
+  itemTitleSingular: string;
 }
 
 type VisibleItemCounts = {
@@ -163,7 +161,7 @@ const workOrderAccordionSubSectionsConfig: WorkOrderAccordionConfig[] = [
     id: 'materials-accordion',
     toggleFieldId: 'includeMaterialTable',
     itemFieldIdPatterns: {
-      description: 'materialItem#Name', 
+      description: 'materialItem#Name',
       quantity: 'materialItem#Quantity',
       unit: 'materialItem#Unit',
       pricePerUnit: 'materialItem#PricePerUnit',
@@ -176,7 +174,7 @@ const workOrderAccordionSubSectionsConfig: WorkOrderAccordionConfig[] = [
     id: 'labour-charges-accordion',
     toggleFieldId: 'includeLaborTable',
     itemFieldIdPatterns: {
-      description: 'laborItem#TeamName', 
+      description: 'laborItem#TeamName',
       numPersons: 'laborItem#NumPersons',
       amount: 'laborItem#Amount',
     },
@@ -203,7 +201,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
     materials: 1,
     labor: 1,
   });
-  
+
   const [currentTab, setCurrentTab] = useState(WORK_ORDER_TABS_CONFIG[0].id);
   const currentTabIndex = WORK_ORDER_TABS_CONFIG.findIndex(tab => tab.id === currentTab);
 
@@ -239,29 +237,29 @@ export function DocumentForm({ template }: DocumentFormProps) {
                     resolvedInitialValues[field.id] = new Date().toISOString().split('T')[0];
                 }
             } else if (field.type === 'number' && (resolvedInitialValues[field.id] === null || resolvedInitialValues[field.id] === '')) {
-                resolvedInitialValues[field.id] = undefined; 
+                resolvedInitialValues[field.id] = undefined;
             } else if (field.type === 'number' && typeof resolvedInitialValues[field.id] === 'string') {
                  const numVal = parseFloat(resolvedInitialValues[field.id]);
                  resolvedInitialValues[field.id] = isNaN(numVal) ? undefined : numVal;
             }
-        } else { 
+        } else {
             if (field.type === 'date') {
                  resolvedInitialValues[field.id] = field.defaultValue && typeof field.defaultValue === 'string' && field.defaultValue.match(/^\d{4}-\d{2}-\d{2}$/)
-                    ? field.defaultValue 
-                    : new Date().toISOString().split('T')[0]; 
+                    ? field.defaultValue
+                    : new Date().toISOString().split('T')[0];
             } else if (field.defaultValue !== undefined) {
                 resolvedInitialValues[field.id] = field.defaultValue;
             } else if (field.type === 'boolean') {
-                 resolvedInitialValues[field.id] = false; 
+                 resolvedInitialValues[field.id] = false;
             } else if (field.type === 'number') {
-                 resolvedInitialValues[field.id] = undefined; 
+                 resolvedInitialValues[field.id] = undefined;
             } else if (field.type === 'file'){
                  resolvedInitialValues[field.id] = undefined;
             } else if (field.type === 'select') {
-                 resolvedInitialValues[field.id] = ''; 
+                 resolvedInitialValues[field.id] = '';
             }
-            else { 
-                 resolvedInitialValues[field.id] = ''; 
+            else {
+                 resolvedInitialValues[field.id] = '';
             }
         }
     });
@@ -274,11 +272,11 @@ export function DocumentForm({ template }: DocumentFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: currentInitialValues,
-    mode: 'onChange', 
+    mode: 'onChange',
   });
 
   useEffect(() => {
-    form.reset(currentInitialValues); 
+    form.reset(currentInitialValues);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentInitialValues, form.reset]);
 
@@ -309,7 +307,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentInitialValues, template.id]); 
+  }, [currentInitialValues, template.id]);
 
  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const submissionValues: Record<string, any> = { ...values };
@@ -396,7 +394,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
         if (submissionValues[field.id] === undefined) {
             if (field.type === 'boolean') {
                 submissionValues[field.id] = field.defaultValue !== undefined ? field.defaultValue : false;
-            } else if (field.id !== logoFieldId) { 
+            } else if (field.id !== logoFieldId) {
                  submissionValues[field.id] = field.defaultValue !== undefined ? field.defaultValue : (field.type === 'number' ? null : '');
             }
         }
@@ -449,22 +447,22 @@ export function DocumentForm({ template }: DocumentFormProps) {
 
   const handleRemoveItem = (countKey: keyof VisibleItemCounts, itemIndexToRemove: number) => {
     const currentVisibleCount = visibleItemCounts[countKey];
-    if (currentVisibleCount <= 1) return; 
+    if (currentVisibleCount <= 1) return;
 
     const sectionConfig = workOrderAccordionSubSectionsConfig.find(s => s.countKey === countKey);
     if (!sectionConfig) return;
 
-    
+
     for (let i = itemIndexToRemove; i < currentVisibleCount - 1; i++) {
         Object.values(sectionConfig.itemFieldIdPatterns).forEach(pattern => {
             if (pattern) {
-                const sourceFieldId = pattern.replace('#', String(i + 2)); 
-                const targetFieldId = pattern.replace('#', String(i + 1)); 
+                const sourceFieldId = pattern.replace('#', String(i + 2));
+                const targetFieldId = pattern.replace('#', String(i + 1));
                 form.setValue(targetFieldId as any, form.getValues(sourceFieldId as any));
             }
         });
     }
-    
+
     Object.values(sectionConfig.itemFieldIdPatterns).forEach(pattern => {
         if (pattern) {
             const fieldId = pattern.replace('#', String(currentVisibleCount));
@@ -547,7 +545,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
         return (
           <Select
             onValueChange={formFieldControllerProps.onChange}
-            value={String(formFieldControllerProps.value || '')} 
+            value={String(formFieldControllerProps.value || '')}
             defaultValue={String(field.defaultValue || '')}
           >
             <FormControl>
@@ -578,7 +576,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
 
   const renderFormField = (field?: TemplateField) => {
     if (!field) return null;
-    
+
     return (
         <FormField
         key={field.id}
@@ -617,7 +615,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
     const targetTabIndex = WORK_ORDER_TABS_CONFIG.findIndex(t => t.id === targetTabId);
     const currentActiveTabIndex = WORK_ORDER_TABS_CONFIG.findIndex(t => t.id === currentTab);
 
-    if (targetTabIndex > currentActiveTabIndex) { 
+    if (targetTabIndex > currentActiveTabIndex) {
         for (let i = currentActiveTabIndex; i < targetTabIndex; i++) {
             const tabToValidate = WORK_ORDER_TABS_CONFIG[i];
             const fieldsToValidate = getFieldsForTabValidation(tabToValidate.id);
@@ -629,13 +627,13 @@ export function DocumentForm({ template }: DocumentFormProps) {
                         description: `Please correct errors in the "${tabToValidate.title}" tab.`,
                         variant: "destructive",
                     });
-                    setCurrentTab(tabToValidate.id); 
-                    return; 
+                    setCurrentTab(tabToValidate.id);
+                    return;
                 }
             }
         }
     }
-    setCurrentTab(targetTabId); 
+    setCurrentTab(targetTabId);
   };
 
 
@@ -647,12 +645,12 @@ export function DocumentForm({ template }: DocumentFormProps) {
         return tabConfig.fieldIds || [];
     }
 
-    
-    let fields: string[] = [...(tabConfig.fieldIds || [])]; 
+
+    let fields: string[] = [...(tabConfig.fieldIds || [])];
 
     workOrderAccordionSubSectionsConfig.forEach(section => {
-        fields.push(section.toggleFieldId); 
-        if (form.getValues(section.toggleFieldId)) { 
+        fields.push(section.toggleFieldId);
+        if (form.getValues(section.toggleFieldId)) {
             for (let i = 1; i <= visibleItemCounts[section.countKey]; i++) {
                 Object.values(section.itemFieldIdPatterns).forEach(pattern => {
                     if (pattern) fields.push(pattern.replace('#', String(i)));
@@ -669,7 +667,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
     const fieldsToValidate = getFieldsForTabValidation(currentTabConfig.id);
 
     if (fieldsToValidate.length > 0) {
-        const isValid = await form.trigger(fieldsToValidate as any); 
+        const isValid = await form.trigger(fieldsToValidate as any);
         if (!isValid) {
             toast({
                 title: "Validation Error",
@@ -691,6 +689,24 @@ export function DocumentForm({ template }: DocumentFormProps) {
     }
   };
 
+  const handleFormKeyDown = (event: React.KeyboardEvent<HTMLFormElement>) => {
+    if (event.key === 'Enter' &&
+        (event.target instanceof HTMLInputElement ||
+         event.target instanceof HTMLTextAreaElement ||
+         event.target instanceof HTMLSelectElement)) {
+      if (currentTabIndex < WORK_ORDER_TABS_CONFIG.length - 1) {
+        // Prevent Enter from submitting the form if not on the last tab
+        // and the event target is an input-like field.
+        // Let the user explicitly click "Next" or "Preview Document".
+        if (!(event.target instanceof HTMLTextAreaElement && event.shiftKey)) { // Allow shift+enter in textarea
+          event.preventDefault();
+        }
+      }
+      // If on the last tab, Enter in an input field should be allowed to trigger form submission.
+    }
+  };
+
+
   if (template.id === 'work-order') {
     const defaultAccordionOpenValues = workOrderAccordionSubSectionsConfig
         .filter(s => {
@@ -705,11 +721,11 @@ export function DocumentForm({ template }: DocumentFormProps) {
                 <CardTitle className="text-lg font-medium">Fill in the details for your {template.name}</CardTitle>
             </CardHeader>
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)}>
+                <form onSubmit={form.handleSubmit(onSubmit)} onKeyDown={handleFormKeyDown}>
                     <Tabs value={currentTab} onValueChange={handleTabChangeAttempt} className="w-full">
                         <div className="px-6">
                           <div className="overflow-x-auto">
-                            <TabsList className="w-full justify-start"> 
+                            <TabsList className="w-full justify-start">
                                 {WORK_ORDER_TABS_CONFIG.map(tab => (
                                     <TabsTrigger key={tab.id} value={tab.id} className="whitespace-nowrap">
                                         {tab.title}
@@ -725,7 +741,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
                                     {tabInfo.id === 'workOrderSpecifics' ? (
                                         <>
                                             {template.fields.filter(f => ['generalWorkDescription', 'termsOfService'].includes(f.id)).map(field => renderFormField(field))}
-                                            
+
                                             <Accordion type="multiple" className="w-full space-y-3" defaultValue={defaultAccordionOpenValues}>
                                                 {workOrderAccordionSubSectionsConfig.map((accordionSection) => {
                                                 const toggleField = template.fields.find(f => f.id === accordionSection.toggleFieldId);
@@ -768,25 +784,25 @@ export function DocumentForm({ template }: DocumentFormProps) {
                                                         const fieldPatterns = accordionSection.itemFieldIdPatterns;
                                                         const itemFieldsToRender: TemplateField[] = [];
 
-                                                        
+
                                                         if (accordionSection.id === 'materials-accordion') {
                                                             if (fieldPatterns.description) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.description!.replace('#', String(itemNumber)))!);
                                                             if (fieldPatterns.quantity) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.quantity!.replace('#', String(itemNumber)))!);
                                                             if (fieldPatterns.unit) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.unit!.replace('#', String(itemNumber)))!);
                                                             if (fieldPatterns.pricePerUnit) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.pricePerUnit!.replace('#', String(itemNumber)))!);
-                                                        } else { 
+                                                        } else {
                                                             if (fieldPatterns.description) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.description!.replace('#', String(itemNumber)))!);
                                                             if (fieldPatterns.area) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.area!.replace('#', String(itemNumber)))!);
                                                             if (fieldPatterns.rate) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.rate!.replace('#', String(itemNumber)))!);
-                                                            
+
                                                             if (fieldPatterns.quantity) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.quantity!.replace('#', String(itemNumber)))!);
                                                             if (fieldPatterns.unit) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.unit!.replace('#', String(itemNumber)))!);
                                                             if (fieldPatterns.pricePerUnit) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.pricePerUnit!.replace('#', String(itemNumber)))!);
-                                                            
+
                                                             if (fieldPatterns.numPersons) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.numPersons!.replace('#', String(itemNumber)))!);
                                                             if (fieldPatterns.amount) itemFieldsToRender.push(template.fields.find(f => f.id === fieldPatterns.amount!.replace('#', String(itemNumber)))!);
                                                         }
-                                                        
+
                                                         const actualFields = itemFieldsToRender.filter(Boolean);
                                                         if (actualFields.length === 0) return null;
 
@@ -794,7 +810,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
                                                             <div key={`${accordionSection.id}-item-${itemNumber}`} className="space-y-4 border-b border-dashed border-border pb-4 mb-4 last:border-b-0 last:pb-0 last:mb-0 relative group">
                                                             <h4 className="text-md font-medium text-muted-foreground">{accordionSection.itemTitleSingular} #{itemNumber}</h4>
                                                             {actualFields.map(field => renderFormField(field))}
-                                                            {itemIndex > 0 && ( 
+                                                            {itemIndex > 0 && (
                                                                 <Button
                                                                 type="button"
                                                                 variant="ghost"
@@ -861,8 +877,8 @@ export function DocumentForm({ template }: DocumentFormProps) {
         </Card>
     );
   }
-  
-  
+
+
   return (
     <Card className="shadow-lg">
       <CardHeader>
@@ -887,4 +903,3 @@ export function DocumentForm({ template }: DocumentFormProps) {
     </Card>
   );
 }
-
