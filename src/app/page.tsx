@@ -37,6 +37,18 @@ export default function HomePage() {
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
+                <Button asChild variant="outline" className="w-full">
+                  <Link href={`/templates/${template.id}`}>
+                    Outline Button
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+                 <Button asChild variant="ghost" className="w-full">
+                  <Link href={`/templates/${template.id}`}>
+                    Ghost Button
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
               </CardFooter>
             </Card>
           ))}
