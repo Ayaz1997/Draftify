@@ -4,7 +4,6 @@ import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -33,10 +32,7 @@ export function CategorySelectionModal({ open, onClose }: CategorySelectionModal
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Welcome to My Biz Docs!</DialogTitle>
-          <DialogDescription>
-            To help you get started, please select your business category.
-          </DialogDescription>
+          <DialogTitle className="text-2xl">Select your business type to continue</DialogTitle>
         </DialogHeader>
         <div className="flex-grow overflow-y-auto pr-2 -mr-6 py-4">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
