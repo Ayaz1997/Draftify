@@ -304,7 +304,7 @@ export function CategorySelectionModal({ open, onClose }: CategorySelectionModal
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
+      <DialogContent className="w-[95vw] max-w-4xl h-[90vh] flex flex-col p-0 rounded-lg">
         {step === 'category' ? renderCategorySelector() : renderProfileForm()}
       </DialogContent>
     </Dialog>
