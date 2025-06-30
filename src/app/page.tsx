@@ -12,11 +12,7 @@ export default function HomePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    // This code runs only on the client
-    const hasSelected = localStorage.getItem('hasSelectedCategory');
-    if (hasSelected !== 'true') {
-      setIsModalOpen(true);
-    }
+    setIsModalOpen(true);
   }, []); // Empty dependency array means this runs once on mount
 
   const handleModalClose = () => {
