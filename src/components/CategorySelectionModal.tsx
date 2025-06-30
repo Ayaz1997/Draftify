@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Facebook, Instagram, Linkedin, Twitter } from 'lucide-react';
 
 interface CategorySelectionModalProps {
   open: boolean;
@@ -217,9 +217,12 @@ export function CategorySelectionModal({ open, onClose }: CategorySelectionModal
                 name="facebook"
                 render={({ field }) => (
                   <FormItem>
-                    <FormControl>
-                      <Input type="url" placeholder="Facebook URL" {...field} />
-                    </FormControl>
+                    <div className="relative flex items-center">
+                      <Facebook className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <FormControl>
+                        <Input type="url" placeholder="Facebook URL" {...field} className="pl-8" />
+                      </FormControl>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -229,9 +232,12 @@ export function CategorySelectionModal({ open, onClose }: CategorySelectionModal
                 name="instagram"
                 render={({ field }) => (
                   <FormItem>
-                    <FormControl>
-                      <Input type="url" placeholder="Instagram URL" {...field} />
-                    </FormControl>
+                    <div className="relative flex items-center">
+                      <Instagram className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <FormControl>
+                        <Input type="url" placeholder="Instagram URL" {...field} className="pl-8" />
+                      </FormControl>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -241,9 +247,12 @@ export function CategorySelectionModal({ open, onClose }: CategorySelectionModal
                 name="linkedin"
                 render={({ field }) => (
                   <FormItem>
-                    <FormControl>
-                      <Input type="url" placeholder="LinkedIn URL" {...field} />
-                    </FormControl>
+                    <div className="relative flex items-center">
+                      <Linkedin className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <FormControl>
+                        <Input type="url" placeholder="LinkedIn URL" {...field} className="pl-8" />
+                      </FormControl>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -253,9 +262,12 @@ export function CategorySelectionModal({ open, onClose }: CategorySelectionModal
                 name="twitter"
                 render={({ field }) => (
                   <FormItem>
-                    <FormControl>
-                      <Input type="url" placeholder="Twitter/X URL" {...field} />
-                    </FormControl>
+                    <div className="relative flex items-center">
+                      <Twitter className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <FormControl>
+                        <Input type="url" placeholder="Twitter/X URL" {...field} className="pl-8" />
+                      </FormControl>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
