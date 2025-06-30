@@ -94,7 +94,7 @@ export function CategorySelectionModal({ open, onClose }: CategorySelectionModal
               key={category.name}
               onClick={() => setSelectedCategory(category.name)}
               className={cn(
-                'flex flex-col items-center justify-center p-4 border rounded-lg aspect-square cursor-pointer transition-colors hover:bg-accent/50',
+                'flex flex-col items-center justify-center p-4 border rounded-lg aspect-square cursor-pointer transition-colors hover:bg-accent/20',
                 selectedCategory === category.name && 'bg-primary/10 ring-2 ring-primary'
               )}
               data-selected={selectedCategory === category.name}
