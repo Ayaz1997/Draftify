@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     description: 'Create professional documents like work orders, letterheads, and invoices with ease.',
     images: [
       {
-        url: 'https://mybusinessdoc.netlify.app/mbd-og-img.jpg', // Updated image URL
+        url: 'https://my-business-doc.vercel.app/mbd-og-img.jpg', // Updated image URL
         width: 1200,
         height: 630,
         alt: 'My Biz Docs - Document Creation Tool',
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'My Biz Docs - Your Business Documentation Tool',
     description: 'Create professional documents like work orders, letterheads, and invoices with ease.',
-    images: ['https://mybusinessdoc.netlify.app/mbd-og-img.jpg'], // Updated image URL
+    images: ['https://my-business-doc.vercel.app/mbd-og-img.jpg'], // Updated image URL
   },
 };
 
