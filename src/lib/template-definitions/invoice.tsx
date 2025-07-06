@@ -169,30 +169,30 @@ export const InvoicePreview = (data: FormData) => {
 
 export const invoiceFields: TemplateField[] = [
   // Business Details
-  { id: 'businessName', label: 'Business Name', type: 'text', required: true, placeholder: 'Your Company Name' },
-  { id: 'businessAddress', label: 'Business Address', type: 'textarea', required: true, placeholder: '123 Business St, City, State, PIN' },
-  { id: 'businessContact', label: 'Business Contact', type: 'text', required: true, placeholder: '9876543210' },
-  { id: 'businessEmail', label: 'Business Email', type: 'email', required: true, placeholder: 'contact@business.com' },
+  { id: 'businessName', label: 'Business Name', type: 'text', placeholder: 'Your Company Name' },
+  { id: 'businessAddress', label: 'Business Address', type: 'textarea', placeholder: '123 Business St, City, State, PIN' },
+  { id: 'businessContact', label: 'Business Contact', type: 'text', placeholder: '9876543210' },
+  { id: 'businessEmail', label: 'Business Email', type: 'email', placeholder: 'contact@business.com' },
   { id: 'businessGstNo', label: 'Business GST No.', type: 'text', placeholder: '22AAAAA0000A1Z5' },
 
   // Client Details
-  { id: 'clientName', label: 'Client Name', type: 'text', required: true, placeholder: 'Mr. John Doe' },
-  { id: 'clientAddress', label: 'Client Address', type: 'textarea', required: true, placeholder: '456 Client St, City, State, PIN' },
-  { id: 'clientContact', label: 'Client Contact', type: 'text', required: true, placeholder: '9998887770' },
-  { id: 'clientEmail', label: 'Client Email', type: 'email', required: true, placeholder: 'client@example.com' },
+  { id: 'clientName', label: 'Client Name', type: 'text', placeholder: 'Mr. John Doe' },
+  { id: 'clientAddress', label: 'Client Address', type: 'textarea', placeholder: '456 Client St, City, State, PIN' },
+  { id: 'clientContact', label: 'Client Contact', type: 'text', placeholder: '9998887770' },
+  { id: 'clientEmail', label: 'Client Email', type: 'email', placeholder: 'client@example.com' },
   { id: 'clientGstNo', label: 'Client GST No. (optional)', type: 'text', placeholder: '22BBBBB0000B1Z5' },
 
   // Invoice Info
-  { id: 'invoiceNumber', label: 'Invoice Number', type: 'text', required: true, placeholder: `INV-${Date.now().toString().slice(-6)}` },
-  { id: 'invoiceDate', label: 'Invoice Date', type: 'date', required: true },
+  { id: 'invoiceNumber', label: 'Invoice Number', type: 'text', placeholder: `INV-${Date.now().toString().slice(-6)}` },
+  { id: 'invoiceDate', label: 'Invoice Date', type: 'date' },
 
   // Invoice Items
   { id: 'includeItemsTable', label: 'Invoice Items', type: 'boolean', defaultValue: true },
   ...Array.from({ length: MAX_INVOICE_ITEMS }, (_, i) => i + 1).flatMap(idx => ([
-    { id: `item${idx}Description`, label: `Item #${idx} Description`, type: 'text', placeholder: idx === 1 ? 'E.g., Website Development Phase 1' : undefined },
+    { id: `item${idx}Description`, label: `Item #${idx} Description`, type: 'text' },
     { id: `item${idx}Unit`, label: 'Unit', type: 'select', options: [ { value: 'pcs', label: 'Piece' }, { value: 'sq.ft.', label: 'Sq. Ft.' }, { value: 'kg', label: 'Kg' }, { value: 'lit.', label: 'Litre' }, { value: 'lumpsum', label: 'Lumpsum' } ], defaultValue: 'pcs', placeholder: 'Select unit' },
-    { id: `item${idx}Quantity`, label: 'Quantity', type: 'number', placeholder: idx === 1 ? '1' : undefined },
-    { id: `item${idx}UnitCost`, label: 'Unit Cost (INR)', type: 'number', placeholder: idx === 1 ? '50000' : undefined },
+    { id: `item${idx}Quantity`, label: 'Quantity', type: 'number' },
+    { id: `item${idx}UnitCost`, label: 'Unit Cost (INR)', type: 'number' },
     { id: `item${idx}ClaimPercentage`, label: 'Claim Amount (%)', type: 'number', placeholder: '100', defaultValue: 100 },
   ] as TemplateField[])),
 

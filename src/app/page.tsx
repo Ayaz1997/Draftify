@@ -12,8 +12,11 @@ export default function HomePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    setIsModalOpen(true);
-  }, []); // Empty dependency array means this runs once on mount
+    const hasSelected = localStorage.getItem('hasSelectedCategory');
+    if (!hasSelected) {
+      setIsModalOpen(true);
+    }
+  }, []);
 
   const handleModalClose = () => {
     localStorage.setItem('hasSelectedCategory', 'true');
