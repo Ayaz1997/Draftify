@@ -49,6 +49,11 @@ export const InvoicePreview = (data: FormData) => {
   return (
     <Card className="w-full max-w-4xl mx-auto shadow-lg text-sm" data-ai-hint="invoice document">
       <CardHeader className="p-4 sm:p-6 bg-muted/30">
+        {data.businessLogo && typeof data.businessLogo === 'string' && data.businessLogo.startsWith('data:image') && (
+            <div className="flex justify-center mb-4">
+                <Image src={data.businessLogo} alt="Business Logo" width={150} height={75} className="object-contain" data-ai-hint="company brand" />
+            </div>
+        )}
         <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
           <div className="flex-grow">
             <h1 className="text-2xl sm:text-3xl font-bold text-primary">{data.businessName || 'Your Business Name'}</h1>
@@ -179,6 +184,7 @@ export const invoiceFields: TemplateField[] = [
   { id: 'businessContact', label: 'Business Contact', type: 'text', placeholder: '9876543210' },
   { id: 'businessEmail', label: 'Business Email', type: 'email', placeholder: 'contact@business.com' },
   { id: 'businessGstNo', label: 'Business GST No.', type: 'text', placeholder: '22AAAAA0000A1Z5' },
+  { id: 'businessLogo', label: 'Business Logo (optional)', type: 'file' },
 
   // Client Details
   { id: 'clientName', label: 'Client Name', type: 'text', placeholder: 'Mr. John Doe' },
@@ -188,7 +194,7 @@ export const invoiceFields: TemplateField[] = [
   { id: 'clientGstNo', label: 'Client GST No. (optional)', type: 'text', placeholder: '22BBBBB0000B1Z5' },
 
   // Invoice Info
-  { id: 'invoiceNumber', label: 'Invoice Number', type: 'text', placeholder: `INV-${Date.now().toString().slice(-6)}` },
+  { id: 'invoiceNumber', label: 'Invoice Number', type: 'text' },
   { id: 'invoiceDate', label: 'Invoice Date', type: 'date' },
 
   // Invoice Items
@@ -198,11 +204,11 @@ export const invoiceFields: TemplateField[] = [
     { id: `item${idx}Unit`, label: 'Unit', type: 'select', options: [ { value: 'pcs', label: 'Piece' }, { value: 'sq.ft.', label: 'Sq. Ft.' }, { value: 'kg', label: 'Kg' }, { value: 'lit.', label: 'Litre' }, { value: 'lumpsum', label: 'Lumpsum' } ], defaultValue: 'pcs', placeholder: 'Select unit' },
     { id: `item${idx}Quantity`, label: 'Quantity', type: 'number' },
     { id: `item${idx}UnitCost`, label: 'Unit Cost (INR)', type: 'number' },
-    { id: `item${idx}ClaimPercentage`, label: 'Claim Amount (%)', type: 'number', placeholder: '100', defaultValue: 100 },
+    { id: `item${idx}ClaimPercentage`, label: 'Claim Amount (%)', type: 'number' },
   ] as TemplateField[])),
 
   // Calculation
-  { id: 'taxPercentage', label: 'Tax Percentage (%)', type: 'number', placeholder: '18', defaultValue: 18 },
+  { id: 'taxPercentage', label: 'Tax Percentage (%)', type: 'number' },
 
   // Bank Details
   { id: 'bankName', label: 'Bank Name', type: 'text', placeholder: 'Your Bank Name' },
