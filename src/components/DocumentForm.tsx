@@ -40,67 +40,81 @@ function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
   const shape: Record<string, z.ZodTypeAny> = {};
   fields.forEach((field) => {
     let validator: z.ZodTypeAny;
+
+    // Create the base validator without optionality
     switch (field.type) {
       case 'email': {
-        validator = z.string().email({ message: 'Invalid email address' }).optional().or(z.literal(''));
+        validator = z.string().email({ message: 'Invalid email address' });
         break;
       }
       case 'number': {
+        // Preprocess to handle empty strings for numeric coercion
         validator = z.preprocess(
           (val) => (val === "" || val === null ? undefined : val),
-          z.coerce.number({ invalid_type_error: 'Must be a number' }).optional().nullable()
+          z.coerce.number({ invalid_type_error: 'Must be a number' })
         );
         break;
       }
       case 'date': {
-        validator = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'Date must be YYYY-MM-DD' }).optional().or(z.literal(''));
+        validator = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'Date must be YYYY-MM-DD' });
         break;
       }
       case 'textarea': {
-        validator = z.string().optional();
+        validator = z.string();
         break;
       }
       case 'boolean': {
-        validator = z.boolean().optional().default(field.defaultValue === true);
+        // Default value is handled here, optionality later
+        validator = z.boolean().default(field.defaultValue === true);
         break;
       }
       case 'file': {
-        validator = z.any().optional();
+        validator = z.any();
         break;
       }
       case 'select': {
         if (field.options && field.options.length > 0) {
           const enumValues = field.options.map(opt => opt.value) as [string, ...string[]];
           if (enumValues.length > 0) {
-            validator = z.enum(enumValues).optional().or(z.literal(''));
+            validator = z.enum(enumValues);
           } else {
-             validator = z.string().optional();
+             validator = z.string();
           }
         } else {
-          validator = z.string().optional();
+          validator = z.string();
         }
         break;
       }
       case 'text': {
-        validator = z.string().optional();
+        validator = z.string();
         break;
       }
       default: {
         const exhaustiveCheck: never = field.type;
         console.warn(`Unknown field type: ${exhaustiveCheck}, treating as optional string.`);
-        validator = z.string().optional();
+        validator = z.string();
         break;
       }
     }
+
+    // Apply required/optional logic
     if (field.required) {
-        if (field.type === 'boolean') {
-             // Required booleans don't make much sense unless they must be true, handle as needed
-        } else if (field.type === 'number') {
-            validator = validator.refine(val => val !== undefined && val !== null && !isNaN(val), { message: `${field.label} is required` });
-        }
-         else {
-             validator = validator.min(1, { message: `${field.label} is required` });
-        }
+      if (['text', 'textarea', 'email', 'date', 'select'].includes(field.type)) {
+         if (validator instanceof z.ZodString || validator instanceof z.ZodEnum) {
+            validator = validator.min(1, { message: `${field.label} is required` });
+         }
+      } else if (field.type === 'number') {
+        validator = validator.refine(val => val !== undefined && val !== null && !isNaN(val), { message: `${field.label} is required` });
+      }
+    } else {
+      // If not required, make it optional
+      if (field.type === 'number') {
+          validator = validator.optional().nullable();
+      } else if (field.type === 'boolean' || field.type === 'file') {
+          validator = validator.optional();
+      } else { // text, email, date, select, textarea
+          validator = validator.optional().or(z.literal(''));
+      }
     }
     shape[field.id] = validator;
   });
