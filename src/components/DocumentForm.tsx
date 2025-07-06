@@ -566,11 +566,6 @@ export function DocumentForm({ template }: DocumentFormProps) {
               <FormLabel htmlFor={field.id} className="font-normal">
                 {field.label}
               </FormLabel>
-              {field.placeholder && (
-                <FormDescription className="text-xs">
-                  {field.placeholder}
-                </FormDescription>
-              )}
             </div>
           </FormItem>
         );
@@ -623,21 +618,6 @@ export function DocumentForm({ template }: DocumentFormProps) {
             <FormControl>
                 {renderField(field, formHookFieldRenderProps)}
             </FormControl>
-            {field.placeholder && field.type !== 'textarea' && field.type !== 'boolean' && field.type !== 'file' && field.type !== 'select' && (
-                <FormDescription className="text-xs text-muted-foreground">
-                Example: {field.placeholder}
-                </FormDescription>
-            )}
-            {field.type === 'file' && field.placeholder && (
-                <FormDescription className="text-xs text-muted-foreground">
-                {field.placeholder}
-                </FormDescription>
-            )}
-             {field.type === 'select' && field.placeholder && !field.options?.some(opt => opt.value === formHookFieldRenderProps.value) && (
-                 <FormDescription className="text-xs text-muted-foreground">
-                  {field.placeholder}
-                 </FormDescription>
-            )}
             <FormMessage />
             </FormItem>
         )}
@@ -1020,3 +1000,5 @@ export function DocumentForm({ template }: DocumentFormProps) {
     </Card>
   );
 }
+
+    
