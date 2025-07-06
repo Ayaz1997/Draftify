@@ -1,7 +1,7 @@
 
 import React from 'react';
 import type { FormData, TemplateField } from '@/types';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter as UiTableFooter } from '@/components/ui/table';
 import { formatCurrency, formatDate, amountToWords } from '@/lib/formatters';
@@ -144,27 +144,25 @@ export const InvoicePreview = (data: FormData) => {
           </div>
         </div>
 
-        <Separator />
-
-        <div className="border p-3 sm:p-4 rounded-md text-xs">
-          <h3 className="text-md font-semibold text-primary mb-2">Bank Details:</h3>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-6 border-t mt-6">
+          {/* Left Column: Bank Details */}
+          <div className="text-xs space-y-1">
+            <h3 className="text-md font-semibold text-primary mb-2">Bank Details:</h3>
             <p><strong>Bank Name:</strong> {data.bankName || 'N/A'}</p>
             <p><strong>Branch:</strong> {data.branchName || 'N/A'}</p>
             <p><strong>Account No:</strong> {data.accountNo || 'N/A'}</p>
             <p><strong>IFSC Code:</strong> {data.ifscCode || 'N/A'}</p>
           </div>
-        </div>
-      </CardContent>
-
-      <CardFooter className="p-4 sm:p-6 bg-muted/30 border-t">
-        <div className="w-full flex justify-end">
-          <div className="w-full sm:w-1/2 md:w-1/3 text-center">
-             <div className="border-b border-foreground/50 pb-1 mt-10 min-h-[24px]"></div>
-            <p className="text-xs text-muted-foreground mt-1">Authorised Signatory for {data.businessName || 'Your Business Name'}</p>
+          
+          {/* Right Column: Signature */}
+          <div className="text-center flex flex-col justify-end">
+            <div className="border-b border-foreground/50 min-h-[40px]"></div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Authorised Signatory for {data.businessName || 'Your Business Name'}
+            </p>
           </div>
         </div>
-      </CardFooter>
+      </CardContent>
     </Card>
   );
 };
