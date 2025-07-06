@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter as UiTableFooter } from '@/components/ui/table';
 import { formatCurrency, formatDate, amountToWords } from '@/lib/formatters';
+import Image from 'next/image';
 
 const MAX_INVOICE_ITEMS = 30;
 
@@ -156,7 +157,11 @@ export const InvoicePreview = (data: FormData) => {
           
           {/* Right Column: Signature */}
           <div className="text-center flex flex-col justify-end">
-            <div className="border-b border-foreground/50 min-h-[40px]"></div>
+            <div className="border-b border-foreground/50 min-h-[60px] flex items-center justify-center">
+              {data.authorisedSignature && typeof data.authorisedSignature === 'string' && data.authorisedSignature.startsWith('data:image') ? (
+                  <Image src={data.authorisedSignature} alt="Authorised Signature" width={150} height={50} className="object-contain" data-ai-hint="signature drawing" />
+              ) : null}
+            </div>
             <p className="text-xs text-muted-foreground mt-2">
               Authorised Signatory for {data.businessName || 'Your Business Name'}
             </p>
@@ -204,4 +209,7 @@ export const invoiceFields: TemplateField[] = [
   { id: 'branchName', label: 'Branch Name', type: 'text', placeholder: 'Your Branch Name' },
   { id: 'accountNo', label: 'Account Number', type: 'text', placeholder: 'Your Bank Account Number' },
   { id: 'ifscCode', label: 'IFSC Code', type: 'text', placeholder: 'YOURBANK000123' },
+  
+  // Signature
+  { id: 'authorisedSignature', label: 'Authorised Signature Image (optional)', type: 'file' },
 ];

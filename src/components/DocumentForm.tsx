@@ -345,90 +345,75 @@ export function DocumentForm({ template }: DocumentFormProps) {
 
  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const submissionValues: Record<string, any> = { ...values };
+    const fileFields = template.fields.filter(f => f.type === 'file');
 
-    const logoField = template.fields.find(f => f.id === 'businessLogoUrl' && f.type === 'file');
-    const logoFieldId = logoField?.id;
+    const fileProcessingPromises = fileFields.map(async (fileField) => {
+        const fieldId = fileField.id;
+        const fileValue = values[fieldId];
+        const existingValue = currentInitialValues[fieldId];
 
-    if (logoFieldId && submissionValues[logoFieldId] === undefined && currentInitialValues[logoFieldId] === undefined) {
-        submissionValues[logoFieldId] = '';
-    } else if (logoFieldId && typeof currentInitialValues[logoFieldId] === 'string' && currentInitialValues[logoFieldId].startsWith('data:image') && submissionValues[logoFieldId] === undefined) {
-        submissionValues[logoFieldId] = currentInitialValues[logoFieldId];
-    }
-
-
-    if (logoFieldId && values[logoFieldId]) {
-        const logoFileValue = values[logoFieldId];
-
-        if (logoFileValue instanceof FileList && logoFileValue.length > 0) {
-            const file = logoFileValue[0];
-            const MAX_FILE_SIZE = 5 * 1024 * 1024;
-            const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
-
-            if (!SUPPORTED_IMAGE_TYPES.includes(file.type)) {
-                toast({
-                    variant: "destructive",
-                    title: "Invalid File Type",
-                    description: `Please upload an image (JPEG, PNG, GIF, WEBP, SVG). You uploaded: ${file.type}`,
-                });
-                submissionValues[logoFieldId] = currentInitialValues[logoFieldId]?.startsWith('data:image') ? currentInitialValues[logoFieldId] : '';
-            } else if (file.size > MAX_FILE_SIZE) {
-                toast({
-                    variant: "destructive",
-                    title: "File Too Large",
-                    description: `Please upload an image smaller than 5MB. Yours is ${(file.size / (1024*1024)).toFixed(2)}MB.`,
-                });
-                submissionValues[logoFieldId] = currentInitialValues[logoFieldId]?.startsWith('data:image') ? currentInitialValues[logoFieldId] : '';
+        if (!(fileValue instanceof FileList) || fileValue.length === 0) {
+            // No new file uploaded. Retain existing value if it's a valid data URI.
+            if (typeof existingValue === 'string' && existingValue.startsWith('data:image')) {
+                submissionValues[fieldId] = existingValue;
+            } else if (typeof fileValue === 'string' && fileValue.startsWith('data:image')) {
+                submissionValues[fieldId] = fileValue;
             } else {
-                try {
-                    const dataUri = await new Promise<string>((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                            if (event.target && typeof event.target.result === 'string') {
-                                resolve(event.target.result);
-                            } else {
-                                reject(new Error('Failed to read file content.'));
-                            }
-                        };
-                        reader.onerror = (error) => {
-                            console.error("CRITICAL: FileReader error:", error);
-                            reject(error);
-                        };
-                        reader.readAsDataURL(file);
-                    });
-                    submissionValues[logoFieldId] = dataUri;
-                } catch (error: any) {
-                    console.error("CRITICAL: Error converting file to data URI:", error);
-                    toast({
-                        variant: "destructive",
-                        title: "Logo Upload Failed",
-                        description: `Error converting file: ${error.message || 'Unknown error'}. Please try again or skip logo.`,
-                    });
-                    submissionValues[logoFieldId] = currentInitialValues[logoFieldId]?.startsWith('data:image') ? currentInitialValues[logoFieldId] : '';
-                }
+                submissionValues[fieldId] = '';
             }
-        } else if (typeof logoFileValue === 'string' && logoFileValue.startsWith('data:image')) {
-            submissionValues[logoFieldId] = logoFileValue;
-        } else if (logoFileValue && !(logoFileValue instanceof FileList)) {
-             console.warn("Unexpected value type for logo field:", logoFileValue);
-             toast({
-                variant: "destructive",
-                title: "Invalid Logo Input",
-                description: "The logo data was not recognized. Please re-upload if you wish to change it."
-             });
-             submissionValues[logoFieldId] = currentInitialValues[logoFieldId]?.startsWith('data:image') ? currentInitialValues[logoFieldId] : '';
+            return;
         }
-    } else if (logoFieldId && typeof values[logoFieldId] === 'string' && (values[logoFieldId] as string).startsWith('data:image')) {
-        submissionValues[logoFieldId] = values[logoFieldId];
-    } else if (logoFieldId && !submissionValues[logoFieldId]) {
-         submissionValues[logoFieldId] = currentInitialValues[logoFieldId]?.startsWith('data:image') ? currentInitialValues[logoFieldId] : '';
-    }
+
+        const file = fileValue[0];
+        const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+        const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+
+        if (!SUPPORTED_IMAGE_TYPES.includes(file.type)) {
+            toast({
+                variant: "destructive",
+                title: "Invalid File Type",
+                description: `For ${fileField.label}, please upload an image. You uploaded: ${file.type}`,
+            });
+            submissionValues[fieldId] = (typeof existingValue === 'string' && existingValue.startsWith('data:image')) ? existingValue : '';
+            return;
+        }
+
+        if (file.size > MAX_FILE_SIZE) {
+            toast({
+                variant: "destructive",
+                title: "File Too Large",
+                description: `For ${fileField.label}, please upload an image smaller than 5MB.`,
+            });
+            submissionValues[fieldId] = (typeof existingValue === 'string' && existingValue.startsWith('data:image')) ? existingValue : '';
+            return;
+        }
+
+        try {
+            const dataUri = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (event) => event.target?.result ? resolve(event.target.result as string) : reject(new Error('Failed to read file.'));
+                reader.onerror = (error) => reject(error);
+                reader.readAsDataURL(file);
+            });
+            submissionValues[fieldId] = dataUri;
+        } catch (error: any) {
+            toast({
+                variant: "destructive",
+                title: "File Upload Failed",
+                description: `Error processing ${fileField.label}: ${error.message || 'Unknown error'}.`,
+            });
+            submissionValues[fieldId] = (typeof existingValue === 'string' && existingValue.startsWith('data:image')) ? existingValue : '';
+        }
+    });
+
+    await Promise.all(fileProcessingPromises);
 
 
     template.fields.forEach(field => {
         if (submissionValues[field.id] === undefined) {
             if (field.type === 'boolean') {
                 submissionValues[field.id] = field.defaultValue !== undefined ? field.defaultValue : false;
-            } else if (field.id !== logoFieldId) {
+            } else if (field.type !== 'file') {
                  submissionValues[field.id] = field.defaultValue !== undefined ? field.defaultValue : (field.type === 'number' ? null : '');
             }
         }
@@ -1000,5 +985,3 @@ export function DocumentForm({ template }: DocumentFormProps) {
     </Card>
   );
 }
-
-    
