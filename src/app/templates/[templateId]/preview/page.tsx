@@ -1,5 +1,5 @@
 
-import { templates } from '@/lib/templates.tsx'; 
+import { templates } from '@/lib/templates'; 
 import type { DocumentPreviewPropsTemplateInfo, FormData } from '@/types';
 import { DocumentPreview } from '@/components/DocumentPreview';
 import { AlertTriangle, ArrowLeft } from 'lucide-react';

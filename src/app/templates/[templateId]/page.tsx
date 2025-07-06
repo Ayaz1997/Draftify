@@ -1,5 +1,5 @@
 
-import { templates } from '@/lib/templates.tsx'; // Ensure .tsx extension if not already
+import { templates } from '@/lib/templates';
 import type { Template, DocumentFormPropsTemplate } from '@/types';
 import { DocumentForm } from '@/components/DocumentForm';
 import { AlertTriangle, ArrowLeft } from 'lucide-react';

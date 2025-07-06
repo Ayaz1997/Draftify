@@ -2,7 +2,7 @@
 'use client';
 
 import type { FormData, DocumentPreviewPropsTemplateInfo } from '@/types';
-import { templates } from '@/lib/templates.tsx'; 
+import { templates } from '@/lib/templates';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -205,4 +205,3 @@ export function DocumentPreview({ templateInfo }: DocumentPreviewProps) {
     </div>
   );
 }
-
