@@ -34,7 +34,7 @@ interface DocumentFormProps {
   template: DocumentFormPropsTemplate;
 }
 
-const MAX_ITEMS_PER_SECTION = 10;
+const MAX_ITEMS_PER_SECTION = 30;
 
 function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
   const shape: Record<string, z.ZodTypeAny> = {};
@@ -534,7 +534,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
                 dateValue = '';
             }
         }
-        return <Input type="date" placeholder={field.placeholder} {...formFieldControllerProps} value={dateValue} />;
+        return <Input type="date" {...formFieldControllerProps} value={dateValue} />;
       }
       case 'email': {
         return <Input type="email" placeholder={field.placeholder} {...formFieldControllerProps} value={formFieldControllerProps.value || ''} />;
@@ -780,7 +780,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
                                                                     checked={checkboxCtrl.value}
                                                                     onCheckedChange={checkboxCtrl.onChange}
                                                                     id={checkboxCtrl.name}
-                                                                    aria-label={toggleField.placeholder || `Toggle ${toggleField.label} section`}
+                                                                    aria-label={toggleField.label}
                                                                     />
                                                                 </FormControl>
                                                                 </FormItem>

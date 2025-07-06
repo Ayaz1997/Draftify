@@ -24,7 +24,7 @@ const formatCurrency = (amount?: number | string, currencySymbol = '₹') => {
   return `${currencySymbol}${num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
-const MAX_ITEMS_PREVIEW = 10;
+const MAX_ITEMS_PREVIEW = 30;
 
 export const WorkOrderPreview = (data: FormData) => {
   const workItems = [];
@@ -334,7 +334,6 @@ export const workOrderFields: TemplateField[] = [
     id: 'businessLogoUrl',
     label: 'Business Logo',
     type: 'file',
-    placeholder: 'Recommended: <1MB, PNG/JPG. Ideal: 240x120px (2:1 ratio).'
   },
   { id: 'orderNumber', label: 'Order Number', type: 'text', placeholder: `WO-${Date.now().toString().slice(-6)}`, defaultValue: `WO-${Date.now().toString().slice(-5)}` },
   { id: 'orderDate', label: 'Order Date', type: 'date' },
@@ -346,22 +345,22 @@ export const workOrderFields: TemplateField[] = [
   { id: 'workLocation', label: 'Work Location / Site Address', type: 'textarea', placeholder: 'Full address of the work site' },
   { id: 'orderReceivedBy', label: 'Order Received By (Your Staff)', type: 'text', placeholder: 'Employee Name' },
   { id: 'generalWorkDescription', label: 'Overall Work Description', type: 'textarea', placeholder: 'Summarize the work to be done', rows: 3 },
-  { id: 'termsOfService', label: 'Terms of Service', type: 'textarea', placeholder: 'Payment terms, warranty, etc.', rows: 4, defaultValue: "1. All payments are due upon completion of work unless otherwise agreed in writing.\n2. Any changes to the scope of work must be documented and may incur additional charges.\n3. Warranty for services performed is 30 days from completion date." },
-  { id: 'includeWorkDescriptionTable', label: 'Work Items', type: 'boolean', defaultValue: true, placeholder: "Toggle visibility of the detailed work items table in the previewed document." },
-  ...Array.from({ length: 10 }, (_, i) => i + 1).flatMap(idx => ([
+  { id: 'termsOfService', label: 'Terms of Service', type: 'textarea', rows: 4, defaultValue: "1. All payments are due upon completion of work unless otherwise agreed in writing.\n2. Any changes to the scope of work must be documented and may incur additional charges.\n3. Warranty for services performed is 30 days from completion date." },
+  { id: 'includeWorkDescriptionTable', label: 'Work Items', type: 'boolean', defaultValue: true },
+  ...Array.from({ length: 30 }, (_, i) => i + 1).flatMap(idx => ([
     { id: `workItem${idx}Description`, label: `Work description ${idx}`, type: 'text', placeholder: idx === 1 ? 'E.g., Interior Painting - Living Room' : undefined},
     { id: `workItem${idx}Area`, label: 'Area (Sq. ft.)', type: 'number', placeholder: idx === 1 ? '250' : undefined },
     { id: `workItem${idx}Rate`, label: 'Rate (₹ per Sq. ft.)', type: 'number', placeholder: idx === 1 ? '15' : undefined },
   ] as TemplateField[])),
-  { id: 'includeMaterialTable', label: 'Materials', type: 'boolean', defaultValue: true, placeholder: "Toggle visibility of the materials table in the previewed document." },
-  ...Array.from({ length: 10 }, (_, i) => i + 1).flatMap(idx => ([
+  { id: 'includeMaterialTable', label: 'Materials', type: 'boolean', defaultValue: true },
+  ...Array.from({ length: 30 }, (_, i) => i + 1).flatMap(idx => ([
     { id: `materialItem${idx}Name`, label: `Material name ${idx}`, type: 'text', placeholder: idx === 1 ? 'E.g., Emulsion Paint' : undefined },
     { id: `materialItem${idx}Quantity`, label: 'Quantity', type: 'number', placeholder: idx === 1 ? '10' : undefined },
     { id: `materialItem${idx}Unit`, label: 'Unit', type: 'select', options: [ { value: 'Pcs', label: 'Pcs' }, { value: 'Litre', label: 'Litre' }, { value: 'Kg', label: 'Kg' } ], defaultValue: 'Pcs', placeholder: 'Select unit' },
     { id: `materialItem${idx}PricePerUnit`, label: 'Price per Unit (₹)', type: 'number', placeholder: idx === 1 ? '450' : undefined },
   ] as TemplateField[])),
-  { id: 'includeLaborTable', label: 'Labour Charges', type: 'boolean', defaultValue: true, placeholder: "Toggle visibility of the labor charges table in the previewed document." },
-  ...Array.from({ length: 10 }, (_, i) => i + 1).flatMap(idx => ([
+  { id: 'includeLaborTable', label: 'Labour Charges', type: 'boolean', defaultValue: true },
+  ...Array.from({ length: 30 }, (_, i) => i + 1).flatMap(idx => ([
     { id: `laborItem${idx}TeamName`, label: `Team/Description ${idx}`, type: 'text', placeholder: idx === 1 ? 'E.g., Painting Team A' : undefined },
     { id: `laborItem${idx}NumPersons`, label: 'No. of Persons', type: 'number', placeholder: idx === 1 ? '2' : undefined },
     { id: `laborItem${idx}Amount`, label: 'Amount (₹)', type: 'number', placeholder: idx === 1 ? '8000' : undefined },

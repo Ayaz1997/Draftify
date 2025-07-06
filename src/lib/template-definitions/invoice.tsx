@@ -6,7 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter as UiTableFooter } from '@/components/ui/table';
 import { formatCurrency, formatDate, amountToWords } from '@/lib/formatters';
 
-const MAX_INVOICE_ITEMS = 10;
+const MAX_INVOICE_ITEMS = 30;
 
 export const InvoicePreview = (data: FormData) => {
   const invoiceItems = [];
@@ -187,7 +187,7 @@ export const invoiceFields: TemplateField[] = [
   { id: 'invoiceDate', label: 'Invoice Date', type: 'date', required: true },
 
   // Invoice Items
-  { id: 'includeItemsTable', label: 'Invoice Items', type: 'boolean', defaultValue: true, placeholder: "Toggle visibility of the items table" },
+  { id: 'includeItemsTable', label: 'Invoice Items', type: 'boolean', defaultValue: true },
   ...Array.from({ length: MAX_INVOICE_ITEMS }, (_, i) => i + 1).flatMap(idx => ([
     { id: `item${idx}Description`, label: `Item #${idx} Description`, type: 'text', placeholder: idx === 1 ? 'E.g., Website Development Phase 1' : undefined },
     { id: `item${idx}Unit`, label: 'Unit', type: 'select', options: [ { value: 'pcs', label: 'Piece' }, { value: 'sq.ft.', label: 'Sq. Ft.' }, { value: 'kg', label: 'Kg' }, { value: 'lit.', label: 'Litre' }, { value: 'lumpsum', label: 'Lumpsum' } ], defaultValue: 'pcs', placeholder: 'Select unit' },
