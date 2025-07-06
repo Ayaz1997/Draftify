@@ -26,7 +26,7 @@ export const templates: Template[] = [
   {
     id: 'invoice',
     name: 'Invoice',
-    description: 'Generate and manage invoices for clients.',
+    description: 'Create professional, itemized invoices with tax calculations and bank details for clients.',
     icon: Receipt,
     fields: invoiceFields,
     previewLayout: InvoicePreview,

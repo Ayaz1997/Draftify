@@ -123,12 +123,14 @@ interface AccordionSectionItemPattern {
   rate?: string;
   quantity?: string;
   unit?: string;
+  unitCost?: string;
   pricePerUnit?: string;
   numPersons?: string;
   amount?: string;
+  claimPercentage?: string;
 }
 
-interface WorkOrderAccordionConfig {
+interface DynamicSectionConfig {
   id: string;
   toggleFieldId: keyof FormData;
   itemFieldIdPatterns: AccordionSectionItemPattern;
@@ -141,10 +143,11 @@ type VisibleItemCounts = {
   workItems: number;
   materials: number;
   labor: number;
+  invoiceItems: number;
 };
 
 
-const workOrderAccordionSubSectionsConfig: WorkOrderAccordionConfig[] = [
+const workOrderAccordionSubSectionsConfig: DynamicSectionConfig[] = [
   {
     id: 'work-items-accordion',
     toggleFieldId: 'includeWorkDescriptionTable',
@@ -184,6 +187,21 @@ const workOrderAccordionSubSectionsConfig: WorkOrderAccordionConfig[] = [
   },
 ];
 
+const invoiceItemConfig: DynamicSectionConfig = {
+    id: 'invoice-items-section',
+    toggleFieldId: 'includeItemsTable',
+    itemFieldIdPatterns: {
+      description: 'item#Description',
+      unit: 'item#Unit',
+      quantity: 'item#Quantity',
+      unitCost: 'item#UnitCost',
+      claimPercentage: 'item#ClaimPercentage',
+    },
+    countKey: 'invoiceItems',
+    addButtonLabel: 'Add New Line',
+    itemTitleSingular: 'Item',
+};
+
 const WORK_ORDER_TABS_CONFIG = [
   { id: 'businessDetails', title: 'Business Details', fieldIds: workOrderSectionStructure['Business Details'] },
   { id: 'orderDetails', title: 'Order Details', fieldIds: workOrderSectionStructure['Order Details'] },
@@ -200,6 +218,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
     workItems: 1,
     materials: 1,
     labor: 1,
+    invoiceItems: 1,
   });
 
   const [currentTab, setCurrentTab] = useState(WORK_ORDER_TABS_CONFIG[0].id);
@@ -282,11 +301,12 @@ export function DocumentForm({ template }: DocumentFormProps) {
 
 
   useEffect(() => {
-    if (template.id === 'work-order' && currentInitialValues) {
-      const newCounts: VisibleItemCounts = { workItems: 0, materials: 0, labor: 0 };
+    if (currentInitialValues) {
+      let newCounts: VisibleItemCounts = { ...visibleItemCounts };
       let changed = false;
+      const allSections = template.id === 'work-order' ? workOrderAccordionSubSectionsConfig : (template.id === 'invoice' ? [invoiceItemConfig] : []);
 
-      workOrderAccordionSubSectionsConfig.forEach(section => {
+      allSections.forEach(section => {
         let maxPopulatedIndex = 0;
         for (let i = 1; i <= MAX_ITEMS_PER_SECTION; i++) {
           const firstFieldPattern = Object.values(section.itemFieldIdPatterns)[0];
@@ -400,21 +420,20 @@ export function DocumentForm({ template }: DocumentFormProps) {
         }
     });
 
-    if (template.id === 'work-order') {
-      workOrderAccordionSubSectionsConfig.forEach(section => {
-        const currentVisibleCount = visibleItemCounts[section.countKey];
-        for (let i = currentVisibleCount + 1; i <= MAX_ITEMS_PER_SECTION; i++) {
-          Object.values(section.itemFieldIdPatterns).forEach(pattern => {
-            if (pattern) {
-              const fieldId = pattern.replace('#', String(i));
-              if (submissionValues[fieldId] !== undefined) {
-                submissionValues[fieldId] = template.fields.find(f => f.id === fieldId)?.type === 'number' ? undefined : '';
-              }
+    const allSections = template.id === 'work-order' ? workOrderAccordionSubSectionsConfig : (template.id === 'invoice' ? [invoiceItemConfig] : []);
+    allSections.forEach(section => {
+      const currentVisibleCount = visibleItemCounts[section.countKey];
+      for (let i = currentVisibleCount + 1; i <= MAX_ITEMS_PER_SECTION; i++) {
+        Object.values(section.itemFieldIdPatterns).forEach(pattern => {
+          if (pattern) {
+            const fieldId = pattern.replace('#', String(i));
+            if (submissionValues[fieldId] !== undefined) {
+              submissionValues[fieldId] = template.fields.find(f => f.id === fieldId)?.type === 'number' ? undefined : '';
             }
-          });
-        }
-      });
-    }
+          }
+        });
+      }
+    });
 
 
     try {
@@ -449,7 +468,8 @@ export function DocumentForm({ template }: DocumentFormProps) {
     const currentVisibleCount = visibleItemCounts[countKey];
     if (currentVisibleCount <= 1) return;
 
-    const sectionConfig = workOrderAccordionSubSectionsConfig.find(s => s.countKey === countKey);
+    const allSections = template.id === 'work-order' ? workOrderAccordionSubSectionsConfig : (template.id === 'invoice' ? [invoiceItemConfig] : []);
+    const sectionConfig = allSections.find(s => s.countKey === countKey);
     if (!sectionConfig) return;
 
 
@@ -878,7 +898,90 @@ export function DocumentForm({ template }: DocumentFormProps) {
     );
   }
 
+  if (template.id === 'invoice') {
+    const section = invoiceItemConfig;
+    return (
+      <Card className="shadow-lg">
+        <CardHeader>
+          <CardTitle className="text-lg font-medium">Fill in the details for your {template.name}</CardTitle>
+        </CardHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <CardContent className="space-y-6">
+              {template.fields.filter(f => !f.id.startsWith('item') && f.id !== 'includeItemsTable').map((field) => renderFormField(field))}
+              
+              <div className="space-y-3 border-t pt-4">
+                 <FormField
+                    control={form.control}
+                    name={section.toggleFieldId as any}
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                        </FormControl>
+                        <FormLabel className="font-semibold text-lg">{template.fields.find(f => f.id === section.toggleFieldId)?.label}</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                  
+                 {form.watch(section.toggleFieldId as any) && (
+                    <div className="space-y-6">
+                      {Array.from({ length: visibleItemCounts[section.countKey] }).map((_, itemIndex) => {
+                        const itemNumber = itemIndex + 1;
+                        return (
+                          <div key={`${section.id}-item-${itemNumber}`} className="p-4 border rounded-md relative group space-y-4">
+                             <h4 className="text-md font-medium text-muted-foreground">{section.itemTitleSingular} #{itemNumber}</h4>
+                              {Object.entries(section.itemFieldIdPatterns).map(([key, pattern]) => {
+                                  if(!pattern) return null;
+                                  const fieldId = pattern.replace('#', String(itemNumber));
+                                  const fieldDef = template.fields.find(f => f.id === fieldId);
+                                  return renderFormField(fieldDef);
+                              })}
 
+                            {itemIndex > 0 && (
+                              <Button
+                                type="button" variant="ghost" size="sm"
+                                onClick={() => handleRemoveItem(section.countKey, itemIndex)}
+                                className="absolute top-2 right-2 text-destructive hover:bg-destructive/10"
+                                aria-label={`Remove ${section.itemTitleSingular} ${itemNumber}`}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        );
+                      })}
+                      {visibleItemCounts[section.countKey] < MAX_ITEMS_PER_SECTION && (
+                        <div className="flex justify-start">
+                          <Button
+                            type="button" variant="outline" size="sm"
+                            onClick={() => handleAddItem(section.countKey)}
+                          >
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            {section.addButtonLabel}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+              </div>
+            </CardContent>
+            <CardFooter className="flex justify-end gap-3 border-t pt-6">
+              <Button type="button" variant="outline" onClick={() => router.back()}>
+                Cancel
+              </Button>
+              <Button type="submit" variant="default">
+                <Eye className="mr-2 h-4 w-4" />
+                Preview Document
+              </Button>
+            </CardFooter>
+          </form>
+        </Form>
+      </Card>
+    );
+  }
+
+  // Default form for other templates like letterhead
   return (
     <Card className="shadow-lg">
       <CardHeader>
@@ -903,4 +1006,3 @@ export function DocumentForm({ template }: DocumentFormProps) {
     </Card>
   );
 }
-

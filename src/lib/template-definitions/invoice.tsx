@@ -3,116 +3,192 @@ import React from 'react';
 import type { FormData, TemplateField } from '@/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Receipt } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter as UiTableFooter } from '@/components/ui/table';
+import { formatCurrency, formatDate, amountToWords } from '@/lib/formatters';
 
-const formatDate = (dateString?: string) => {
-  if (!dateString) return 'N/A';
-  if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-    return new Date(dateString + 'T00:00:00Z').toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+const MAX_INVOICE_ITEMS = 10;
+
+export const InvoicePreview = (data: FormData) => {
+  const invoiceItems = [];
+  let tableSubtotal = 0;
+
+  if (data.includeItemsTable) {
+    for (let i = 1; i <= MAX_INVOICE_ITEMS; i++) {
+      if (data[`item${i}Description`]) {
+        const quantity = parseFloat(data[`item${i}Quantity`] || 1);
+        const unitCost = parseFloat(data[`item${i}UnitCost`] || 0);
+        const totalCost = quantity * unitCost;
+        invoiceItems.push({
+          sno: invoiceItems.length + 1,
+          description: data[`item${i}Description`],
+          unit: data[`item${i}Unit`] || 'N/A',
+          quantity: quantity,
+          unitCost: unitCost,
+          totalCost: totalCost,
+          claimPercentage: parseFloat(data[`item${i}ClaimPercentage`] || 0),
+        });
+        tableSubtotal += totalCost;
+      }
+    }
   }
-  try {
-    return new Date(dateString).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
-  } catch (e) {
-    return dateString;
-  }
+
+  const taxRate = parseFloat(data.taxPercentage || 0);
+  const taxAmount = tableSubtotal * (taxRate / 100);
+  const grandTotal = tableSubtotal + taxAmount;
+  
+  return (
+    <Card className="w-full max-w-4xl mx-auto shadow-lg text-sm" data-ai-hint="invoice document">
+      <CardHeader className="p-4 sm:p-6 bg-muted/30">
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+          <div className="flex-grow">
+            <h1 className="text-2xl sm:text-3xl font-bold text-primary">{data.businessName || 'Your Business Name'}</h1>
+            <p className="text-xs sm:text-sm text-foreground/80 whitespace-pre-wrap mt-1">{data.businessAddress || '123 Business St, City, State, PIN'}</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              <strong>Contact:</strong> {data.businessContact || 'N/A'} | <strong>Email:</strong> {data.businessEmail || 'N/A'}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              <strong>GST No:</strong> {data.businessGstNo || 'N/A'}
+            </p>
+          </div>
+          <div className="text-left sm:text-right text-xs sm:text-sm self-start sm:self-end">
+            <p><strong>Invoice No:</strong> {data.invoiceNumber || 'INV-001'}</p>
+            <p><strong>Date:</strong> {formatDate(data.invoiceDate)}</p>
+          </div>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="p-4 sm:p-6 space-y-4">
+        <div className="border p-3 sm:p-4 rounded-md">
+          <h3 className="text-md font-semibold text-primary mb-2">Bill To:</h3>
+          <p className="font-bold">{data.clientName || 'Client Name'}</p>
+          <p className="whitespace-pre-wrap text-foreground/90">{data.clientAddress || 'Client Address'}</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            <strong>Contact:</strong> {data.clientContact || 'N/A'} | <strong>Email:</strong> {data.clientEmail || 'N/A'}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            <strong>GST No:</strong> {data.clientGstNo || 'N/A'}
+          </p>
+        </div>
+
+        {data.includeItemsTable && invoiceItems.length > 0 && (
+          <div className="border rounded-md overflow-hidden">
+            <Table>
+              <TableHeader className="bg-muted/50">
+                <TableRow>
+                  <TableHead className="p-2 w-10">Sl. No.</TableHead>
+                  <TableHead className="p-2">Description</TableHead>
+                  <TableHead className="p-2 w-20">Unit</TableHead>
+                  <TableHead className="p-2 text-right w-20">Quantity</TableHead>
+                  <TableHead className="p-2 text-right w-24">Unit Cost</TableHead>
+                  <TableHead className="p-2 text-right w-24">Total Cost</TableHead>
+                  <TableHead className="p-2 text-right w-28">Claim Amt (%)</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {invoiceItems.map((item) => (
+                  <TableRow key={item.sno}>
+                    <TableCell className="p-2 text-center">{item.sno}</TableCell>
+                    <TableCell className="p-2 whitespace-pre-wrap">{item.description}</TableCell>
+                    <TableCell className="p-2">{item.unit}</TableCell>
+                    <TableCell className="p-2 text-right">{item.quantity.toFixed(2)}</TableCell>
+                    <TableCell className="p-2 text-right">{formatCurrency(item.unitCost)}</TableCell>
+                    <TableCell className="p-2 text-right font-medium">{formatCurrency(item.totalCost)}</TableCell>
+                    <TableCell className="p-2 text-right">{item.claimPercentage > 0 ? `${item.claimPercentage}%` : '-'}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+              <UiTableFooter>
+                <TableRow className="bg-muted/50">
+                  <TableCell colSpan={5} className="p-2 text-right font-bold text-primary">Total Table Amount</TableCell>
+                  <TableCell colSpan={2} className="p-2 text-right font-bold text-primary">{formatCurrency(tableSubtotal)}</TableCell>
+                </TableRow>
+              </UiTableFooter>
+            </Table>
+          </div>
+        )}
+
+        <div className="flex flex-col sm:flex-row justify-between gap-4">
+          <div className="flex-grow text-xs text-muted-foreground">
+            <p className="font-semibold text-foreground">Amount in Words:</p>
+            <p className="italic">{amountToWords(grandTotal)}</p>
+          </div>
+          <div className="w-full sm:w-2/5 md:w-1/3 space-y-2">
+            <div className="flex justify-between">
+              <span className="font-medium">Subtotal:</span>
+              <span>{formatCurrency(tableSubtotal)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="font-medium">Tax ({taxRate}%):</span>
+              <span>{formatCurrency(taxAmount)}</span>
+            </div>
+            <Separator className="my-1"/>
+            <div className="flex justify-between font-bold text-lg text-primary">
+              <span>Total Amount:</span>
+              <span>{formatCurrency(grandTotal)}</span>
+            </div>
+          </div>
+        </div>
+
+        <Separator />
+
+        <div className="border p-3 sm:p-4 rounded-md text-xs">
+          <h3 className="text-md font-semibold text-primary mb-2">Bank Details:</h3>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+            <p><strong>Bank Name:</strong> {data.bankName || 'N/A'}</p>
+            <p><strong>Branch:</strong> {data.branchName || 'N/A'}</p>
+            <p><strong>Account No:</strong> {data.accountNo || 'N/A'}</p>
+            <p><strong>IFSC Code:</strong> {data.ifscCode || 'N/A'}</p>
+          </div>
+        </div>
+      </CardContent>
+
+      <CardFooter className="p-4 sm:p-6 bg-muted/30 border-t">
+        <div className="w-full flex justify-end">
+          <div className="w-full sm:w-1/2 md:w-1/3 text-center">
+             <div className="border-b border-foreground/50 pb-1 mt-10 min-h-[24px]"></div>
+            <p className="text-xs text-muted-foreground mt-1">Authorised Signatory for {data.businessName || 'Your Business Name'}</p>
+          </div>
+        </div>
+      </CardFooter>
+    </Card>
+  );
 };
 
-export const InvoicePreview = (data: FormData) => (
-  <Card className="w-full max-w-3xl mx-auto shadow-lg">
-    <CardHeader className="bg-primary text-primary-foreground p-4 sm:p-6 rounded-t-lg">
-      <div className="flex justify-between items-center">
-        <CardTitle className="text-2xl sm:text-3xl font-bold">INVOICE</CardTitle>
-        <Receipt className="h-8 w-8 sm:h-10 sm:w-10" />
-      </div>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mt-2 gap-2 sm:gap-0">
-        <div className="text-xs sm:text-sm">
-          <p className="text-primary-foreground/80"><strong>{data.companyName || 'Your Company LLC'}</strong></p>
-          <p className="text-primary-foreground/80 whitespace-pre-wrap">{data.companyAddress || '123 Business Rd\nCity, State ZIP'}</p>
-        </div>
-        <div className="text-left sm:text-right text-xs sm:text-sm">
-          <p className="text-primary-foreground/80">Invoice #: {data.invoiceNumber || `INV-${Date.now().toString().slice(-6)}`}</p>
-          <p className="text-primary-foreground/80">Date: {formatDate(data.invoiceDate)}</p>
-          <p className="text-primary-foreground/80">Due Date: {formatDate(data.dueDate)}</p>
-        </div>
-      </div>
-    </CardHeader>
-    <CardContent className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6 bg-card text-card-foreground text-xs sm:text-sm">
-      <div>
-        <h3 className="text-md sm:text-lg font-semibold text-primary mb-2">Bill To:</h3>
-        <p><strong>{data.clientName || 'Client Company Name'}</strong></p>
-        <p className="whitespace-pre-wrap">{data.clientAddress || '456 Client Ave\nClient City, State ZIP'}</p>
-      </div>
-      <Separator />
-      <div>
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-primary/50">
-              <th className="text-left py-1 px-1 sm:py-2 sm:pr-2 font-semibold text-primary">Item Description</th>
-              <th className="text-right py-1 px-1 sm:py-2 sm:px-2 font-semibold text-primary">Quantity</th>
-              <th className="text-right py-1 px-1 sm:py-2 sm:px-2 font-semibold text-primary">Unit Price</th>
-              <th className="text-right py-1 px-1 sm:py-2 sm:pl-2 font-semibold text-primary">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(data.items && Array.isArray(data.items) ? data.items : [{ description: data.itemDescription1, quantity: data.itemQuantity1, unitPrice: data.itemPrice1 }]).map((item: any, index: number) => (
-              <tr key={index} className="border-b border-muted">
-                <td className="py-1 px-1 sm:py-2 sm:pr-2">{item.description || 'N/A'}</td>
-                <td className="text-right py-1 px-1 sm:py-2 sm:px-2">{item.quantity || 1}</td>
-                <td className="text-right py-1 px-1 sm:py-2 sm:px-2">${parseFloat(item.unitPrice || 0).toFixed(2)}</td>
-                <td className="text-right py-1 px-1 sm:py-2 sm:pl-2">${(parseFloat(item.quantity || 1) * parseFloat(item.unitPrice || 0)).toFixed(2)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <Separator />
-      <div className="flex justify-end">
-        <div className="w-full md:w-2/3 lg:w-1/2 space-y-1 sm:space-y-2">
-          <div className="flex justify-between">
-            <span className="font-semibold">Subtotal:</span>
-            <span>${parseFloat(data.subtotal || 0).toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="font-semibold">Tax ({data.taxRate || 0}%):</span>
-            <span>${parseFloat(data.taxAmount || 0).toFixed(2)}</span>
-          </div>
-          <Separator className="my-1 bg-primary/50"/>
-          <div className="flex justify-between text-lg sm:text-xl font-bold text-primary">
-            <span>Total Due:</span>
-            <span>${parseFloat(data.totalAmount || 0).toFixed(2)}</span>
-          </div>
-        </div>
-      </div>
-       {data.notes && (
-        <>
-          <Separator />
-          <div>
-            <h3 className="text-sm sm:text-md font-semibold text-primary mb-1">Notes:</h3>
-            <p className="text-xs sm:text-sm whitespace-pre-wrap">{data.notes}</p>
-          </div>
-        </>
-      )}
-    </CardContent>
-    <CardFooter className="p-4 sm:p-6 bg-muted/50 rounded-b-lg text-xs sm:text-sm text-muted-foreground">
-      <p>Thank you for your prompt payment. Please make all checks payable to {data.companyName || 'Your Company LLC'}.</p>
-    </CardFooter>
-  </Card>
-);
-
 export const invoiceFields: TemplateField[] = [
-  { id: 'companyName', label: 'Your Company Name', type: 'text', placeholder: 'Your Company LLC', defaultValue: 'Your Company LLC' },
-  { id: 'companyAddress', label: 'Your Company Address', type: 'textarea', placeholder: '123 Business Rd\nCity, State ZIP', defaultValue: '123 Business Rd\nCity, State ZIP' },
-  { id: 'clientName', label: 'Client Name/Company', type: 'text', placeholder: 'Client Inc.' },
-  { id: 'clientAddress', label: 'Client Address', type: 'textarea', placeholder: '456 Client Ave\nClient City, State ZIP' },
-  { id: 'invoiceNumber', label: 'Invoice Number', type: 'text', placeholder: `INV-${Date.now().toString().slice(-6)}`, defaultValue: `INV-${Date.now().toString().slice(-6)}` },
-  { id: 'invoiceDate', label: 'Invoice Date', type: 'date' },
-  { id: 'dueDate', label: 'Due Date', type: 'date' },
-  { id: 'itemDescription1', label: 'Item 1 Description', type: 'text', placeholder: 'Service Rendered / Product Name' },
-  { id: 'itemQuantity1', label: 'Item 1 Quantity', type: 'number', placeholder: '1', defaultValue: 1 },
-  { id: 'itemPrice1', label: 'Item 1 Unit Price ($)', type: 'number', placeholder: '100.00' },
-  { id: 'subtotal', label: 'Subtotal ($)', type: 'number', placeholder: 'Calculate automatically or enter' },
-  { id: 'taxRate', label: 'Tax Rate (%)', type: 'number', placeholder: '7.5', defaultValue: 0 },
-  { id: 'taxAmount', label: 'Tax Amount ($)', type: 'number', placeholder: 'Calculate automatically or enter' },
-  { id: 'totalAmount', label: 'Total Amount ($)', type: 'number', placeholder: 'Calculate automatically or enter' },
-  { id: 'notes', label: 'Notes/Terms (optional)', type: 'textarea', placeholder: 'Payment due within 30 days. Late fees may apply.' },
+  // Business Details
+  { id: 'businessName', label: 'Business Name', type: 'text', required: true, placeholder: 'Your Company Name' },
+  { id: 'businessAddress', label: 'Business Address', type: 'textarea', required: true, placeholder: '123 Business St, City, State, PIN' },
+  { id: 'businessContact', label: 'Business Contact', type: 'text', required: true, placeholder: '9876543210' },
+  { id: 'businessEmail', label: 'Business Email', type: 'email', required: true, placeholder: 'contact@business.com' },
+  { id: 'businessGstNo', label: 'Business GST No.', type: 'text', placeholder: '22AAAAA0000A1Z5' },
+
+  // Client Details
+  { id: 'clientName', label: 'Client Name', type: 'text', required: true, placeholder: 'Mr. John Doe' },
+  { id: 'clientAddress', label: 'Client Address', type: 'textarea', required: true, placeholder: '456 Client St, City, State, PIN' },
+  { id: 'clientContact', label: 'Client Contact', type: 'text', required: true, placeholder: '9998887770' },
+  { id: 'clientEmail', label: 'Client Email', type: 'email', required: true, placeholder: 'client@example.com' },
+  { id: 'clientGstNo', label: 'Client GST No. (optional)', type: 'text', placeholder: '22BBBBB0000B1Z5' },
+
+  // Invoice Info
+  { id: 'invoiceNumber', label: 'Invoice Number', type: 'text', required: true, placeholder: `INV-${Date.now().toString().slice(-6)}` },
+  { id: 'invoiceDate', label: 'Invoice Date', type: 'date', required: true },
+
+  // Invoice Items
+  { id: 'includeItemsTable', label: 'Invoice Items', type: 'boolean', defaultValue: true, placeholder: "Toggle visibility of the items table" },
+  ...Array.from({ length: MAX_INVOICE_ITEMS }, (_, i) => i + 1).flatMap(idx => ([
+    { id: `item${idx}Description`, label: `Item #${idx} Description`, type: 'text', placeholder: idx === 1 ? 'E.g., Website Development Phase 1' : undefined },
+    { id: `item${idx}Unit`, label: 'Unit', type: 'select', options: [ { value: 'pcs', label: 'Piece' }, { value: 'sq.ft.', label: 'Sq. Ft.' }, { value: 'kg', label: 'Kg' }, { value: 'lit.', label: 'Litre' }, { value: 'lumpsum', label: 'Lumpsum' } ], defaultValue: 'pcs', placeholder: 'Select unit' },
+    { id: `item${idx}Quantity`, label: 'Quantity', type: 'number', placeholder: idx === 1 ? '1' : undefined },
+    { id: `item${idx}UnitCost`, label: 'Unit Cost (INR)', type: 'number', placeholder: idx === 1 ? '50000' : undefined },
+    { id: `item${idx}ClaimPercentage`, label: 'Claim Amount (%)', type: 'number', placeholder: '100', defaultValue: 100 },
+  ] as TemplateField[])),
+
+  // Calculation
+  { id: 'taxPercentage', label: 'Tax Percentage (%)', type: 'number', placeholder: '18', defaultValue: 18 },
+
+  // Bank Details
+  { id: 'bankName', label: 'Bank Name', type: 'text', placeholder: 'Your Bank Name' },
+  { id: 'branchName', label: 'Branch Name', type: 'text', placeholder: 'Your Branch Name' },
+  { id: 'accountNo', label: 'Account Number', type: 'text', placeholder: 'Your Bank Account Number' },
+  { id: 'ifscCode', label: 'IFSC Code', type: 'text', placeholder: 'YOURBANK000123' },
 ];
