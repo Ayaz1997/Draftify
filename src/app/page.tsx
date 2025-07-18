@@ -6,6 +6,7 @@ import { templates } from '@/lib/templates';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye } from 'lucide-react';
+import Image from 'next/image';
 // import { useState, useEffect } from 'react';
 // import { CategorySelectionModal } from '@/components/CategorySelectionModal';
 
@@ -29,6 +30,14 @@ export default function HomePage() {
       {/* <CategorySelectionModal open={isModalOpen} onClose={handleModalClose} /> */}
       <div className="space-y-8">
         <section className="text-left py-8">
+          <Image 
+            src="https://placehold.co/100x100.png"
+            alt="Folder Icon"
+            width={100}
+            height={100}
+            className="mb-6"
+            data-ai-hint="folder icon"
+          />
           <h1 className="text-4xl font-bold tracking-tight text-primary mb-4">Welcome to My Biz Docs</h1>
           <p className="text-lg text-foreground/80 max-w-2xl">
             Easily create professional documents from our selection of templates. <br /> Fill in the details, preview, and you're ready to go!
