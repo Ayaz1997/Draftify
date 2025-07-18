@@ -58,13 +58,13 @@ const createFormSchema = (template?: Template) => {
     });
 
     if (template.id === 'work-order') {
-        shape['workItems'] = z.array(z.object({ description: z.string(), area: z.any(), rate: z.any() })).optional();
-        shape['materials'] = z.array(z.object({ name: z.string(), quantity: z.any(), unit: z.string(), pricePerUnit: z.any() })).optional();
-        shape['labor'] = z.array(z.object({ teamName: z.string(), numPersons: z.any(), amount: z.any() })).optional();
+        shape['workItems'] = z.array(z.object({ description: z.string().min(1, 'Required'), area: z.any(), rate: z.any() })).optional();
+        shape['materials'] = z.array(z.object({ name: z.string().min(1, 'Required'), quantity: z.any(), unit: z.string(), pricePerUnit: z.any() })).optional();
+        shape['labor'] = z.array(z.object({ teamName: z.string().min(1, 'Required'), numPersons: z.any(), amount: z.any() })).optional();
     }
     
     if (template.id === 'invoice' || template.id === 'claim-invoice') {
-        const itemShape: any = { description: z.string(), unit: z.string(), quantity: z.any(), unitCost: z.any() };
+        const itemShape: any = { description: z.string().min(1, 'Required'), unit: z.string(), quantity: z.any(), unitCost: z.any() };
         if (template.id === 'claim-invoice') {
             itemShape.claimPercentage = z.any();
         }
@@ -212,11 +212,11 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
 
   return (
     <FormProvider {...methods}>
-        <div className="flex justify-center lg:gap-8 lg:items-start relative">
+        <div className="flex lg:gap-4 lg:items-start relative justify-center">
             {/* Left Column: Form */}
             <div className={cn(
               "w-full lg:w-1/2 lg:max-w-2xl transition-all duration-300 ease-in-out",
-               isPreviewCollapsed && "lg:w-1/2" // Keep the width but flexbox will center it
+               isPreviewCollapsed && "lg:w-1/2"
             )}>
                 <div className="mb-8 text-center lg:text-left">
                     <TemplateIcon className="h-12 w-12 text-accent mx-auto lg:mx-0 mb-3" />
@@ -225,9 +225,9 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
                 </div>
                 <DocumentForm template={templateDataForForm} />
             </div>
-
+            
             {/* Desktop Preview Toggle Button */}
-            <div className="hidden lg:block fixed right-4 top-1/2 -translate-y-1/2 z-40">
+            <div className={cn("hidden lg:flex items-center sticky top-20", isPreviewCollapsed && "fixed right-4 top-1/2 -translate-y-1/2 z-40")}>
               <Button
                 variant="outline"
                 size="icon"
@@ -272,5 +272,3 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
     </FormProvider>
   );
 }
-
-    
