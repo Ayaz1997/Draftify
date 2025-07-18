@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google'; // Changed from Geist
 import './globals.css';
 import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
 import { Toaster } from "@/components/ui/toaster";
 
 // Changed from geistSans and geistMono
@@ -50,6 +51,7 @@ export default function RootLayout({
         <main className="flex-grow container mx-auto px-4 py-8">
           {children}
         </main>
+        <Footer />
         <Toaster />
       </body>
     </html>
