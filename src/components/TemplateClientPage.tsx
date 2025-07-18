@@ -3,15 +3,18 @@
 
 import type { Template, DocumentFormPropsTemplate, FormData } from '@/types';
 import { DocumentForm } from '@/components/DocumentForm';
-import { Printer, Edit } from 'lucide-react';
+import { Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
 import { templates } from '@/lib/templates'; // Import templates for client-side lookup
+import { cn } from '@/lib/utils';
+import { ChevronRight } from 'lucide-react';
+
 
 interface TemplateClientPageProps {
   templateData: DocumentFormPropsTemplate & {
@@ -77,6 +80,7 @@ const createFormSchema = (template?: Template) => {
 export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const [isPreviewCollapsed, setIsPreviewCollapsed] = useState(false);
   
   // Find the full template object on the client-side using the ID
   const template = useMemo(() => templates.find(t => t.id === templateData.id), [templateData.id]);
@@ -86,7 +90,7 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
 
   const methods = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    mode: 'onChange',
+    mode: 'onBlur',
   });
 
   const formData = methods.watch();
@@ -208,9 +212,12 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
 
   return (
     <FormProvider {...methods}>
-        <div className="flex flex-col lg:flex-row gap-8 lg:items-start">
+        <div className="flex lg:gap-8 lg:items-start relative">
             {/* Left Column: Form */}
-            <div className="w-full lg:w-1/2 lg:max-w-2xl">
+            <div className={cn(
+              "w-full transition-all duration-300 ease-in-out",
+              isPreviewCollapsed ? "lg:w-full" : "lg:w-1/2 lg:max-w-2xl"
+            )}>
                 <div className="mb-8 text-center lg:text-left">
                     <TemplateIcon className="h-12 w-12 text-accent mx-auto lg:mx-0 mb-3" />
                     <h1 className="text-3xl font-bold text-primary">{template.name}</h1>
@@ -220,23 +227,45 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
             </div>
 
             {/* Right Column: Live Preview (Desktop only) */}
-            <div className="hidden lg:block w-full lg:w-1/2 sticky top-24">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold text-primary">Live Preview</h2>
-                    <div className="flex gap-2">
-                         <Button variant="default" onClick={handlePrint}>
-                            <Printer className="mr-2 h-4 w-4" /> Print / Save PDF
-                        </Button>
-                    </div>
-                </div>
-                <div 
-                  id="live-preview-area" 
-                  className="bg-white rounded-lg shadow-lg overflow-auto max-h-[calc(100vh-10rem)] border"
-                  style={{ transform: 'scale(0.95)', transformOrigin: 'top center' }}
-                >
-                  {template.previewLayout(formData as FormData)}
+            <div className={cn(
+              "hidden lg:flex flex-col w-1/2 sticky top-20 transition-all duration-300 ease-in-out",
+              isPreviewCollapsed && "w-0 opacity-0 -mr-12"
+            )}>
+                <div className="bg-muted/50 border rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-4">
+                      <h2 className="text-xl font-semibold text-primary">Live Preview</h2>
+                      <div className="flex gap-2">
+                          <Button variant="outline" size="sm" onClick={handlePrint}>
+                              <Printer className="mr-2 h-4 w-4" /> Print / Save PDF
+                          </Button>
+                      </div>
+                  </div>
+                  <div 
+                    id="live-preview-area" 
+                    className="bg-white rounded-lg shadow-inner overflow-auto max-h-[calc(100vh-12rem)] border"
+                  >
+                    {template.previewLayout(formData as FormData)}
+                  </div>
                 </div>
             </div>
+
+            {/* Desktop Preview Toggle Button */}
+            <div className="hidden lg:block">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setIsPreviewCollapsed(!isPreviewCollapsed)}
+                className={cn(
+                  "absolute top-1/2 -translate-y-1/2 bg-background rounded-full shadow-md transition-all duration-300 ease-in-out",
+                  isPreviewCollapsed ? "left-0" : "left-1/2 -ml-4"
+                )}
+                style={{ zIndex: 40 }} /* Ensure it's above form but below mobile footer */
+              >
+                  <ChevronRight className={cn("h-5 w-5 transition-transform", isPreviewCollapsed && "rotate-180")} />
+              </Button>
+            </div>
+
+
              {/* Mobile-only Preview Button */}
             <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-background border-t z-50">
                 <Button className="w-full" onClick={methods.handleSubmit(handleMobilePreview)}>
@@ -247,5 +276,3 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
     </FormProvider>
   );
 }
-
-    
