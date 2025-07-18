@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { templates } from '@/lib/templates';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, Eye } from 'lucide-react';
+import { Eye } from 'lucide-react';
 // import { useState, useEffect } from 'react';
 // import { CategorySelectionModal } from '@/components/CategorySelectionModal';
 
@@ -50,16 +50,15 @@ export default function HomePage() {
                 <CardContent className="flex-grow">
                   {/* Optional: Could add a small visual preview or key fields here */}
                 </CardContent>
-                <CardFooter className="flex items-center gap-2">
-                  <Button variant="outline" className="w-full">
-                    <Eye className="mr-2 h-4 w-4" />
-                    Preview
-                  </Button>
-                  <Button asChild variant="default" className="w-full">
+                <CardFooter className="flex items-center justify-between">
+                  <Button asChild variant="default">
                     <Link href={`/templates/${template.id}`}>
                       Create
-                      <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
+                  </Button>
+                   <Button variant="outline">
+                    <Eye className="mr-2 h-4 w-4" />
+                    Preview
                   </Button>
                 </CardFooter>
               </Card>
