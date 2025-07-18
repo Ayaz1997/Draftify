@@ -38,20 +38,16 @@ export default function TemplatePage({ params }: TemplatePageProps) {
     );
   }
 
-  // Destructure the icon for use in this Server Component
-  const TemplateIcon = template.icon;
-
-  // Prepare a serializable object for the Client Component
-  const templateDataForClient: DocumentFormPropsTemplate & { description: string; previewLayout: (data: any) => React.ReactNode, icon: React.ElementType } = {
+  // Prepare a serializable object for the Client Component.
+  // We only pass data that can be serialized over the network.
+  const templateDataForClient: DocumentFormPropsTemplate & { description: string } = {
     id: template.id,
     name: template.name,
     description: template.description,
     fields: template.fields,
-    previewLayout: template.previewLayout,
-    icon: TemplateIcon,
   };
 
-  return <TemplateClientPage template={templateDataForClient} />;
+  return <TemplateClientPage templateData={templateDataForClient} />;
 }
 
 // Metadata generation remains a server-side function

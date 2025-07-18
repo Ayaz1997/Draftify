@@ -11,20 +11,21 @@ import * as z from 'zod';
 import { useMemo, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
+import { templates } from '@/lib/templates'; // Import templates for client-side lookup
 
 interface TemplateClientPageProps {
-  template: DocumentFormPropsTemplate & {
+  templateData: DocumentFormPropsTemplate & {
       description: string;
-      previewLayout: (data: any) => React.ReactNode,
-      icon: React.ElementType
   };
 }
 
 // This is the new Client Component that holds the interactive logic
-export function TemplateClientPage({ template }: TemplateClientPageProps) {
+export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const params = { templateId: template.id };
+  
+  // Find the full template object on the client-side using the ID
+  const template = useMemo(() => templates.find(t => t.id === templateData.id), [templateData.id]);
 
   // We need to create the Zod schema dynamically based on the template fields
   const formSchema = useMemo(() => {
@@ -67,7 +68,7 @@ export function TemplateClientPage({ template }: TemplateClientPageProps) {
   const formData = methods.watch();
 
   useEffect(() => {
-    const editDataKey = `docuFormEditData-${params.templateId}`;
+    const editDataKey = `docuFormEditData-${templateData.id}`;
     const storedEditDataString = sessionStorage.getItem(editDataKey);
 
     if (storedEditDataString) {
@@ -97,7 +98,7 @@ export function TemplateClientPage({ template }: TemplateClientPageProps) {
         });
         methods.reset(defaultValues);
     }
-  }, [params.templateId, methods, template?.fields]);
+  }, [templateData.id, methods, template?.fields]);
 
   const handlePrint = () => {
     toast({
@@ -133,9 +134,9 @@ export function TemplateClientPage({ template }: TemplateClientPageProps) {
     const values = methods.getValues();
      try {
         if (typeof window !== 'undefined' && window.sessionStorage) {
-            const dataKey = `docuFormPreviewData-${template?.id}`;
+            const dataKey = `docuFormPreviewData-${templateData.id}`;
             sessionStorage.setItem(dataKey, JSON.stringify(values));
-            router.push(`/templates/${template?.id}/preview`);
+            router.push(`/templates/${templateData.id}/preview`);
         } else {
             throw new Error('Session storage is not available.');
         }
@@ -148,6 +149,12 @@ export function TemplateClientPage({ template }: TemplateClientPageProps) {
         });
     }
   };
+  
+  if (!template) {
+    // This can happen briefly while the component is mounting
+    return <div>Loading template...</div>;
+  }
+
 
   const TemplateIcon = template.icon;
   const templateDataForForm: DocumentFormPropsTemplate = {
