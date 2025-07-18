@@ -123,7 +123,7 @@ function createZodSchema(fields: TemplateField[]): z.ZodObject<any, any> {
 
 const workOrderSectionStructure: Record<string, string[]> = {
   'Business Details': ['businessName', 'businessAddress', 'businessContactNumber', 'businessEmail', 'businessLogoUrl'],
-  'Order Details': ['orderNumber', 'orderDate', 'expectedStartDate', 'expectedEndDate'],
+  'Order Details': ['orderNumber', 'orderDate', 'expectedStartDate', 'expectedEndDate', 'currency'],
   'Client Details': ['clientName', 'clientPhone', 'clientEmail', 'workLocation', 'orderReceivedBy'],
   'Work Order Specifics': [
     'generalWorkDescription', 'termsOfService',
