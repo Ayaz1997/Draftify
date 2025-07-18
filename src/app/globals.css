@@ -10,7 +10,7 @@ body {
 
 @layer base {
   :root {
-    --background: 200 0% 96%; /* #F5F5F5 Off-white */
+    --background: 200 0% 98%; /* #F9FAFB Brighter Off-white */
     --foreground: 200 0% 20%; /* Dark Gray for text on off-white */
 
     --muted: 200 0% 90%;
