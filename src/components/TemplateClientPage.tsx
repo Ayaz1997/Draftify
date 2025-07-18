@@ -8,13 +8,10 @@ import { Button } from '@/components/ui/button';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
 import { templates } from '@/lib/templates'; // Import templates for client-side lookup
-import { cn } from '@/lib/utils';
-import { ChevronRight } from 'lucide-react';
-
 
 interface TemplateClientPageProps {
   templateData: DocumentFormPropsTemplate & {
@@ -80,7 +77,6 @@ const createFormSchema = (template?: Template) => {
 export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const [isPreviewCollapsed, setIsPreviewCollapsed] = useState(true);
   
   // Find the full template object on the client-side using the ID
   const template = useMemo(() => templates.find(t => t.id === templateData.id), [templateData.id]);
@@ -212,9 +208,9 @@ router.push(`/templates/${templateData.id}/preview`);
 
   return (
     <FormProvider {...methods}>
-      <div className="lg:flex lg:gap-4 lg:items-start lg:justify-center">
+      <div className="grid lg:grid-cols-2 gap-8 items-start">
         {/* Left Column: Form */}
-        <div className="w-full lg:max-w-2xl lg:flex-shrink-0">
+        <div className="w-full">
           <div className="mb-8 text-center lg:text-left">
             <TemplateIcon className="h-12 w-12 text-accent mx-auto lg:mx-0 mb-3" />
             <h1 className="text-3xl font-bold text-primary">{template.name}</h1>
@@ -223,44 +219,24 @@ router.push(`/templates/${templateData.id}/preview`);
           <DocumentForm template={templateDataForForm} />
         </div>
 
-        {/* Right Column: Combination of Toggle Button and Preview */}
-         <div className={cn(
-          "hidden lg:flex w-full lg:w-1/2 sticky top-20 items-center transition-all",
-          isPreviewCollapsed && "lg:w-auto"
-        )}>
-            {/* Desktop Preview Toggle Button */}
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setIsPreviewCollapsed(!isPreviewCollapsed)}
-              className="rounded-full shadow-md z-10 bg-background hover:bg-muted"
-            >
-              <ChevronRight className={cn("h-5 w-5 transition-transform", !isPreviewCollapsed ? "rotate-180" : "")} />
-            </Button>
-
-            {/* Live Preview Pane */}
-            <div className={cn(
-                "flex-grow flex-shrink min-w-0 transition-all duration-300 ease-in-out",
-                isPreviewCollapsed ? "w-0 ml-0 opacity-0 pointer-events-none" : "w-full ml-4"
-            )}>
-                <div className="bg-muted/50 border rounded-lg p-4">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold text-primary">Live Preview</h2>
-                    <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={handlePrint}>
-                        <Printer className="mr-2 h-4 w-4" /> Print / Save PDF
-                    </Button>
-                    </div>
-                </div>
-                <div
-                    id="live-preview-area"
-                    className="bg-white rounded-lg shadow-inner overflow-auto max-h-[calc(100vh-12rem)] border"
-                >
-                    {template.previewLayout(formData as FormData)}
-                </div>
-                </div>
+        {/* Right Column: Live Preview */}
+        <div className="hidden lg:block sticky top-24">
+            <div className="bg-muted/50 border rounded-lg p-4">
+              <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold text-primary">Live Preview</h2>
+                  <Button variant="outline" size="sm" onClick={handlePrint}>
+                      <Printer className="mr-2 h-4 w-4" /> Print / Save PDF
+                  </Button>
+              </div>
+              <div
+                  id="live-preview-area"
+                  className="bg-white rounded-lg shadow-inner overflow-auto max-h-[calc(100vh-12rem)] border"
+              >
+                  {template.previewLayout(formData as FormData)}
+              </div>
             </div>
         </div>
+
 
         {/* Mobile-only Preview Button */}
         <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-background border-t z-50">
