@@ -212,11 +212,11 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
 
   return (
     <FormProvider {...methods}>
-        <div className="flex lg:gap-8 lg:items-start relative">
+        <div className="flex justify-center lg:gap-8 lg:items-start relative">
             {/* Left Column: Form */}
             <div className={cn(
-              "w-full transition-all duration-300 ease-in-out",
-              isPreviewCollapsed ? "lg:w-full" : "lg:w-1/2 lg:max-w-2xl"
+              "w-full lg:w-1/2 lg:max-w-2xl transition-all duration-300 ease-in-out",
+               isPreviewCollapsed && "lg:w-1/2" // Keep the width but flexbox will center it
             )}>
                 <div className="mb-8 text-center lg:text-left">
                     <TemplateIcon className="h-12 w-12 text-accent mx-auto lg:mx-0 mb-3" />
@@ -226,10 +226,23 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
                 <DocumentForm template={templateDataForForm} />
             </div>
 
+            {/* Desktop Preview Toggle Button */}
+            <div className="hidden lg:block fixed right-4 top-1/2 -translate-y-1/2 z-40">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setIsPreviewCollapsed(!isPreviewCollapsed)}
+                className="rounded-full shadow-md"
+              >
+                  <ChevronRight className={cn("h-5 w-5 transition-transform", !isPreviewCollapsed && "rotate-180")} />
+              </Button>
+            </div>
+
+
             {/* Right Column: Live Preview (Desktop only) */}
             <div className={cn(
               "hidden lg:flex flex-col w-1/2 sticky top-20 transition-all duration-300 ease-in-out",
-              isPreviewCollapsed && "w-0 opacity-0 -mr-12"
+              isPreviewCollapsed && "w-0 opacity-0 pointer-events-none"
             )}>
                 <div className="bg-muted/50 border rounded-lg p-4">
                   <div className="flex justify-between items-center mb-4">
@@ -249,23 +262,6 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
                 </div>
             </div>
 
-            {/* Desktop Preview Toggle Button */}
-            <div className="hidden lg:block">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setIsPreviewCollapsed(!isPreviewCollapsed)}
-                className={cn(
-                  "absolute top-1/2 -translate-y-1/2 bg-background rounded-full shadow-md transition-all duration-300 ease-in-out",
-                  isPreviewCollapsed ? "left-0" : "left-1/2 -ml-4"
-                )}
-                style={{ zIndex: 40 }} /* Ensure it's above form but below mobile footer */
-              >
-                  <ChevronRight className={cn("h-5 w-5 transition-transform", isPreviewCollapsed && "rotate-180")} />
-              </Button>
-            </div>
-
-
              {/* Mobile-only Preview Button */}
             <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-background border-t z-50">
                 <Button className="w-full" onClick={methods.handleSubmit(handleMobilePreview)}>
@@ -276,3 +272,5 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
     </FormProvider>
   );
 }
+
+    
