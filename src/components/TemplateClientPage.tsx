@@ -212,63 +212,65 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
 
   return (
     <FormProvider {...methods}>
-        <div className="flex lg:gap-4 lg:items-start relative justify-center">
-            {/* Left Column: Form */}
-            <div className={cn(
-              "w-full lg:w-1/2 lg:max-w-2xl transition-all duration-300 ease-in-out",
-               isPreviewCollapsed && "lg:w-1/2"
-            )}>
-                <div className="mb-8 text-center lg:text-left">
-                    <TemplateIcon className="h-12 w-12 text-accent mx-auto lg:mx-0 mb-3" />
-                    <h1 className="text-3xl font-bold text-primary">{template.name}</h1>
-                    <p className="text-md text-foreground/70 mt-1">{template.description}</p>
-                </div>
-                <DocumentForm template={templateDataForForm} />
-            </div>
-            
-            {/* Desktop Preview Toggle Button */}
-            <div className={cn("hidden lg:flex items-center sticky top-20", isPreviewCollapsed && "fixed right-4 top-1/2 -translate-y-1/2 z-40")}>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setIsPreviewCollapsed(!isPreviewCollapsed)}
-                className="rounded-full shadow-md"
-              >
-                  <ChevronRight className={cn("h-5 w-5 transition-transform", !isPreviewCollapsed && "rotate-180")} />
-              </Button>
-            </div>
-
-
-            {/* Right Column: Live Preview (Desktop only) */}
-            <div className={cn(
-              "hidden lg:flex flex-col w-1/2 sticky top-20 transition-all duration-300 ease-in-out",
-              isPreviewCollapsed && "w-0 opacity-0 pointer-events-none"
-            )}>
-                <div className="bg-muted/50 border rounded-lg p-4">
-                  <div className="flex justify-between items-center mb-4">
-                      <h2 className="text-xl font-semibold text-primary">Live Preview</h2>
-                      <div className="flex gap-2">
-                          <Button variant="outline" size="sm" onClick={handlePrint}>
-                              <Printer className="mr-2 h-4 w-4" /> Print / Save PDF
-                          </Button>
-                      </div>
-                  </div>
-                  <div 
-                    id="live-preview-area" 
-                    className="bg-white rounded-lg shadow-inner overflow-auto max-h-[calc(100vh-12rem)] border"
-                  >
-                    {template.previewLayout(formData as FormData)}
-                  </div>
-                </div>
-            </div>
-
-             {/* Mobile-only Preview Button */}
-            <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-background border-t z-50">
-                <Button className="w-full" onClick={methods.handleSubmit(handleMobilePreview)}>
-                    Preview Document
-                </Button>
-            </div>
+      <div className="lg:flex lg:gap-4 lg:items-start lg:justify-center">
+        {/* Left Column: Form */}
+        <div className="w-full lg:max-w-2xl lg:flex-shrink-0">
+          <div className="mb-8 text-center lg:text-left">
+            <TemplateIcon className="h-12 w-12 text-accent mx-auto lg:mx-0 mb-3" />
+            <h1 className="text-3xl font-bold text-primary">{template.name}</h1>
+            <p className="text-md text-foreground/70 mt-1">{template.description}</p>
+          </div>
+          <DocumentForm template={templateDataForForm} />
         </div>
+
+        {/* Right Column: Combination of Toggle Button and Preview */}
+        <div className="hidden lg:flex w-1/2 sticky top-20 items-start">
+          {/* Spacer to push button to the right when collapsed */}
+          {isPreviewCollapsed && <div className="flex-grow" />}
+          
+          {/* Desktop Preview Toggle Button */}
+          <div className="flex-shrink-0">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setIsPreviewCollapsed(!isPreviewCollapsed)}
+              className="rounded-full shadow-md z-10 bg-background hover:bg-muted"
+            >
+              <ChevronRight className={cn("h-5 w-5 transition-transform", !isPreviewCollapsed && "rotate-180")} />
+            </Button>
+          </div>
+
+          {/* Live Preview Pane */}
+          <div className={cn(
+            "flex-grow flex-shrink-0 w-full ml-4 transition-all duration-300 ease-in-out",
+            isPreviewCollapsed && "w-0 ml-0 opacity-0 pointer-events-none"
+          )}>
+            <div className="bg-muted/50 border rounded-lg p-4">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-primary">Live Preview</h2>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={handlePrint}>
+                    <Printer className="mr-2 h-4 w-4" /> Print / Save PDF
+                  </Button>
+                </div>
+              </div>
+              <div
+                id="live-preview-area"
+                className="bg-white rounded-lg shadow-inner overflow-auto max-h-[calc(100vh-12rem)] border"
+              >
+                {template.previewLayout(formData as FormData)}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile-only Preview Button */}
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-background border-t z-50">
+          <Button className="w-full" onClick={methods.handleSubmit(handleMobilePreview)}>
+            Preview Document
+          </Button>
+        </div>
+      </div>
     </FormProvider>
   );
 }
