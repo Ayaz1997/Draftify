@@ -119,7 +119,7 @@ export const WorkOrderPreview = (data: FormData) => {
             <TableBody>
               <TableRow>
                 <TableCell className="font-medium py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Order Number:</TableCell>
-                <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{data.orderNumber || `WO-${Date.now().toString().slice(-6)}`}</TableCell>
+                <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{data.orderNumber || ''}</TableCell>
                 <TableCell className="font-medium py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Order Date:</TableCell>
                 <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatDate(data.orderDate)}</TableCell>
               </TableRow>
@@ -326,7 +326,7 @@ export const workOrderFields: TemplateField[] = [
     label: 'Business Logo',
     type: 'file',
   },
-  { id: 'orderNumber', label: 'Order Number', type: 'text', placeholder: `WO-${Date.now().toString().slice(-6)}`, defaultValue: `WO-${Date.now().toString().slice(-5)}` },
+  { id: 'orderNumber', label: 'Order Number', type: 'text', placeholder: `WO-123456`, defaultValue: '' },
   { id: 'orderDate', label: 'Order Date', type: 'date' },
   { id: 'expectedStartDate', label: 'Expected Start Date', type: 'date' },
   { id: 'expectedEndDate', label: 'Expected End Date', type: 'date' },

@@ -96,6 +96,12 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
                 defaultValues[field.id] = '';
             }
         });
+        
+        // Specific client-side default for dynamic order number
+        if (templateData.id === 'work-order' && !defaultValues['orderNumber']) {
+          defaultValues['orderNumber'] = `WO-${Date.now().toString().slice(-6)}`;
+        }
+        
         methods.reset(defaultValues);
     }
   }, [templateData.id, methods, template?.fields]);
