@@ -28,9 +28,9 @@ export default function HomePage() {
     <>
       {/* <CategorySelectionModal open={isModalOpen} onClose={handleModalClose} /> */}
       <div className="space-y-8">
-        <section className="text-center py-8">
+        <section className="text-left py-8">
           <h1 className="text-4xl font-bold tracking-tight text-primary mb-4">Welcome to My Biz Docs</h1>
-          <p className="text-lg text-foreground/80 max-w-2xl mx-auto">
+          <p className="text-lg text-foreground/80 max-w-2xl">
             Easily create professional documents from our selection of templates. Fill in the details, preview, and you're ready to go!
           </p>
         </section>
