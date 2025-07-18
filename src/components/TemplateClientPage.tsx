@@ -19,6 +19,60 @@ interface TemplateClientPageProps {
   };
 }
 
+const createFormSchema = (template?: Template) => {
+    if (!template) return z.object({});
+
+    const shape: Record<string, z.ZodTypeAny> = {};
+
+    template.fields.forEach((field) => {
+        if (field.id.includes('.')) return; // Skip nested field definitions
+
+        let validator: z.ZodTypeAny;
+        switch (field.type) {
+            case 'email': validator = z.string().email({ message: 'Invalid email address' }); break;
+            case 'number': validator = z.preprocess((val) => (val === "" || val === null ? undefined : val), z.coerce.number({ invalid_type_error: 'Must be a number' })); break;
+            case 'date': validator = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'Date must be YYYY-MM-DD' }); break;
+            case 'textarea': validator = z.string(); break;
+            case 'boolean': validator = z.boolean().default(field.defaultValue === true); break;
+            case 'file': validator = z.any(); break;
+            case 'select':
+                if (field.options && field.options.length > 0) {
+                    const enumValues = field.options.map(opt => opt.value) as [string, ...string[]];
+                    validator = enumValues.length > 0 ? z.enum(enumValues) : z.string();
+                } else {
+                    validator = z.string();
+                }
+                break;
+            default: validator = z.string(); break;
+        }
+
+        if (!field.required) {
+            if (field.type === 'number') validator = validator.optional().nullable();
+            else if (field.type === 'boolean' || field.type === 'file') validator = validator.optional();
+            else validator = validator.optional().or(z.literal(''));
+        }
+        shape[field.id] = validator;
+    });
+
+    if (template.id === 'work-order') {
+        shape['workItems'] = z.array(z.object({ description: z.string(), area: z.any(), rate: z.any() })).optional();
+        shape['materials'] = z.array(z.object({ name: z.string(), quantity: z.any(), unit: z.string(), pricePerUnit: z.any() })).optional();
+        shape['labor'] = z.array(z.object({ teamName: z.string(), numPersons: z.any(), amount: z.any() })).optional();
+    }
+    
+    if (template.id === 'invoice' || template.id === 'claim-invoice') {
+        const itemShape: any = { description: z.string(), unit: z.string(), quantity: z.any(), unitCost: z.any() };
+        if (template.id === 'claim-invoice') {
+            itemShape.claimPercentage = z.any();
+        }
+        shape['items'] = z.array(z.object(itemShape)).optional();
+    }
+
+
+    return z.object(shape);
+}
+
+
 // This is the new Client Component that holds the interactive logic
 export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
   const router = useRouter();
@@ -28,37 +82,7 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
   const template = useMemo(() => templates.find(t => t.id === templateData.id), [templateData.id]);
 
   // We need to create the Zod schema dynamically based on the template fields
-  const formSchema = useMemo(() => {
-    if (!template) return z.object({});
-    const shape: Record<string, z.ZodTypeAny> = {};
-    template.fields.forEach((field) => {
-      let validator: z.ZodTypeAny;
-      switch (field.type) {
-        case 'email': validator = z.string().email({ message: 'Invalid email address' }); break;
-        case 'number': validator = z.preprocess((val) => (val === "" || val === null ? undefined : val), z.coerce.number({ invalid_type_error: 'Must be a number' })); break;
-        case 'date': validator = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'Date must be YYYY-MM-DD' }); break;
-        case 'textarea': validator = z.string(); break;
-        case 'boolean': validator = z.boolean().default(field.defaultValue === true); break;
-        case 'file': validator = z.any(); break;
-        case 'select':
-          if (field.options && field.options.length > 0) {
-            const enumValues = field.options.map(opt => opt.value) as [string, ...string[]];
-            validator = enumValues.length > 0 ? z.enum(enumValues) : z.string();
-          } else {
-            validator = z.string();
-          }
-          break;
-        default: validator = z.string(); break;
-      }
-      if (!field.required) {
-        if (field.type === 'number') validator = validator.optional().nullable();
-        else if (field.type === 'boolean' || field.type === 'file') validator = validator.optional();
-        else validator = validator.optional().or(z.literal(''));
-      }
-      shape[field.id] = validator;
-    });
-    return z.object(shape);
-  }, [template]);
+  const formSchema = useMemo(() => createFormSchema(template), [template]);
 
   const methods = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -71,40 +95,53 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
     const editDataKey = `docuFormEditData-${templateData.id}`;
     const storedEditDataString = sessionStorage.getItem(editDataKey);
 
+    let initialValues: Record<string, any> = {};
+
     if (storedEditDataString) {
       try {
-        const parsedData = JSON.parse(storedEditDataString);
-        methods.reset(parsedData);
+        initialValues = JSON.parse(storedEditDataString);
         sessionStorage.removeItem(editDataKey);
       } catch (e) {
         console.error('Failed to parse edit data from session storage:', e);
       }
-    } else {
+    } else if (template) {
         // Initialize with default values if no edit data is found
-        const defaultValues: Record<string, any> = {};
-        template?.fields.forEach(field => {
+        template.fields.forEach(field => {
+            if (field.id.includes('.')) return; // Don't process nested definitions here
+            
             if (field.type === 'date') {
-                defaultValues[field.id] = field.defaultValue && typeof field.defaultValue === 'string' && field.defaultValue.match(/^\d{4}-\d{2}-\d{2}$/)
+                initialValues[field.id] = field.defaultValue && typeof field.defaultValue === 'string' && field.defaultValue.match(/^\d{4}-\d{2}-\d{2}$/)
                     ? field.defaultValue : new Date().toISOString().split('T')[0];
             } else if (field.defaultValue !== undefined) {
-                defaultValues[field.id] = field.defaultValue;
+                initialValues[field.id] = field.defaultValue;
             } else if (field.type === 'boolean') {
-                defaultValues[field.id] = false;
+                initialValues[field.id] = false;
             } else if (field.type === 'number') {
-                defaultValues[field.id] = undefined;
+                initialValues[field.id] = undefined;
             } else {
-                defaultValues[field.id] = '';
+                initialValues[field.id] = '';
             }
         });
         
         // Specific client-side default for dynamic order number
-        if (templateData.id === 'work-order' && !defaultValues['orderNumber']) {
-          defaultValues['orderNumber'] = `WO-${Date.now().toString().slice(-6)}`;
+        if (templateData.id === 'work-order' && !initialValues['orderNumber']) {
+          initialValues['orderNumber'] = `WO-${Date.now().toString().slice(-6)}`;
         }
         
-        methods.reset(defaultValues);
+        // Initialize field arrays
+        if (template.id === 'work-order') {
+            initialValues['workItems'] = [{ description: '', area: '', rate: '' }];
+            initialValues['materials'] = [{ name: '', quantity: '', unit: 'Pcs', pricePerUnit: '' }];
+            initialValues['labor'] = [{ teamName: '', numPersons: '', amount: '' }];
+        }
+        if (template.id === 'invoice' || template.id === 'claim-invoice') {
+             initialValues['items'] = [{ description: '', unit: 'pcs', quantity: '', unitCost: '', claimPercentage: template.id === 'claim-invoice' ? '' : undefined }];
+        }
     }
-  }, [templateData.id, methods, template?.fields]);
+
+    methods.reset(initialValues);
+
+  }, [templateData.id, methods, template]);
 
   const handlePrint = () => {
     toast({
@@ -202,7 +239,7 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
             </div>
              {/* Mobile-only Preview Button */}
             <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-background border-t z-50">
-                <Button className="w-full" onClick={handleMobilePreview}>
+                <Button className="w-full" onClick={methods.handleSubmit(handleMobilePreview)}>
                     Preview Document
                 </Button>
             </div>
@@ -210,3 +247,5 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
     </FormProvider>
   );
 }
+
+    

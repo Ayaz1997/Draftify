@@ -9,34 +9,24 @@ import { formatCurrency, formatDate, amountToWords } from '@/lib/formatters';
 import Image from 'next/image';
 import { currencyOptionsForSelect } from './currency-options';
 
-const MAX_INVOICE_ITEMS = 30;
 
 export const StandardInvoicePreview = (data: FormData) => {
   const currencySymbol = data.currency || '₹';
-  const invoiceItems = [];
+  const invoiceItems = Array.isArray(data.items) ? data.items : [];
   let totalQuantity = 0;
   let totalCostSum = 0;
 
-  if (data.includeItemsTable) {
-    for (let i = 1; i <= MAX_INVOICE_ITEMS; i++) {
-      if (data[`item${i}Description`]) {
-        const quantity = parseFloat(data[`item${i}Quantity`] || 1);
-        const unitCost = parseFloat(data[`item${i}UnitCost`] || 0);
+  if (data.includeItemsTable && invoiceItems.length > 0) {
+    invoiceItems.forEach(item => {
+      if (item.description) {
+        const quantity = parseFloat(item.quantity || 1);
+        const unitCost = parseFloat(item.unitCost || 0);
         const totalCost = quantity * unitCost;
         
-        invoiceItems.push({
-          sno: invoiceItems.length + 1,
-          description: data[`item${i}Description`],
-          unit: data[`item${i}Unit`] || 'N/A',
-          quantity: quantity,
-          unitCost: unitCost,
-          totalCost: totalCost,
-        });
-
         totalQuantity += quantity;
         totalCostSum += totalCost;
       }
-    }
+    });
   }
 
   const taxRate = parseFloat(data.taxPercentage || 0);
@@ -96,16 +86,22 @@ export const StandardInvoicePreview = (data: FormData) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {invoiceItems.map((item) => (
-                  <TableRow key={item.sno}>
-                    <TableCell className="p-2 text-center">{item.sno}</TableCell>
-                    <TableCell className="p-2 whitespace-pre-wrap">{item.description}</TableCell>
-                    <TableCell className="p-2">{item.unit}</TableCell>
-                    <TableCell className="p-2 text-right">{item.quantity.toFixed(2)}</TableCell>
-                    <TableCell className="p-2 text-right">{formatCurrency(item.unitCost, currencySymbol)}</TableCell>
-                    <TableCell className="p-2 text-right font-medium">{formatCurrency(item.totalCost, currencySymbol)}</TableCell>
-                  </TableRow>
-                ))}
+                {invoiceItems.map((item, index) => {
+                  if (!item.description) return null;
+                  const quantity = parseFloat(item.quantity || 1);
+                  const unitCost = parseFloat(item.unitCost || 0);
+                  const totalCost = quantity * unitCost;
+                  return (
+                    <TableRow key={index}>
+                      <TableCell className="p-2 text-center">{index + 1}</TableCell>
+                      <TableCell className="p-2 whitespace-pre-wrap">{item.description}</TableCell>
+                      <TableCell className="p-2">{item.unit}</TableCell>
+                      <TableCell className="p-2 text-right">{quantity.toFixed(2)}</TableCell>
+                      <TableCell className="p-2 text-right">{formatCurrency(unitCost, currencySymbol)}</TableCell>
+                      <TableCell className="p-2 text-right font-medium">{formatCurrency(totalCost, currencySymbol)}</TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
               <UiTableFooter>
                 <TableRow className="bg-muted/50 font-bold">
@@ -189,12 +185,12 @@ export const standardInvoiceFields: TemplateField[] = [
 
   // Invoice Items
   { id: 'includeItemsTable', label: 'Invoice Items', type: 'boolean', defaultValue: true },
-  ...Array.from({ length: MAX_INVOICE_ITEMS }, (_, i) => i + 1).flatMap(idx => ([
-    { id: `item${idx}Description`, label: `Item #${idx} Description`, type: 'text' },
-    { id: `item${idx}Unit`, label: 'Unit', type: 'select', options: [ { value: 'pcs', label: 'Piece' }, { value: 'sq.ft.', label: 'Sq. Ft.' }, { value: 'kg', label: 'Kg' }, { value: 'lit.', label: 'Litre' }, { value: 'lumpsum', label: 'Lumpsum' } ], defaultValue: 'pcs', placeholder: 'Select unit' },
-    { id: `item${idx}Quantity`, label: 'Quantity', type: 'number' },
-    { id: `item${idx}UnitCost`, label: 'Unit Cost', type: 'number' },
-  ] as TemplateField[])),
+  
+  // NOTE: The following are markers for the useFieldArray hook, not rendered directly as fields.
+  { id: 'items.description', label: 'Item Description', type: 'text' },
+  { id: 'items.unit', label: 'Unit', type: 'text' },
+  { id: 'items.quantity', label: 'Quantity', type: 'number' },
+  { id: 'items.unitCost', label: 'Unit Cost', type: 'number' },
 
   // Calculation
   { id: 'taxPercentage', label: 'Tax Percentage (%)', type: 'number' },
@@ -208,3 +204,5 @@ export const standardInvoiceFields: TemplateField[] = [
   // Signature
   { id: 'authorisedSignature', label: 'Authorised Signature Image (optional)', type: 'file' },
 ];
+
+    

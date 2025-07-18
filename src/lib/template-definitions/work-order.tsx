@@ -14,64 +14,44 @@ const formatCurrency = (amount?: number | string, currencySymbol = '₹') => {
   return originalFormatCurrency(amount, currencySymbol);
 };
 
-const MAX_ITEMS_PREVIEW = 30;
-
 export const WorkOrderPreview = (data: FormData) => {
   const currencySymbol = data.currency || '₹';
-  const workItems = [];
+  
+  const workItems = Array.isArray(data.workItems) ? data.workItems : [];
   let subtotalWorkDescription = 0;
   if (data.includeWorkDescriptionTable) {
-    for (let i = 1; i <= MAX_ITEMS_PREVIEW; i++) {
-      if (data[`workItem${i}Description`]) {
-        const area = parseFloat(data[`workItem${i}Area`] || 0);
-        const rate = parseFloat(data[`workItem${i}Rate`] || 0);
+    workItems.forEach(item => {
+      if (item.description) {
+        const area = parseFloat(item.area || 0);
+        const rate = parseFloat(item.rate || 0);
         const amount = area * rate;
-        workItems.push({
-          description: data[`workItem${i}Description`],
-          area: area,
-          rate: rate,
-          amount: amount,
-        });
         subtotalWorkDescription += amount;
       }
-    }
+    });
   }
 
-  const materialItems = [];
+  const materialItems = Array.isArray(data.materials) ? data.materials : [];
   let subtotalMaterial = 0;
   if (data.includeMaterialTable) {
-    for (let i = 1; i <= MAX_ITEMS_PREVIEW; i++) {
-      if (data[`materialItem${i}Name`]) {
-        const quantity = parseFloat(data[`materialItem${i}Quantity`] || 1);
-        const pricePerUnit = parseFloat(data[`materialItem${i}PricePerUnit`] || 0);
+    materialItems.forEach(item => {
+      if (item.name) {
+        const quantity = parseFloat(item.quantity || 1);
+        const pricePerUnit = parseFloat(item.pricePerUnit || 0);
         const amount = quantity * pricePerUnit;
-        materialItems.push({
-          name: data[`materialItem${i}Name`],
-          unit: data[`materialItem${i}Unit`],
-          quantity: quantity,
-          pricePerUnit: pricePerUnit,
-          amount: amount,
-        });
         subtotalMaterial += amount;
       }
-    }
+    });
   }
 
-  const laborItems = [];
+  const laborItems = Array.isArray(data.labor) ? data.labor : [];
   let subtotalLabor = 0;
   if (data.includeLaborTable) {
-    for (let i = 1; i <= MAX_ITEMS_PREVIEW; i++) {
-      if (data[`laborItem${i}TeamName`]) {
-        const numPersons = parseInt(data[`laborItem${i}NumPersons`] || 1);
-        const amount = parseFloat(data[`laborItem${i}Amount`] || 0);
-        laborItems.push({
-          teamName: data[`laborItem${i}TeamName`],
-          numPersons: numPersons,
-          amount: amount,
-        });
+    laborItems.forEach(item => {
+      if (item.teamName) {
+        const amount = parseFloat(item.amount || 0);
         subtotalLabor += amount;
       }
-    }
+    });
   }
 
   const grandSubtotal = subtotalWorkDescription + subtotalMaterial + subtotalLabor + parseFloat(data.otherCosts || 0);
@@ -177,14 +157,20 @@ export const WorkOrderPreview = (data: FormData) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {workItems.map((item, index) => (
-                  <TableRow key={`work-${index}`}>
-                    <TableCell className="whitespace-pre-wrap py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{item.description}</TableCell>
-                    <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{item.area.toFixed(2)}</TableCell>
-                    <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(item.rate, '')}</TableCell>
-                    <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(item.amount, '')}</TableCell>
-                  </TableRow>
-                ))}
+                {workItems.map((item, index) => {
+                  if (!item.description) return null;
+                  const area = parseFloat(item.area || 0);
+                  const rate = parseFloat(item.rate || 0);
+                  const amount = area * rate;
+                  return (
+                    <TableRow key={`work-${index}`}>
+                      <TableCell className="whitespace-pre-wrap py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{item.description}</TableCell>
+                      <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{area.toFixed(2)}</TableCell>
+                      <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(rate, '')}</TableCell>
+                      <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(amount, '')}</TableCell>
+                    </TableRow>
+                  )
+                })}
               </TableBody>
               <UiTableFooter>
                 <TableRow className="bg-muted/50">
@@ -210,15 +196,21 @@ export const WorkOrderPreview = (data: FormData) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {materialItems.map((item, index) => (
-                  <TableRow key={`material-${index}`}>
-                    <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{item.name}</TableCell>
-                    <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{item.unit}</TableCell>
-                    <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{item.quantity}</TableCell>
-                    <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(item.pricePerUnit, '')}</TableCell>
-                    <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(item.amount, '')}</TableCell>
-                  </TableRow>
-                ))}
+                {materialItems.map((item, index) => {
+                  if (!item.name) return null;
+                  const quantity = parseFloat(item.quantity || 1);
+                  const pricePerUnit = parseFloat(item.pricePerUnit || 0);
+                  const amount = quantity * pricePerUnit;
+                  return (
+                    <TableRow key={`material-${index}`}>
+                      <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{item.name}</TableCell>
+                      <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{item.unit}</TableCell>
+                      <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{quantity}</TableCell>
+                      <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(pricePerUnit, '')}</TableCell>
+                      <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(amount, '')}</TableCell>
+                    </TableRow>
+                  )
+                })}
               </TableBody>
               <UiTableFooter>
                 <TableRow className="bg-muted/50">
@@ -242,13 +234,18 @@ export const WorkOrderPreview = (data: FormData) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {laborItems.map((item, index) => (
-                  <TableRow key={`labor-${index}`}>
-                    <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{item.teamName}</TableCell>
-                    <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{item.numPersons}</TableCell>
-                    <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(item.amount, '')}</TableCell>
-                  </TableRow>
-                ))}
+                {laborItems.map((item, index) => {
+                  if (!item.teamName) return null;
+                  const numPersons = parseInt(item.numPersons || 1);
+                  const amount = parseFloat(item.amount || 0);
+                  return (
+                    <TableRow key={`labor-${index}`}>
+                      <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{item.teamName}</TableCell>
+                      <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{numPersons}</TableCell>
+                      <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(amount, '')}</TableCell>
+                    </TableRow>
+                  )
+                })}
               </TableBody>
               <UiTableFooter>
                 <TableRow className="bg-muted/50">
@@ -341,29 +338,25 @@ export const workOrderFields: TemplateField[] = [
   { id: 'termsOfService', label: 'Terms of Service', type: 'textarea', rows: 4, defaultValue: "1. All payments are due upon completion of work unless otherwise agreed in writing.\n2. Any changes to the scope of work must be documented and may incur additional charges.\n3. Warranty for services performed is 30 days from completion date." },
   
   { id: 'includeWorkDescriptionTable', label: 'Work Items', type: 'boolean', defaultValue: true },
-  ...Array.from({ length: 30 }, (_, i) => i + 1).flatMap(idx => ([
-    { id: `workItem${idx}Description`, label: `Work description ${idx}`, type: 'text', placeholder: idx === 1 ? 'E.g., Interior Painting - Living Room' : undefined},
-    { id: `workItem${idx}Area`, label: 'Area (Sq. ft.)', type: 'number', placeholder: idx === 1 ? '250' : undefined },
-    { id: `workItem${idx}Rate`, label: 'Rate (per Sq. ft.)', type: 'number', placeholder: idx === 1 ? '15' : undefined },
-  ] as TemplateField[])),
+  { id: 'workItems.description', label: 'Work description', type: 'text' },
+  { id: 'workItems.area', label: 'Area (Sq. ft.)', type: 'number' },
+  { id: 'workItems.rate', label: 'Rate (per Sq. ft.)', type: 'number' },
   
   { id: 'includeMaterialTable', label: 'Materials', type: 'boolean', defaultValue: true },
-  ...Array.from({ length: 30 }, (_, i) => i + 1).flatMap(idx => ([
-    { id: `materialItem${idx}Name`, label: `Material name ${idx}`, type: 'text', placeholder: idx === 1 ? 'E.g., Emulsion Paint' : undefined },
-    { id: `materialItem${idx}Quantity`, label: 'Quantity', type: 'number', placeholder: idx === 1 ? '10' : undefined },
-    { id: `materialItem${idx}Unit`, label: 'Unit', type: 'select', options: [ { value: 'Pcs', label: 'Pcs' }, { value: 'Litre', label: 'Litre' }, { value: 'Kg', label: 'Kg' } ], defaultValue: 'Pcs', placeholder: 'Select unit' },
-    { id: `materialItem${idx}PricePerUnit`, label: 'Price per Unit', type: 'number', placeholder: idx === 1 ? '450' : undefined },
-  ] as TemplateField[])),
+  { id: 'materials.name', label: `Material name`, type: 'text' },
+  { id: 'materials.quantity', label: 'Quantity', type: 'number' },
+  { id: 'materials.unit', label: 'Unit', type: 'select', options: [ { value: 'Pcs', label: 'Pcs' }, { value: 'Litre', label: 'Litre' }, { value: 'Kg', label: 'Kg' } ], defaultValue: 'Pcs' },
+  { id: 'materials.pricePerUnit', label: 'Price per Unit', type: 'number' },
 
   { id: 'includeLaborTable', label: 'Labour Charges', type: 'boolean', defaultValue: true },
-  ...Array.from({ length: 30 }, (_, i) => i + 1).flatMap(idx => ([
-    { id: `laborItem${idx}TeamName`, label: `Team/Description ${idx}`, type: 'text', placeholder: idx === 1 ? 'E.g., Painting Team A' : undefined },
-    { id: `laborItem${idx}NumPersons`, label: 'No. of Persons', type: 'number', placeholder: idx === 1 ? '2' : undefined },
-    { id: `laborItem${idx}Amount`, label: 'Amount', type: 'number', placeholder: idx === 1 ? '8000' : undefined },
-  ] as TemplateField[])),
+  { id: 'labor.teamName', label: `Team/Description`, type: 'text' },
+  { id: 'labor.numPersons', label: 'No. of Persons', type: 'number' },
+  { id: 'labor.amount', label: 'Amount', type: 'number' },
 
   { id: 'otherCosts', label: 'Other Costs (e.g., Transportation)', type: 'number', placeholder: '500', defaultValue: 0 },
   { id: 'taxRatePercentage', label: 'Tax Rate (%)', type: 'number', placeholder: '18', defaultValue: 18 },
   { id: 'approvedByName', label: 'Approved By (Name)', type: 'text', placeholder: 'Project Manager Name' },
   { id: 'dateOfApproval', label: 'Date of Approval', type: 'date' },
 ];
+
+    
