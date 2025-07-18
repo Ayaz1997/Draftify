@@ -50,13 +50,13 @@ export default function HomePage() {
                 <CardContent className="flex-grow">
                   {/* Optional: Could add a small visual preview or key fields here */}
                 </CardContent>
-                <CardFooter className="flex items-center justify-between">
-                  <Button asChild variant="default">
+                <CardFooter className="flex flex-col sm:flex-row gap-2">
+                  <Button asChild variant="default" className="w-full">
                     <Link href={`/templates/${template.id}`}>
                       Create
                     </Link>
                   </Button>
-                   <Button variant="outline">
+                   <Button variant="outline" className="w-full">
                     <Eye className="mr-2 h-4 w-4" />
                     Preview
                   </Button>
