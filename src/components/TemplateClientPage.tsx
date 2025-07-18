@@ -80,7 +80,7 @@ const createFormSchema = (template?: Template) => {
 export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const [isPreviewCollapsed, setIsPreviewCollapsed] = useState(false);
+  const [isPreviewCollapsed, setIsPreviewCollapsed] = useState(true);
   
   // Find the full template object on the client-side using the ID
   const template = useMemo(() => templates.find(t => t.id === templateData.id), [templateData.id]);
@@ -183,7 +183,7 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
         if (typeof window !== 'undefined' && window.sessionStorage) {
             const dataKey = `docuFormPreviewData-${templateData.id}`;
             sessionStorage.setItem(dataKey, JSON.stringify(values));
-            router.push(`/templates/${templateData.id}/preview`);
+router.push(`/templates/${templateData.id}/preview`);
         } else {
             throw new Error('Session storage is not available.');
         }
@@ -224,23 +224,24 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
         </div>
 
         {/* Right Column: Combination of Toggle Button and Preview */}
-        <div className="hidden lg:flex w-1/2 sticky top-20 items-center">
+         <div className={cn(
+          "hidden lg:flex w-full lg:w-1/2 sticky top-20 items-center transition-all",
+          isPreviewCollapsed && "lg:w-auto"
+        )}>
             {/* Desktop Preview Toggle Button */}
-            <div className="flex-shrink-0">
-                <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setIsPreviewCollapsed(!isPreviewCollapsed)}
-                className="rounded-full shadow-md z-10 bg-background hover:bg-muted"
-                >
-                <ChevronRight className={cn("h-5 w-5 transition-transform", !isPreviewCollapsed && "rotate-180")} />
-                </Button>
-            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setIsPreviewCollapsed(!isPreviewCollapsed)}
+              className="rounded-full shadow-md z-10 bg-background hover:bg-muted"
+            >
+              <ChevronRight className={cn("h-5 w-5 transition-transform", !isPreviewCollapsed ? "rotate-180" : "")} />
+            </Button>
 
             {/* Live Preview Pane */}
             <div className={cn(
-                "flex-grow flex-shrink-0 w-full ml-4 transition-all duration-300 ease-in-out",
-                isPreviewCollapsed && "w-0 ml-0 opacity-0 pointer-events-none"
+                "flex-grow flex-shrink min-w-0 transition-all duration-300 ease-in-out",
+                isPreviewCollapsed ? "w-0 ml-0 opacity-0 pointer-events-none" : "w-full ml-4"
             )}>
                 <div className="bg-muted/50 border rounded-lg p-4">
                 <div className="flex justify-between items-center mb-4">
