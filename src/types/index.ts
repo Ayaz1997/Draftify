@@ -24,7 +24,7 @@ export interface Template {
   previewLayout: (data: FormData) => React.ReactNode;
 }
 
-// Data needed by DocumentForm (Client Component)
+// Data needed by DocumentForm and TemplateClientPage (Client Components)
 export interface DocumentFormPropsTemplate {
   id: string;
   name: string;
