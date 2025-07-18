@@ -4,7 +4,7 @@ import { Building2 } from 'lucide-react'; // Changed from FileTextIcon
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-50">
+    <header>
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 text-xl font-semibold text-primary hover:opacity-80 transition-opacity">
           <Building2 className="h-7 w-7 text-accent" /> {/* Changed icon */}
