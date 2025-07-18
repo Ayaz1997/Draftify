@@ -5,27 +5,27 @@ import { templates } from '@/lib/templates';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowRight } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { CategorySelectionModal } from '@/components/CategorySelectionModal';
+// import { useState, useEffect } from 'react';
+// import { CategorySelectionModal } from '@/components/CategorySelectionModal';
 
 export default function HomePage() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    const hasSelected = localStorage.getItem('hasSelectedCategory');
-    if (!hasSelected) {
-      setIsModalOpen(true);
-    }
-  }, []);
+  // useEffect(() => {
+  //   const hasSelected = localStorage.getItem('hasSelectedCategory');
+  //   if (!hasSelected) {
+  //     setIsModalOpen(true);
+  //   }
+  // }, []);
 
-  const handleModalClose = () => {
-    localStorage.setItem('hasSelectedCategory', 'true');
-    setIsModalOpen(false);
-  };
+  // const handleModalClose = () => {
+  //   localStorage.setItem('hasSelectedCategory', 'true');
+  //   setIsModalOpen(false);
+  // };
 
   return (
     <>
-      <CategorySelectionModal open={isModalOpen} onClose={handleModalClose} />
+      {/* <CategorySelectionModal open={isModalOpen} onClose={handleModalClose} /> */}
       <div className="space-y-8">
         <section className="text-center py-8 bg-gradient-to-r from-primary/10 via-background to-accent/10 rounded-lg shadow-inner">
           <h1 className="text-4xl font-bold tracking-tight text-primary mb-4">Welcome to My Biz Docs</h1>

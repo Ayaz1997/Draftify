@@ -134,10 +134,8 @@ export function DocumentPreview({ templateInfo }: DocumentPreviewProps) {
         <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
         <h1 className="text-2xl font-semibold mb-2">Preview Error</h1>
         <p className="text-muted-foreground mb-6">{error}</p>
-        <Button asChild variant="outline">
-            <Link href={`/templates/${templateInfo.id}`}>
-                <ArrowLeft className="mr-2 h-4 w-4" /> Go Back to Form
-            </Link>
+        <Button variant="outline" onClick={() => router.push(`/templates/${templateInfo.id}`)}>
+            <ArrowLeft className="mr-2 h-4 w-4" /> Go Back to Form
         </Button>
       </div>
     );
@@ -160,10 +158,8 @@ export function DocumentPreview({ templateInfo }: DocumentPreviewProps) {
         <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
         <h1 className="text-2xl font-semibold mb-2">No Data for Preview</h1>
         <p className="text-muted-foreground mb-6">Could not retrieve document data. Please try creating it again.</p>
-        <Button asChild variant="outline">
-          <Link href={`/templates/${templateInfo.id}`}>
+        <Button variant="outline" onClick={() => router.push(`/templates/${templateInfo.id}`)}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Go Back to Form
-          </Link>
         </Button>
       </div>
     );
