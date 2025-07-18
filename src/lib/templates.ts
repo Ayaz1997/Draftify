@@ -1,6 +1,6 @@
 
 import type { Template } from '@/types';
-import { Briefcase, Scroll, Receipt } from 'lucide-react';
+import { Briefcase, Scroll, ReceiptText, SquarePercent } from 'lucide-react';
 
 import { workOrderFields, WorkOrderPreview } from './template-definitions/work-order';
 import { letterheadFields, LetterheadPreview } from './template-definitions/letterhead';
@@ -28,7 +28,7 @@ export const templates: Template[] = [
     id: 'invoice',
     name: 'Invoice',
     description: 'Generate a standard invoice for products or services with automated tax calculation.',
-    icon: Receipt,
+    icon: ReceiptText,
     fields: standardInvoiceFields,
     previewLayout: StandardInvoicePreview,
   },
@@ -36,7 +36,7 @@ export const templates: Template[] = [
     id: 'claim-invoice',
     name: 'Claim Invoice',
     description: 'Create tax claim invoice, with tax calculations and bank details for clients.',
-    icon: Receipt,
+    icon: SquarePercent,
     fields: claimInvoiceFields,
     previewLayout: ClaimInvoicePreview,
   },
