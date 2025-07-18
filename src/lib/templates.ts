@@ -4,7 +4,7 @@ import { Briefcase, Scroll, Receipt } from 'lucide-react';
 
 import { workOrderFields, WorkOrderPreview } from './template-definitions/work-order';
 import { letterheadFields, LetterheadPreview } from './template-definitions/letterhead';
-import { invoiceFields, InvoicePreview } from './template-definitions/invoice';
+import { invoiceFields, InvoicePreview } from './template-definitions/claim-invoice';
 
 export const templates: Template[] = [
   {
@@ -25,8 +25,8 @@ export const templates: Template[] = [
   },
   {
     id: 'invoice',
-    name: 'Invoice',
-    description: 'Create professional, itemized invoices with tax calculations and bank details for clients.',
+    name: 'Claim Invoice',
+    description: 'Create tax claim invoice, with tax calculations and bank details for clients',
     icon: Receipt,
     fields: invoiceFields,
     previewLayout: InvoicePreview,
