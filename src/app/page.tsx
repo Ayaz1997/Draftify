@@ -31,8 +31,8 @@ export default function HomePage() {
       <div className="space-y-8">
         <section className="text-left py-8">
           <Image 
-            src="https://placehold.co/100x100.png"
-            alt="Folder Icon"
+            src="/doc-illustration.svg"
+            alt="Document Icon"
             width={100}
             height={100}
             className="mb-6"
