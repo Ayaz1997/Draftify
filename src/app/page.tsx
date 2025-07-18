@@ -1,10 +1,11 @@
+
 'use client';
 
 import Link from 'next/link';
 import { templates } from '@/lib/templates';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Eye } from 'lucide-react';
 // import { useState, useEffect } from 'react';
 // import { CategorySelectionModal } from '@/components/CategorySelectionModal';
 
@@ -38,7 +39,7 @@ export default function HomePage() {
           <h2 className="text-2xl font-semibold text-foreground mb-6 pb-2 border-b border-border">Choose a Template</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {templates.map((template) => (
-              <Card key={template.id} className="flex flex-col hover:shadow-xl transition-shadow duration-300 ease-in-out">
+              <Card key={template.id} className="flex flex-col hover:shadow-lg transition-shadow duration-300 ease-in-out">
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-3 mb-2">
                     <template.icon className="h-8 w-8 text-accent" />
@@ -49,10 +50,14 @@ export default function HomePage() {
                 <CardContent className="flex-grow">
                   {/* Optional: Could add a small visual preview or key fields here */}
                 </CardContent>
-                <CardFooter>
+                <CardFooter className="flex items-center gap-2">
+                  <Button variant="outline" className="w-full">
+                    <Eye className="mr-2 h-4 w-4" />
+                    Preview
+                  </Button>
                   <Button asChild variant="default" className="w-full">
                     <Link href={`/templates/${template.id}`}>
-                      Create Document
+                      Create
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
