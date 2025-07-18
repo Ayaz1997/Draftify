@@ -52,8 +52,12 @@ export function Footer() {
         <div className="border-t border-border mt-8 pt-6 text-center text-sm text-muted-foreground">
           <p>
             © 2025 — Developed and maintained by{' '}
+            <a href="https://ayaz.me/" target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline">
+              Ayaz
+            </a>{' '}
+            at{' '}
             <a href="https://www.runtime.works/" target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline">
-              Ayaz at runtime.works
+              runtime.works
             </a>
           </p>
         </div>
