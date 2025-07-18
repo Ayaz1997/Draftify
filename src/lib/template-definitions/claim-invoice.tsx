@@ -7,10 +7,12 @@ import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter as UiTableFooter } from '@/components/ui/table';
 import { formatCurrency, formatDate, amountToWords } from '@/lib/formatters';
 import Image from 'next/image';
+import { currencyOptions } from './currency-options';
 
 const MAX_INVOICE_ITEMS = 30;
 
 export const InvoicePreview = (data: FormData) => {
+  const currencySymbol = data.currency || '₹';
   const invoiceItems = [];
   let totalQuantity = 0;
   let totalCostSum = 0;
@@ -108,10 +110,10 @@ export const InvoicePreview = (data: FormData) => {
                     <TableCell className="p-2 whitespace-pre-wrap">{item.description}</TableCell>
                     <TableCell className="p-2">{item.unit}</TableCell>
                     <TableCell className="p-2 text-right">{item.quantity.toFixed(2)}</TableCell>
-                    <TableCell className="p-2 text-right">{formatCurrency(item.unitCost)}</TableCell>
-                    <TableCell className="p-2 text-right font-medium">{formatCurrency(item.totalCost)}</TableCell>
+                    <TableCell className="p-2 text-right">{formatCurrency(item.unitCost, currencySymbol)}</TableCell>
+                    <TableCell className="p-2 text-right font-medium">{formatCurrency(item.totalCost, currencySymbol)}</TableCell>
                     <TableCell className="p-2 text-right">{item.claimPercentage > 0 ? `${item.claimPercentage}%` : '-'}</TableCell>
-                    <TableCell className="p-2 text-right font-medium">{formatCurrency(item.claimValue)}</TableCell>
+                    <TableCell className="p-2 text-right font-medium">{formatCurrency(item.claimValue, currencySymbol)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -120,9 +122,9 @@ export const InvoicePreview = (data: FormData) => {
                   <TableCell colSpan={3} className="p-2 text-right text-primary">TOTAL</TableCell>
                   <TableCell className="p-2 text-right text-primary">{totalQuantity.toFixed(2)}</TableCell>
                   <TableCell className="p-2 text-right text-primary"></TableCell>
-                  <TableCell className="p-2 text-right text-primary">{formatCurrency(totalCostSum)}</TableCell>
+                  <TableCell className="p-2 text-right text-primary">{formatCurrency(totalCostSum, currencySymbol)}</TableCell>
                   <TableCell className="p-2 text-right text-primary"></TableCell>
-                  <TableCell className="p-2 text-right text-primary">{formatCurrency(totalClaimValue)}</TableCell>
+                  <TableCell className="p-2 text-right text-primary">{formatCurrency(totalClaimValue, currencySymbol)}</TableCell>
                 </TableRow>
               </UiTableFooter>
             </Table>
@@ -137,16 +139,16 @@ export const InvoicePreview = (data: FormData) => {
           <div className="w-full sm:w-2/5 md:w-1/3 space-y-2">
             <div className="flex justify-between">
               <span className="font-medium">Total Claim Value:</span>
-              <span>{formatCurrency(totalClaimValue)}</span>
+              <span>{formatCurrency(totalClaimValue, currencySymbol)}</span>
             </div>
             <div className="flex justify-between">
               <span className="font-medium">Tax ({taxRate}%):</span>
-              <span>{formatCurrency(taxAmount)}</span>
+              <span>{formatCurrency(taxAmount, currencySymbol)}</span>
             </div>
             <Separator className="my-1"/>
             <div className="flex justify-between font-bold text-lg text-primary">
               <span>Total Amount:</span>
-              <span>{formatCurrency(grandTotal)}</span>
+              <span>{formatCurrency(grandTotal, currencySymbol)}</span>
             </div>
           </div>
         </div>
@@ -195,6 +197,7 @@ export const invoiceFields: TemplateField[] = [
   // Invoice Info
   { id: 'invoiceNumber', label: 'Invoice Number', type: 'text' },
   { id: 'invoiceDate', label: 'Invoice Date', type: 'date' },
+  { id: 'currency', label: 'Currency', type: 'select', options: currencyOptions, defaultValue: '₹' },
 
   // Invoice Items
   { id: 'includeItemsTable', label: 'Invoice Items', type: 'boolean', defaultValue: true },
@@ -202,7 +205,7 @@ export const invoiceFields: TemplateField[] = [
     { id: `item${idx}Description`, label: `Item #${idx} Description`, type: 'text' },
     { id: `item${idx}Unit`, label: 'Unit', type: 'select', options: [ { value: 'pcs', label: 'Piece' }, { value: 'sq.ft.', label: 'Sq. Ft.' }, { value: 'kg', label: 'Kg' }, { value: 'lit.', label: 'Litre' }, { value: 'lumpsum', label: 'Lumpsum' } ], defaultValue: 'pcs' },
     { id: `item${idx}Quantity`, label: 'Quantity', type: 'number' },
-    { id: `item${idx}UnitCost`, label: 'Unit Cost (INR)', type: 'number' },
+    { id: `item${idx}UnitCost`, label: 'Unit Cost', type: 'number' },
     { id: `item${idx}ClaimPercentage`, label: 'Claim Amount (%)', type: 'number' },
   ] as TemplateField[])),
 

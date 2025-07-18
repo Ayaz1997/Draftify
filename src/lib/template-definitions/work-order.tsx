@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import type { FormData, TemplateField } from '@/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,27 +7,17 @@ import { Separator } from '@/components/ui/separator';
 import Image from 'next/image';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter as UiTableFooter } from '@/components/ui/table';
 import { Briefcase } from 'lucide-react';
-
-const formatDate = (dateString?: string) => {
-  if (!dateString) return 'N/A';
-  if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-    return new Date(dateString + 'T00:00:00Z').toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
-  }
-  try {
-    return new Date(dateString).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
-  } catch (e) {
-    return dateString;
-  }
-};
+import { formatCurrency as originalFormatCurrency, formatDate } from '@/lib/formatters';
+import { currencyOptions } from './currency-options';
 
 const formatCurrency = (amount?: number | string, currencySymbol = '₹') => {
-  const num = parseFloat(String(amount || 0));
-  return `${currencySymbol}${num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return originalFormatCurrency(amount, currencySymbol);
 };
 
 const MAX_ITEMS_PREVIEW = 30;
 
 export const WorkOrderPreview = (data: FormData) => {
+  const currencySymbol = data.currency || '₹';
   const workItems = [];
   let subtotalWorkDescription = 0;
   if (data.includeWorkDescriptionTable) {
@@ -181,8 +172,8 @@ export const WorkOrderPreview = (data: FormData) => {
                 <TableRow>
                   <TableHead className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Work Description</TableHead>
                   <TableHead className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Area (Sq. ft.)</TableHead>
-                  <TableHead className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Rate ({formatCurrency(0).charAt(0)})</TableHead>
-                  <TableHead className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Amount ({formatCurrency(0).charAt(0)})</TableHead>
+                  <TableHead className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Rate ({currencySymbol})</TableHead>
+                  <TableHead className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Amount ({currencySymbol})</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -198,7 +189,7 @@ export const WorkOrderPreview = (data: FormData) => {
               <UiTableFooter>
                 <TableRow className="bg-muted/50">
                   <TableCell colSpan={3} className="text-right font-bold text-primary py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Subtotal Work Description</TableCell>
-                  <TableCell className="text-right font-bold py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(subtotalWorkDescription)}</TableCell>
+                  <TableCell className="text-right font-bold py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(subtotalWorkDescription, currencySymbol)}</TableCell>
                 </TableRow>
               </UiTableFooter>
             </Table>
@@ -214,8 +205,8 @@ export const WorkOrderPreview = (data: FormData) => {
                   <TableHead className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Material Name</TableHead>
                   <TableHead className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Unit</TableHead>
                   <TableHead className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Quantity</TableHead>
-                  <TableHead className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Price/Unit ({formatCurrency(0).charAt(0)})</TableHead>
-                  <TableHead className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Amount ({formatCurrency(0).charAt(0)})</TableHead>
+                  <TableHead className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Price/Unit ({currencySymbol})</TableHead>
+                  <TableHead className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Amount ({currencySymbol})</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -232,7 +223,7 @@ export const WorkOrderPreview = (data: FormData) => {
               <UiTableFooter>
                 <TableRow className="bg-muted/50">
                   <TableCell colSpan={4} className="text-right font-bold text-primary py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Subtotal Materials</TableCell>
-                  <TableCell className="text-right font-bold py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(subtotalMaterial)}</TableCell>
+                  <TableCell className="text-right font-bold py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(subtotalMaterial, currencySymbol)}</TableCell>
                 </TableRow>
               </UiTableFooter>
             </Table>
@@ -247,7 +238,7 @@ export const WorkOrderPreview = (data: FormData) => {
                 <TableRow>
                   <TableHead className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Team Name / Description</TableHead>
                   <TableHead className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">No. of Persons</TableHead>
-                  <TableHead className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Amount ({formatCurrency(0).charAt(0)})</TableHead>
+                  <TableHead className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Amount ({currencySymbol})</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -262,7 +253,7 @@ export const WorkOrderPreview = (data: FormData) => {
               <UiTableFooter>
                 <TableRow className="bg-muted/50">
                   <TableCell colSpan={2} className="text-right font-bold text-primary py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Subtotal Labor</TableCell>
-                  <TableCell className="text-right font-bold py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(subtotalLabor)}</TableCell>
+                  <TableCell className="text-right font-bold py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(subtotalLabor, currencySymbol)}</TableCell>
                 </TableRow>
               </UiTableFooter>
             </Table>
@@ -282,27 +273,27 @@ export const WorkOrderPreview = (data: FormData) => {
             {(data.includeWorkDescriptionTable || data.includeMaterialTable || data.includeLaborTable) && (
                 <div className="flex justify-between">
                   <span className="font-medium">Total Items Subtotal:</span>
-                  <span>{formatCurrency(subtotalWorkDescription + subtotalMaterial + subtotalLabor)}</span>
+                  <span>{formatCurrency(subtotalWorkDescription + subtotalMaterial + subtotalLabor, currencySymbol)}</span>
                 </div>
             )}
             {typeof data.otherCosts === 'number' && data.otherCosts > 0 || (typeof data.otherCosts === 'string' && parseFloat(data.otherCosts) > 0)  && (
                  <div className="flex justify-between">
                     <span className="font-medium">Other Costs:</span>
-                    <span>{formatCurrency(data.otherCosts)}</span>
+                    <span>{formatCurrency(data.otherCosts, currencySymbol)}</span>
                 </div>
             )}
             <div className="flex justify-between">
               <span className="font-medium">Grand Subtotal:</span>
-              <span>{formatCurrency(grandSubtotal)}</span>
+              <span>{formatCurrency(grandSubtotal, currencySymbol)}</span>
             </div>
             <div className="flex justify-between">
               <span className="font-medium">Tax ({data.taxRatePercentage || 0}%):</span>
-              <span>{formatCurrency(taxAmount)}</span>
+              <span>{formatCurrency(taxAmount, currencySymbol)}</span>
             </div>
             <Separator className="my-1 sm:my-2 bg-primary/50"/>
             <div className="flex justify-between text-lg sm:text-xl font-bold text-primary">
               <span>Final Total Amount:</span>
-              <span>{formatCurrency(finalTotalAmount)}</span>
+              <span>{formatCurrency(finalTotalAmount, currencySymbol)}</span>
             </div>
           </div>
         </div>
@@ -339,6 +330,8 @@ export const workOrderFields: TemplateField[] = [
   { id: 'orderDate', label: 'Order Date', type: 'date' },
   { id: 'expectedStartDate', label: 'Expected Start Date', type: 'date' },
   { id: 'expectedEndDate', label: 'Expected End Date', type: 'date' },
+  { id: 'currency', label: 'Currency', type: 'select', options: currencyOptions, defaultValue: '₹' },
+
   { id: 'clientName', label: 'Client Name', type: 'text', placeholder: 'Mr. John Doe' },
   { id: 'clientPhone', label: 'Client Phone', type: 'text', placeholder: '9998887770' },
   { id: 'clientEmail', label: 'Client Email', type: 'email', placeholder: 'client@example.com' },
@@ -346,26 +339,30 @@ export const workOrderFields: TemplateField[] = [
   { id: 'orderReceivedBy', label: 'Order Received By (Your Staff)', type: 'text', placeholder: 'Employee Name' },
   { id: 'generalWorkDescription', label: 'Overall Work Description', type: 'textarea', placeholder: 'Summarize the work to be done', rows: 3 },
   { id: 'termsOfService', label: 'Terms of Service', type: 'textarea', rows: 4, defaultValue: "1. All payments are due upon completion of work unless otherwise agreed in writing.\n2. Any changes to the scope of work must be documented and may incur additional charges.\n3. Warranty for services performed is 30 days from completion date." },
+  
   { id: 'includeWorkDescriptionTable', label: 'Work Items', type: 'boolean', defaultValue: true },
   ...Array.from({ length: 30 }, (_, i) => i + 1).flatMap(idx => ([
     { id: `workItem${idx}Description`, label: `Work description ${idx}`, type: 'text', placeholder: idx === 1 ? 'E.g., Interior Painting - Living Room' : undefined},
     { id: `workItem${idx}Area`, label: 'Area (Sq. ft.)', type: 'number', placeholder: idx === 1 ? '250' : undefined },
-    { id: `workItem${idx}Rate`, label: 'Rate (₹ per Sq. ft.)', type: 'number', placeholder: idx === 1 ? '15' : undefined },
+    { id: `workItem${idx}Rate`, label: 'Rate (per Sq. ft.)', type: 'number', placeholder: idx === 1 ? '15' : undefined },
   ] as TemplateField[])),
+  
   { id: 'includeMaterialTable', label: 'Materials', type: 'boolean', defaultValue: true },
   ...Array.from({ length: 30 }, (_, i) => i + 1).flatMap(idx => ([
     { id: `materialItem${idx}Name`, label: `Material name ${idx}`, type: 'text', placeholder: idx === 1 ? 'E.g., Emulsion Paint' : undefined },
     { id: `materialItem${idx}Quantity`, label: 'Quantity', type: 'number', placeholder: idx === 1 ? '10' : undefined },
     { id: `materialItem${idx}Unit`, label: 'Unit', type: 'select', options: [ { value: 'Pcs', label: 'Pcs' }, { value: 'Litre', label: 'Litre' }, { value: 'Kg', label: 'Kg' } ], defaultValue: 'Pcs', placeholder: 'Select unit' },
-    { id: `materialItem${idx}PricePerUnit`, label: 'Price per Unit (₹)', type: 'number', placeholder: idx === 1 ? '450' : undefined },
+    { id: `materialItem${idx}PricePerUnit`, label: 'Price per Unit', type: 'number', placeholder: idx === 1 ? '450' : undefined },
   ] as TemplateField[])),
+
   { id: 'includeLaborTable', label: 'Labour Charges', type: 'boolean', defaultValue: true },
   ...Array.from({ length: 30 }, (_, i) => i + 1).flatMap(idx => ([
     { id: `laborItem${idx}TeamName`, label: `Team/Description ${idx}`, type: 'text', placeholder: idx === 1 ? 'E.g., Painting Team A' : undefined },
     { id: `laborItem${idx}NumPersons`, label: 'No. of Persons', type: 'number', placeholder: idx === 1 ? '2' : undefined },
-    { id: `laborItem${idx}Amount`, label: 'Amount (₹)', type: 'number', placeholder: idx === 1 ? '8000' : undefined },
+    { id: `laborItem${idx}Amount`, label: 'Amount', type: 'number', placeholder: idx === 1 ? '8000' : undefined },
   ] as TemplateField[])),
-  { id: 'otherCosts', label: 'Other Costs (₹, e.g., Transportation)', type: 'number', placeholder: '500', defaultValue: 0 },
+
+  { id: 'otherCosts', label: 'Other Costs (e.g., Transportation)', type: 'number', placeholder: '500', defaultValue: 0 },
   { id: 'taxRatePercentage', label: 'Tax Rate (%)', type: 'number', placeholder: '18', defaultValue: 18 },
   { id: 'approvedByName', label: 'Approved By (Name)', type: 'text', placeholder: 'Project Manager Name' },
   { id: 'dateOfApproval', label: 'Date of Approval', type: 'date' },

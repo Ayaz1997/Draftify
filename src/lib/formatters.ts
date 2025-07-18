@@ -1,3 +1,4 @@
+
 import numWords from 'num-words';
 
 export const formatDate = (dateString?: string) => {
@@ -28,7 +29,8 @@ export const formatCurrency = (amount?: number | string, currencySymbol = '₹')
   if (isNaN(num)) {
     return `${currencySymbol}0.00`;
   }
-  return `${currencySymbol}${num.toLocaleString('en-IN', {
+  const locale = currencySymbol === '₹' ? 'en-IN' : 'en-US';
+  return `${currencySymbol}${num.toLocaleString(locale, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
