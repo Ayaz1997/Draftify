@@ -10,11 +10,10 @@ import Image from 'next/image';
 
 const MAX_INVOICE_ITEMS = 30;
 
-export const InvoicePreview = (data: FormData) => {
+export const StandardInvoicePreview = (data: FormData) => {
   const invoiceItems = [];
   let totalQuantity = 0;
   let totalCostSum = 0;
-  let totalClaimValue = 0;
 
   if (data.includeItemsTable) {
     for (let i = 1; i <= MAX_INVOICE_ITEMS; i++) {
@@ -22,9 +21,7 @@ export const InvoicePreview = (data: FormData) => {
         const quantity = parseFloat(data[`item${i}Quantity`] || 1);
         const unitCost = parseFloat(data[`item${i}UnitCost`] || 0);
         const totalCost = quantity * unitCost;
-        const claimPercentage = parseFloat(data[`item${i}ClaimPercentage`] || 0);
-        const claimValue = (totalCost * claimPercentage) / 100;
-
+        
         invoiceItems.push({
           sno: invoiceItems.length + 1,
           description: data[`item${i}Description`],
@@ -32,27 +29,24 @@ export const InvoicePreview = (data: FormData) => {
           quantity: quantity,
           unitCost: unitCost,
           totalCost: totalCost,
-          claimPercentage: claimPercentage,
-          claimValue: claimValue,
         });
 
         totalQuantity += quantity;
         totalCostSum += totalCost;
-        totalClaimValue += claimValue;
       }
     }
   }
 
   const taxRate = parseFloat(data.taxPercentage || 0);
-  const taxAmount = totalClaimValue * (taxRate / 100);
-  const grandTotal = totalClaimValue + taxAmount;
+  const taxAmount = totalCostSum * (taxRate / 100);
+  const grandTotal = totalCostSum + taxAmount;
   
   return (
     <Card className="w-full max-w-4xl mx-auto shadow-lg text-sm" data-ai-hint="invoice document">
       <CardHeader className="p-4 sm:p-6 bg-muted/30">
         {data.businessLogo && typeof data.businessLogo === 'string' && data.businessLogo.startsWith('data:image') && (
             <div className="flex justify-center mb-4">
-                <Image src={data.businessLogo} alt="Business Logo" width={150} height={75} className="object-contain" data-ai-hint="company brand" />
+                <Image src={data.businessLogo} alt="Business Logo" width={150} height={75} className="object-contain" data-ai-hint="company brand"/>
             </div>
         )}
         <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
@@ -97,8 +91,6 @@ export const InvoicePreview = (data: FormData) => {
                   <TableHead className="p-2 text-right w-20">Quantity</TableHead>
                   <TableHead className="p-2 text-right w-24">Unit Cost</TableHead>
                   <TableHead className="p-2 text-right w-24">Total Cost</TableHead>
-                  <TableHead className="p-2 text-right w-20">Claim (%)</TableHead>
-                  <TableHead className="p-2 text-right w-24">Claim Value</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -110,8 +102,6 @@ export const InvoicePreview = (data: FormData) => {
                     <TableCell className="p-2 text-right">{item.quantity.toFixed(2)}</TableCell>
                     <TableCell className="p-2 text-right">{formatCurrency(item.unitCost)}</TableCell>
                     <TableCell className="p-2 text-right font-medium">{formatCurrency(item.totalCost)}</TableCell>
-                    <TableCell className="p-2 text-right">{item.claimPercentage > 0 ? `${item.claimPercentage}%` : '-'}</TableCell>
-                    <TableCell className="p-2 text-right font-medium">{formatCurrency(item.claimValue)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -119,10 +109,8 @@ export const InvoicePreview = (data: FormData) => {
                 <TableRow className="bg-muted/50 font-bold">
                   <TableCell colSpan={3} className="p-2 text-right text-primary">TOTAL</TableCell>
                   <TableCell className="p-2 text-right text-primary">{totalQuantity.toFixed(2)}</TableCell>
-                  <TableCell className="p-2 text-right text-primary"></TableCell>
+                  <TableCell className="p-2"></TableCell>
                   <TableCell className="p-2 text-right text-primary">{formatCurrency(totalCostSum)}</TableCell>
-                  <TableCell className="p-2 text-right text-primary"></TableCell>
-                  <TableCell className="p-2 text-right text-primary">{formatCurrency(totalClaimValue)}</TableCell>
                 </TableRow>
               </UiTableFooter>
             </Table>
@@ -136,8 +124,8 @@ export const InvoicePreview = (data: FormData) => {
           </div>
           <div className="w-full sm:w-2/5 md:w-1/3 space-y-2">
             <div className="flex justify-between">
-              <span className="font-medium">Total Claim Value:</span>
-              <span>{formatCurrency(totalClaimValue)}</span>
+              <span className="font-medium">Subtotal:</span>
+              <span>{formatCurrency(totalCostSum)}</span>
             </div>
             <div className="flex justify-between">
               <span className="font-medium">Tax ({taxRate}%):</span>
@@ -176,7 +164,7 @@ export const InvoicePreview = (data: FormData) => {
   );
 };
 
-export const invoiceFields: TemplateField[] = [
+export const standardInvoiceFields: TemplateField[] = [
   // Business Details
   { id: 'businessName', label: 'Business Name', type: 'text' },
   { id: 'businessAddress', label: 'Business Address', type: 'textarea' },
@@ -200,10 +188,9 @@ export const invoiceFields: TemplateField[] = [
   { id: 'includeItemsTable', label: 'Invoice Items', type: 'boolean', defaultValue: true },
   ...Array.from({ length: MAX_INVOICE_ITEMS }, (_, i) => i + 1).flatMap(idx => ([
     { id: `item${idx}Description`, label: `Item #${idx} Description`, type: 'text' },
-    { id: `item${idx}Unit`, label: 'Unit', type: 'select', options: [ { value: 'pcs', label: 'Piece' }, { value: 'sq.ft.', label: 'Sq. Ft.' }, { value: 'kg', label: 'Kg' }, { value: 'lit.', label: 'Litre' }, { value: 'lumpsum', label: 'Lumpsum' } ], defaultValue: 'pcs' },
+    { id: `item${idx}Unit`, label: 'Unit', type: 'select', options: [ { value: 'pcs', label: 'Piece' }, { value: 'sq.ft.', label: 'Sq. Ft.' }, { value: 'kg', label: 'Kg' }, { value: 'lit.', label: 'Litre' }, { value: 'lumpsum', label: 'Lumpsum' } ], defaultValue: 'pcs', placeholder: 'Select unit' },
     { id: `item${idx}Quantity`, label: 'Quantity', type: 'number' },
     { id: `item${idx}UnitCost`, label: 'Unit Cost (INR)', type: 'number' },
-    { id: `item${idx}ClaimPercentage`, label: 'Claim Amount (%)', type: 'number' },
   ] as TemplateField[])),
 
   // Calculation

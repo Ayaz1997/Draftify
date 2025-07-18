@@ -318,7 +318,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
     if (currentInitialValues) {
       let newCounts: VisibleItemCounts = { ...visibleItemCounts };
       let changed = false;
-      const allSections = template.id === 'work-order' ? workOrderAccordionSubSectionsConfig : (template.id === 'invoice' ? [invoiceItemConfig] : []);
+      const allSections = template.id === 'work-order' ? workOrderAccordionSubSectionsConfig : (template.id === 'invoice' || template.id === 'claim-invoice' ? [invoiceItemConfig] : []);
 
       allSections.forEach(section => {
         let maxPopulatedIndex = 0;
@@ -419,7 +419,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
         }
     });
 
-    const allSections = template.id === 'work-order' ? workOrderAccordionSubSectionsConfig : (template.id === 'invoice' ? [invoiceItemConfig] : []);
+    const allSections = template.id === 'work-order' ? workOrderAccordionSubSectionsConfig : (template.id === 'invoice' || template.id === 'claim-invoice' ? [invoiceItemConfig] : []);
     allSections.forEach(section => {
       const currentVisibleCount = visibleItemCounts[section.countKey];
       for (let i = currentVisibleCount + 1; i <= MAX_ITEMS_PER_SECTION; i++) {
@@ -467,7 +467,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
     const currentVisibleCount = visibleItemCounts[countKey];
     if (currentVisibleCount <= 1) return;
 
-    const allSections = template.id === 'work-order' ? workOrderAccordionSubSectionsConfig : (template.id === 'invoice' ? [invoiceItemConfig] : []);
+    const allSections = template.id === 'work-order' ? workOrderAccordionSubSectionsConfig : (template.id === 'invoice' || template.id === 'claim-invoice' ? [invoiceItemConfig] : []);
     const sectionConfig = allSections.find(s => s.countKey === countKey);
     if (!sectionConfig) return;
 
@@ -877,7 +877,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
     );
   }
 
-  if (template.id === 'invoice') {
+  if (template.id === 'invoice' || template.id === 'claim-invoice') {
     const section = invoiceItemConfig;
     return (
       <Card className="shadow-lg">
@@ -914,6 +914,10 @@ export function DocumentForm({ template }: DocumentFormProps) {
                                   if(!pattern) return null;
                                   const fieldId = pattern.replace('#', String(itemNumber));
                                   const fieldDef = template.fields.find(f => f.id === fieldId);
+                                  // For claim-invoice, we want to render the claimPercentage field, but not for standard invoice
+                                  if (template.id === 'invoice' && key === 'claimPercentage') {
+                                      return null;
+                                  }
                                   return renderFormField(fieldDef);
                               })}
 

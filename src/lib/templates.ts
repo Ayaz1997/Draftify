@@ -4,7 +4,8 @@ import { Briefcase, Scroll, Receipt } from 'lucide-react';
 
 import { workOrderFields, WorkOrderPreview } from './template-definitions/work-order';
 import { letterheadFields, LetterheadPreview } from './template-definitions/letterhead';
-import { invoiceFields, InvoicePreview } from './template-definitions/claim-invoice';
+import { invoiceFields as claimInvoiceFields, InvoicePreview as ClaimInvoicePreview } from './template-definitions/claim-invoice';
+import { standardInvoiceFields, StandardInvoicePreview } from './template-definitions/invoice';
 
 export const templates: Template[] = [
   {
@@ -23,12 +24,20 @@ export const templates: Template[] = [
     fields: letterheadFields,
     previewLayout: LetterheadPreview,
   },
-  {
+   {
     id: 'invoice',
-    name: 'Claim Invoice',
-    description: 'Create tax claim invoice, with tax calculations and bank details for clients',
+    name: 'Invoice',
+    description: 'Generate a standard invoice for products or services with automated tax calculation.',
     icon: Receipt,
-    fields: invoiceFields,
-    previewLayout: InvoicePreview,
+    fields: standardInvoiceFields,
+    previewLayout: StandardInvoicePreview,
+  },
+  {
+    id: 'claim-invoice',
+    name: 'Claim Invoice',
+    description: 'Create tax claim invoice, with tax calculations and bank details for clients.',
+    icon: Receipt,
+    fields: claimInvoiceFields,
+    previewLayout: ClaimInvoicePreview,
   },
 ];
