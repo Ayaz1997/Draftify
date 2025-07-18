@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter as UiTableFooter } from '@/components/ui/table';
 import { Briefcase } from 'lucide-react';
 import { formatCurrency as originalFormatCurrency, formatDate } from '@/lib/formatters';
-import { currencyOptions } from './currency-options';
+import { currencyOptionsForSelect } from './currency-options';
 
 const formatCurrency = (amount?: number | string, currencySymbol = '₹') => {
   return originalFormatCurrency(amount, currencySymbol);
@@ -330,7 +330,7 @@ export const workOrderFields: TemplateField[] = [
   { id: 'orderDate', label: 'Order Date', type: 'date' },
   { id: 'expectedStartDate', label: 'Expected Start Date', type: 'date' },
   { id: 'expectedEndDate', label: 'Expected End Date', type: 'date' },
-  { id: 'currency', label: 'Currency', type: 'select', options: currencyOptions, defaultValue: '₹' },
+  { id: 'currency', label: 'Currency', type: 'select', options: currencyOptionsForSelect, defaultValue: '₹' },
 
   { id: 'clientName', label: 'Client Name', type: 'text', placeholder: 'Mr. John Doe' },
   { id: 'clientPhone', label: 'Client Phone', type: 'text', placeholder: '9998887770' },

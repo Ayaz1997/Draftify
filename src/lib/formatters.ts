@@ -1,5 +1,6 @@
 
 import numWords from 'num-words';
+import { getCurrencyInfo } from './template-definitions/currency-options';
 
 export const formatDate = (dateString?: string) => {
   if (!dateString) return 'N/A';
@@ -36,10 +37,12 @@ export const formatCurrency = (amount?: number | string, currencySymbol = '₹')
   })}`;
 };
 
-export const amountToWords = (amount?: number | string) => {
+export const amountToWords = (amount?: number | string, currencySymbol = '₹') => {
   const num = parseFloat(String(amount || 0));
   if (isNaN(num)) return 'Invalid Number';
 
+  const currency = getCurrencyInfo(currencySymbol);
+  
   const integerPart = Math.floor(num);
   const decimalPart = Math.round((num - integerPart) * 100);
 
@@ -47,8 +50,8 @@ export const amountToWords = (amount?: number | string) => {
   words = words.charAt(0).toUpperCase() + words.slice(1); // Capitalize first letter
 
   if (decimalPart > 0) {
-    words += ' and ' + numWords(decimalPart) + ' paise';
+    words += ' and ' + numWords(decimalPart) + ' ' + currency.fractionalUnit;
   }
 
-  return 'Rupees ' + words + ' only';
+  return currency.plural + ' ' + words + ' only';
 };

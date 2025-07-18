@@ -7,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter as UiTableFooter } from '@/components/ui/table';
 import { formatCurrency, formatDate, amountToWords } from '@/lib/formatters';
 import Image from 'next/image';
-import { currencyOptions } from './currency-options';
+import { currencyOptionsForSelect } from './currency-options';
 
 const MAX_INVOICE_ITEMS = 30;
 
@@ -122,7 +122,7 @@ export const StandardInvoicePreview = (data: FormData) => {
         <div className="flex flex-col sm:flex-row justify-between gap-4">
           <div className="flex-grow text-xs text-muted-foreground">
             <p className="font-semibold text-foreground">Amount in Words:</p>
-            <p className="italic">{amountToWords(grandTotal)}</p>
+            <p className="italic">{amountToWords(grandTotal, currencySymbol)}</p>
           </div>
           <div className="w-full sm:w-2/5 md:w-1/3 space-y-2">
             <div className="flex justify-between">
@@ -185,7 +185,7 @@ export const standardInvoiceFields: TemplateField[] = [
   // Invoice Info
   { id: 'invoiceNumber', label: 'Invoice Number', type: 'text' },
   { id: 'invoiceDate', label: 'Invoice Date', type: 'date' },
-  { id: 'currency', label: 'Currency', type: 'select', options: currencyOptions, defaultValue: '₹' },
+  { id: 'currency', label: 'Currency', type: 'select', options: currencyOptionsForSelect, defaultValue: '₹' },
 
   // Invoice Items
   { id: 'includeItemsTable', label: 'Invoice Items', type: 'boolean', defaultValue: true },
