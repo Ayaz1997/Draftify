@@ -1,0 +1,32 @@
+{
+  "theme_color": "#220542",
+  "background_color": "#f3f4f6",
+  "display": "standalone",
+  "scope": "/",
+  "start_url": "/",
+  "name": "My Biz Docs",
+  "short_name": "My Biz Docs",
+  "description": "Create professional documents like work orders, letterheads, and invoices with ease.",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-256x256.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

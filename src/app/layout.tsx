@@ -15,6 +15,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'My Biz Docs - Your Business Documentation Tool',
   description: 'Create professional documents like work orders, letterheads, and invoices with ease.',
+  manifest: "/manifest.json",
   openGraph: {
     title: 'My Biz Docs - Your Business Documentation Tool',
     description: 'Create professional documents like work orders, letterheads, and invoices with ease.',
