@@ -7,27 +7,18 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye } from 'lucide-react';
 import Image from 'next/image';
-// import { useState, useEffect } from 'react';
-// import { CategorySelectionModal } from '@/components/CategorySelectionModal';
+import { useState } from 'react';
+import { TemplatePreviewModal } from '@/components/TemplatePreviewModal';
 
 export default function HomePage() {
-  // const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // useEffect(() => {
-  //   const hasSelected = localStorage.getItem('hasSelectedCategory');
-  //   if (!hasSelected) {
-  //     setIsModalOpen(true);
-  //   }
-  // }, []);
-
-  // const handleModalClose = () => {
-  //   localStorage.setItem('hasSelectedCategory', 'true');
-  //   setIsModalOpen(false);
-  // };
+  const [previewTemplateId, setPreviewTemplateId] = useState<string | null>(null);
 
   return (
     <>
-      {/* <CategorySelectionModal open={isModalOpen} onClose={handleModalClose} /> */}
+      <TemplatePreviewModal
+        templateId={previewTemplateId}
+        onClose={() => setPreviewTemplateId(null)}
+      />
       <div className="space-y-8">
         <section className="text-left py-8">
           <Image 
@@ -65,7 +56,11 @@ export default function HomePage() {
                       Create
                     </Link>
                   </Button>
-                   <Button variant="outline" className="w-full">
+                   <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => setPreviewTemplateId(template.id)}
+                  >
                     <Eye className="mr-2 h-4 w-4" />
                     Preview
                   </Button>
