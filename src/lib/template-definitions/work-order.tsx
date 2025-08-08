@@ -95,46 +95,50 @@ export const WorkOrderPreview = (data: FormData) => {
       <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
         <div className="border p-3 sm:p-4 rounded-md shadow-sm">
           <h3 className="text-md sm:text-lg font-semibold text-primary mb-2">Order Details</h3>
-          <Table>
-            <TableBody>
-              <TableRow>
-                <TableCell className="font-medium py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Order Number:</TableCell>
-                <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{data.orderNumber || ''}</TableCell>
-                <TableCell className="font-medium py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Order Date:</TableCell>
-                <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatDate(data.orderDate)}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Expected Start Date:</TableCell>
-                <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatDate(data.expectedStartDate)}</TableCell>
-                <TableCell className="font-medium py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Expected End Date:</TableCell>
-                <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatDate(data.expectedEndDate)}</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+          <div className="overflow-x-auto">
+            <Table className="min-w-full">
+              <TableBody>
+                <TableRow>
+                  <TableCell className="font-medium py-1 px-2 text-xs sm:text-sm min-w-[120px]">Order Number:</TableCell>
+                  <TableCell className="py-1 px-2 text-xs sm:text-sm">{data.orderNumber || ''}</TableCell>
+                  <TableCell className="font-medium py-1 px-2 text-xs sm:text-sm min-w-[120px]">Order Date:</TableCell>
+                  <TableCell className="py-1 px-2 text-xs sm:text-sm">{formatDate(data.orderDate)}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium py-1 px-2 text-xs sm:text-sm min-w-[120px]">Expected Start Date:</TableCell>
+                  <TableCell className="py-1 px-2 text-xs sm:text-sm">{formatDate(data.expectedStartDate)}</TableCell>
+                  <TableCell className="font-medium py-1 px-2 text-xs sm:text-sm min-w-[120px]">Expected End Date:</TableCell>
+                  <TableCell className="py-1 px-2 text-xs sm:text-sm">{formatDate(data.expectedEndDate)}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
         </div>
 
         <div className="border p-3 sm:p-4 rounded-md shadow-sm">
           <h3 className="text-md sm:text-lg font-semibold text-primary mb-2">Client Details</h3>
-          <Table>
-            <TableBody>
-              <TableRow>
-                <TableCell className="font-medium py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Client Name:</TableCell>
-                <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{data.clientName || 'N/A'}</TableCell>
-                <TableCell className="font-medium py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Client Phone:</TableCell>
-                <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{data.clientPhone || 'N/A'}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Client Email:</TableCell>
-                <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{data.clientEmail || 'N/A'}</TableCell>
-                <TableCell className="font-medium py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Order Received By:</TableCell>
-                <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{data.orderReceivedBy || 'N/A'}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Work Location:</TableCell>
-                <TableCell colSpan={3} className="whitespace-pre-wrap py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{data.workLocation || 'N/A'}</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+          <div className="overflow-x-auto">
+            <Table className="min-w-full">
+              <TableBody>
+                <TableRow>
+                  <TableCell className="font-medium py-1 px-2 text-xs sm:text-sm min-w-[120px]">Client Name:</TableCell>
+                  <TableCell className="py-1 px-2 text-xs sm:text-sm">{data.clientName || 'N/A'}</TableCell>
+                  <TableCell className="font-medium py-1 px-2 text-xs sm:text-sm min-w-[120px]">Client Phone:</TableCell>
+                  <TableCell className="py-1 px-2 text-xs sm:text-sm">{data.clientPhone || 'N/A'}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium py-1 px-2 text-xs sm:text-sm min-w-[120px]">Client Email:</TableCell>
+                  <TableCell className="py-1 px-2 text-xs sm:text-sm">{data.clientEmail || 'N/A'}</TableCell>
+                  <TableCell className="font-medium py-1 px-2 text-xs sm:text-sm min-w-[120px]">Order Received By:</TableCell>
+                  <TableCell className="py-1 px-2 text-xs sm:text-sm">{data.orderReceivedBy || 'N/A'}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium py-1 px-2 text-xs sm:text-sm align-top min-w-[120px]">Work Location:</TableCell>
+                  <TableCell colSpan={3} className="whitespace-pre-wrap py-1 px-2 text-xs sm:text-sm">{data.workLocation || 'N/A'}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
         </div>
 
         {data.generalWorkDescription && (
