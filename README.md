@@ -1,5 +1,3 @@
-<img src="https://r2cdn.perplexity.ai/pplx-full-logo-primary-dark%402x.png" style="height:64px;margin-right:32px"/>
-
 # Draftify
 
 **Draftify** is a modern, mobile-first platform for rapidly creating business documents—tailored for small and medium businesses, freelancers, and professionals who need fast, professional paperwork on any device.
