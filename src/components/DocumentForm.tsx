@@ -489,7 +489,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
             <form onKeyDown={handleFormKeyDown}>
                 <Tabs value={currentTab} onValueChange={handleTabChangeAttempt} className="w-full">
                      <div className="px-6">
-                      <div className="overflow-x-auto">
+                      <div className="overflow-x-auto pb-2">
                         <TabsList className="w-full justify-start">
                             {WORK_ORDER_TABS_CONFIG.map(tab => (
                                 <TabsTrigger key={tab.id} value={tab.id} className="whitespace-nowrap">
