@@ -95,49 +95,22 @@ export const WorkOrderPreview = (data: FormData) => {
       <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
         <div className="border p-3 sm:p-4 rounded-md shadow-sm">
           <h3 className="text-md sm:text-lg font-semibold text-primary mb-2">Order Details</h3>
-          <div className="overflow-x-auto">
-            <Table className="min-w-full">
-              <TableBody>
-                <TableRow>
-                  <TableCell className="font-medium py-1 px-2 text-xs sm:text-sm min-w-[120px]">Order Number:</TableCell>
-                  <TableCell className="py-1 px-2 text-xs sm:text-sm">{data.orderNumber || ''}</TableCell>
-                  <TableCell className="font-medium py-1 px-2 text-xs sm:text-sm min-w-[120px]">Order Date:</TableCell>
-                  <TableCell className="py-1 px-2 text-xs sm:text-sm">{formatDate(data.orderDate)}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium py-1 px-2 text-xs sm:text-sm min-w-[120px]">Expected Start Date:</TableCell>
-                  <TableCell className="py-1 px-2 text-xs sm:text-sm">{formatDate(data.expectedStartDate)}</TableCell>
-                  <TableCell className="font-medium py-1 px-2 text-xs sm:text-sm min-w-[120px]">Expected End Date:</TableCell>
-                  <TableCell className="py-1 px-2 text-xs sm:text-sm">{formatDate(data.expectedEndDate)}</TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-xs sm:text-sm">
+            <div className="flex"><strong className="w-1/2 sm:w-2/5">Order Number:</strong><span className="flex-1">{data.orderNumber || ''}</span></div>
+            <div className="flex"><strong className="w-1/2 sm:w-2/5">Order Date:</strong><span className="flex-1">{formatDate(data.orderDate)}</span></div>
+            <div className="flex"><strong className="w-1/2 sm:w-2/5">Start Date:</strong><span className="flex-1">{formatDate(data.expectedStartDate)}</span></div>
+            <div className="flex"><strong className="w-1/2 sm:w-2/5">End Date:</strong><span className="flex-1">{formatDate(data.expectedEndDate)}</span></div>
           </div>
         </div>
 
         <div className="border p-3 sm:p-4 rounded-md shadow-sm">
           <h3 className="text-md sm:text-lg font-semibold text-primary mb-2">Client Details</h3>
-          <div className="overflow-x-auto">
-            <Table className="min-w-full">
-              <TableBody>
-                <TableRow>
-                  <TableCell className="font-medium py-1 px-2 text-xs sm:text-sm min-w-[120px]">Client Name:</TableCell>
-                  <TableCell className="py-1 px-2 text-xs sm:text-sm">{data.clientName || 'N/A'}</TableCell>
-                  <TableCell className="font-medium py-1 px-2 text-xs sm:text-sm min-w-[120px]">Client Phone:</TableCell>
-                  <TableCell className="py-1 px-2 text-xs sm:text-sm">{data.clientPhone || 'N/A'}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium py-1 px-2 text-xs sm:text-sm min-w-[120px]">Client Email:</TableCell>
-                  <TableCell className="py-1 px-2 text-xs sm:text-sm">{data.clientEmail || 'N/A'}</TableCell>
-                  <TableCell className="font-medium py-1 px-2 text-xs sm:text-sm min-w-[120px]">Order Received By:</TableCell>
-                  <TableCell className="py-1 px-2 text-xs sm:text-sm">{data.orderReceivedBy || 'N/A'}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium py-1 px-2 text-xs sm:text-sm align-top min-w-[120px]">Work Location:</TableCell>
-                  <TableCell colSpan={3} className="whitespace-pre-wrap py-1 px-2 text-xs sm:text-sm">{data.workLocation || 'N/A'}</TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-xs sm:text-sm">
+            <div className="flex"><strong className="w-1/2 sm:w-2/5">Client Name:</strong><span className="flex-1">{data.clientName || 'N/A'}</span></div>
+            <div className="flex"><strong className="w-1/2 sm:w-2/5">Client Phone:</strong><span className="flex-1">{data.clientPhone || 'N/A'}</span></div>
+            <div className="flex"><strong className="w-1/2 sm:w-2/5">Client Email:</strong><span className="flex-1">{data.clientEmail || 'N/A'}</span></div>
+            <div className="flex"><strong className="w-1/2 sm:w-2/5">Received By:</strong><span className="flex-1">{data.orderReceivedBy || 'N/A'}</span></div>
+            <div className="flex sm:col-span-2"><strong className="w-1/2 sm:w-[20%]">Work Location:</strong><span className="flex-1 whitespace-pre-wrap">{data.workLocation || 'N/A'}</span></div>
           </div>
         </div>
 
@@ -149,7 +122,7 @@ export const WorkOrderPreview = (data: FormData) => {
         )}
 
         {data.includeWorkDescriptionTable && workItems.length > 0 && (
-          <div className="border p-3 sm:p-4 rounded-md shadow-sm">
+          <div className="border p-3 sm:p-4 rounded-md shadow-sm overflow-x-auto">
             <h3 className="text-md sm:text-lg font-semibold text-primary mb-2 sm:mb-3">Detailed Work Items</h3>
             <Table>
               <TableHeader>
@@ -187,7 +160,7 @@ export const WorkOrderPreview = (data: FormData) => {
         )}
 
         {data.includeMaterialTable && materialItems.length > 0 && (
-          <div className="border p-3 sm:p-4 rounded-md shadow-sm">
+          <div className="border p-3 sm:p-4 rounded-md shadow-sm overflow-x-auto">
             <h3 className="text-md sm:text-lg font-semibold text-primary mb-2 sm:mb-3">Materials Used</h3>
             <Table>
               <TableHeader>
@@ -227,7 +200,7 @@ export const WorkOrderPreview = (data: FormData) => {
         )}
 
         {data.includeLaborTable && laborItems.length > 0 && (
-          <div className="border p-3 sm:p-4 rounded-md shadow-sm">
+          <div className="border p-3 sm:p-4 rounded-md shadow-sm overflow-x-auto">
             <h3 className="text-md sm:text-lg font-semibold text-primary mb-2 sm:mb-3">Labor Charges</h3>
             <Table>
               <TableHeader>
