@@ -1,7 +1,8 @@
 
 import Link from 'next/link';
-import { Building2, MessageSquare, Twitter, Dribbble, Linkedin, Globe } from 'lucide-react';
+import { MessageSquare, Twitter, Dribbble, Linkedin, Globe } from 'lucide-react';
 import { Button } from './ui/button';
+import Image from 'next/image';
 
 export function Footer() {
   return (
@@ -10,8 +11,15 @@ export function Footer() {
         <div className="flex flex-col md:flex-row justify-between items-start gap-8">
           {/* Left Column */}
           <div className="space-y-4">
-            <Link href="/" className="flex items-center gap-2 text-xl font-semibold text-primary hover:opacity-80 transition-opacity">
-              <Building2 className="h-7 w-7 text-accent" />
+             <Link href="/" className="flex items-center gap-2 text-xl font-semibold text-primary hover:opacity-80 transition-opacity">
+               <Image 
+                src="https://placehold.co/100x100/748DA6/white?text=D&font=sans" 
+                alt="Draftify Logo" 
+                width={28} 
+                height={28}
+                data-ai-hint="logo icon"
+                className="rounded-md"
+              />
               <span>Draftify</span>
             </Link>
             <p className="text-lg font-semibold text-foreground max-w-xs">

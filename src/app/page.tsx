@@ -23,11 +23,11 @@ export default function HomePage() {
         <section className="text-left py-8">
           <Image 
             src="/doc-illustration.svg"
-            alt="Document Icon"
+            alt="Draftify document icon"
             width={100}
             height={100}
             className="mb-6"
-            data-ai-hint="folder icon"
+            data-ai-hint="document illustration"
           />
           <h1 className="text-4xl font-bold tracking-tight text-primary mb-4">Welcome to Draftify</h1>
           <p className="text-lg text-foreground/80 max-w-2xl">
