@@ -13,17 +13,17 @@ export function Footer() {
           <div className="space-y-4">
              <Link href="/" className="flex items-center gap-2 text-xl font-semibold text-primary hover:opacity-80 transition-opacity">
                <Image 
-                src="https://placehold.co/100x100/748DA6/white?text=D&font=sans" 
+                src="/doc-illustration.svg"
                 alt="Draftify Logo" 
-                width={28} 
-                height={28}
+                width={40} 
+                height={40}
                 data-ai-hint="logo icon"
                 className="rounded-md"
               />
               <span>Draftify</span>
             </Link>
             <p className="text-lg font-semibold text-foreground max-w-xs">
-              Have a project idea to build?
+              Need custom solution for your business?
             </p>
             <Button asChild>
               <a href="mailto:hey@ayaz.me">
