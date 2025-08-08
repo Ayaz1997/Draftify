@@ -13,30 +13,30 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'My Biz Docs - Your Business Documentation Tool',
-  description: 'Create professional documents like work orders, letterheads, and invoices with ease.',
+  title: 'Draftify - Your Business Documentation Tool',
+  description: 'Professional paperwork, made playful.',
   manifest: "/manifest.json",
    themeColor: [
     { media: "(prefers-color-scheme: light)", color: "white" },
     { media: "(prefers-color-scheme: dark)", color: "black" },
   ],
   openGraph: {
-    title: 'My Biz Docs - Your Business Documentation Tool',
-    description: 'Create professional documents like work orders, letterheads, and invoices with ease.',
+    title: 'Draftify - Your Business Documentation Tool',
+    description: 'Professional paperwork, made playful.',
     images: [
       {
         url: 'https://my-business-doc.vercel.app/mbd-og-img.jpg', // Updated image URL
         width: 1200,
         height: 630,
-        alt: 'My Biz Docs - Document Creation Tool',
+        alt: 'Draftify - Document Creation Tool',
       },
     ],
     type: 'website',
   },
   twitter: { // Optional: Add Twitter specific card metadata
     card: 'summary_large_image',
-    title: 'My Biz Docs - Your Business Documentation Tool',
-    description: 'Create professional documents like work orders, letterheads, and invoices with ease.',
+    title: 'Draftify - Your Business Documentation Tool',
+    description: 'Professional paperwork, made playful.',
     images: ['https://my-business-doc.vercel.app/mbd-og-img.jpg'], // Updated image URL
   },
 };

@@ -29,9 +29,9 @@ export default function HomePage() {
             className="mb-6"
             data-ai-hint="folder icon"
           />
-          <h1 className="text-4xl font-bold tracking-tight text-primary mb-4">Welcome to My Biz Docs</h1>
+          <h1 className="text-4xl font-bold tracking-tight text-primary mb-4">Welcome to Draftify</h1>
           <p className="text-lg text-foreground/80 max-w-2xl">
-            Easily create professional documents from our selection of templates. <br /> Fill in the details, preview, and you're ready to go!
+            Professional paperwork, made playful.
           </p>
         </section>
 

@@ -12,7 +12,7 @@ export function Footer() {
           <div className="space-y-4">
             <Link href="/" className="flex items-center gap-2 text-xl font-semibold text-primary hover:opacity-80 transition-opacity">
               <Building2 className="h-7 w-7 text-accent" />
-              <span>My Biz Docs</span>
+              <span>Draftify</span>
             </Link>
             <p className="text-lg font-semibold text-foreground max-w-xs">
               Have a project idea to build?

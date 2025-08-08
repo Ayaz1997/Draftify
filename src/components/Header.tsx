@@ -8,7 +8,7 @@ export function Header() {
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 text-xl font-semibold text-primary hover:opacity-80 transition-opacity">
           <Building2 className="h-7 w-7 text-accent" /> {/* Changed icon */}
-          <span>My Biz Docs</span> {/* Changed text */}
+          <span>Draftify</span> {/* Changed text */}
         </Link>
         {/* Future navigation items can go here */}
       </div>
