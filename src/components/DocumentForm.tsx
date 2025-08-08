@@ -489,8 +489,8 @@ export function DocumentForm({ template }: DocumentFormProps) {
             <form onKeyDown={handleFormKeyDown}>
                 <Tabs value={currentTab} onValueChange={handleTabChangeAttempt} className="w-full">
                      <div className="px-6">
-                      <div className="overflow-x-auto pb-2">
-                        <TabsList className="w-full justify-start">
+                      <div className="overflow-x-auto pb-2 -mx-6 px-6">
+                        <TabsList>
                             {WORK_ORDER_TABS_CONFIG.map(tab => (
                                 <TabsTrigger key={tab.id} value={tab.id} className="whitespace-nowrap">
                                     {tab.title}
@@ -552,9 +552,20 @@ export function DocumentForm({ template }: DocumentFormProps) {
                     <Button type="button" variant="outline" onClick={handlePrevious} disabled={currentTabIndex === 0}>
                         Previous
                     </Button>
-                     <Button type="button" variant="default" onClick={handleNext} disabled={currentTabIndex === WORK_ORDER_TABS_CONFIG.length - 1}>
-                        Next
-                    </Button>
+                     {currentTabIndex === WORK_ORDER_TABS_CONFIG.length - 1 ? (
+                        <Button 
+                            type="button" 
+                            variant="default" 
+                            onClick={form.handleSubmit(onSubmit)}
+                        >
+                            <Eye className="mr-2 h-4 w-4" />
+                            Preview Document
+                        </Button>
+                    ) : (
+                        <Button type="button" variant="default" onClick={handleNext}>
+                            Next
+                        </Button>
+                    )}
                 </CardFooter>
             </form>
         </Card>
@@ -594,5 +605,3 @@ export function DocumentForm({ template }: DocumentFormProps) {
     </Card>
   );
 }
-
-    
