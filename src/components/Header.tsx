@@ -27,10 +27,10 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2 pr-2">
-          <Button variant="ghost" asChild>
+          <Button variant="ghost" asChild className="rounded-full">
             <Link href="#">Create an account</Link>
           </Button>
-          <Button asChild>
+          <Button asChild className="rounded-full">
             <Link href="/dashboard">Try App</Link>
           </Button>
         </div>
