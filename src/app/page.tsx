@@ -30,7 +30,7 @@ export default function LandingPage() {
               Professional paperwork, made playful.
             </p>
             <div className="mt-10 flex justify-center">
-              <Button asChild size="lg" className="text-lg">
+              <Button asChild size="lg" className="text-lg rounded-full">
                 <Link href="/dashboard">
                   Try the App <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
@@ -40,7 +40,7 @@ export default function LandingPage() {
         </section>
 
         {/* How It Works Section */}
-        <section className="w-full py-16 bg-muted/50 rounded-lg">
+        <section className="w-full py-16 bg-muted/50 rounded-2xl">
           <div className="max-w-5xl mx-auto">
             <h2 className="text-3xl font-bold text-foreground mb-12">How It Works in 3 Easy Steps</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -107,7 +107,7 @@ export default function LandingPage() {
                     Stop wrestling with word processors. Start creating beautiful documents today.
                 </p>
                 <div className="mt-8">
-                    <Button asChild size="lg" className="text-lg">
+                    <Button asChild size="lg" className="text-lg rounded-full">
                         <Link href="/dashboard">
                         Create Your First Document <ArrowRight className="ml-2 h-5 w-5" />
                         </Link>
