@@ -33,7 +33,7 @@ export default function LandingPage() {
               <Button asChild size="lg" className="text-lg rounded-full">
                 <Link href="/dashboard">
                   <Sparkles className="mr-2 h-5 w-5" />
-                  Try the App <ArrowRight className="ml-2 h-5 w-5" />
+                  Try the App
                 </Link>
               </Button>
             </div>
