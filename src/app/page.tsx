@@ -1,7 +1,6 @@
-
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, FileText, MousePointerClick, Download, CheckCircle, PencilRuler, Bot, Sparkles } from 'lucide-react';
+import { ArrowRight, FileText, MousePointerClick, Download, CheckCircle, PencilRuler, Bot, Sparkles, Handshake } from 'lucide-react';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -33,7 +32,7 @@ export default function LandingPage() {
               <Button asChild size="lg" className="text-lg rounded-full">
                 <Link href="/dashboard">
                   <Sparkles className="mr-2 h-5 w-5" />
-                  Try the App
+                  Try App
                 </Link>
               </Button>
             </div>
@@ -43,7 +42,7 @@ export default function LandingPage() {
         {/* How It Works Section */}
         <section className="w-full py-16 bg-muted/50 rounded-2xl">
           <div className="max-w-5xl mx-auto">
-            <h2 className="text-3xl font-bold text-foreground mb-12">How It Works in 3 Easy Steps</h2>
+            <h2 className="text-3xl font-bold text-foreground mb-12">Create Documents in 3 Easy Steps</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="flex flex-col items-center p-6">
                 <FileText className="h-16 w-16 text-primary mb-4" />
@@ -103,14 +102,14 @@ export default function LandingPage() {
         {/* Final CTA Section */}
         <section className="w-full py-16">
             <div className="max-w-3xl mx-auto">
-                <h2 className="text-3xl font-bold text-foreground">Ready to Get Started?</h2>
+                <h2 className="text-3xl font-bold text-foreground">Customize to your business requirements!</h2>
                 <p className="mt-4 text-lg text-muted-foreground">
                     Stop wrestling with word processors. Start creating beautiful documents today.
                 </p>
                 <div className="mt-8">
                     <Button asChild size="lg" className="text-lg rounded-full">
-                        <Link href="/dashboard">
-                        Create Your First Document <ArrowRight className="ml-2 h-5 w-5" />
+                        <Link href="mailto:hey@ayaz.me">
+                        <Handshake className="ml-2 h-5 w-5" /> Contact for Business Enquiries
                         </Link>
                     </Button>
                 </div>
