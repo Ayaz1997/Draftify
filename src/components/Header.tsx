@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 
 export function Header() {
   return (
-    <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[95vw] max-w-7xl">
+    <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-5xl">
       <div className="w-full bg-background/60 backdrop-blur-lg border rounded-full shadow-lg p-2 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 text-xl font-semibold text-primary hover:opacity-80 transition-opacity pl-4">
           <Image 
