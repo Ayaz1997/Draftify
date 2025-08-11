@@ -30,7 +30,7 @@ export default function TemplatePage({ params }: TemplatePageProps) {
         <h1 className="text-2xl font-semibold mb-2">Template Not Found</h1>
         <p className="text-muted-foreground mb-6">The template you are looking for does not exist or has been moved.</p>
         <Button asChild variant="outline">
-          <Link href="/">
+          <Link href="/dashboard">
             <ArrowLeft className="mr-2 h-4 w-4" /> Go Back to Templates
           </Link>
         </Button>

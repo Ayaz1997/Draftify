@@ -6,7 +6,7 @@ export function Header() {
   return (
     <header>
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 text-xl font-semibold text-primary hover:opacity-80 transition-opacity">
+        <Link href="/dashboard" className="flex items-center gap-2 text-xl font-semibold text-primary hover:opacity-80 transition-opacity">
           <Image 
             src="/doc-illustration.svg"
             alt="Draftify Logo" 

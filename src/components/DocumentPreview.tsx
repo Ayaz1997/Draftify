@@ -147,7 +147,7 @@ export function DocumentPreview({ templateInfo }: DocumentPreviewProps) {
         <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
         <h1 className="text-2xl font-semibold mb-2">Preview Error</h1>
         <p className="text-muted-foreground mb-6">Could not load the preview for this document type.</p>
-        <Button variant="outline" onClick={() => router.push('/')}>Go to Templates</Button>
+        <Button variant="outline" onClick={() => router.push('/dashboard')}>Go to Templates</Button>
       </div>
     );
   }
