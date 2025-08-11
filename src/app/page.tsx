@@ -1,7 +1,7 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, FileText, MousePointerSquare, Download, CheckCircle, PencilRuler, Bot } from 'lucide-react';
+import { ArrowRight, FileText, MousePointerClick, Download, CheckCircle, PencilRuler, Bot } from 'lucide-react';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -50,7 +50,7 @@ export default function LandingPage() {
                 <p className="text-muted-foreground">Choose from a variety of professionally designed business document templates.</p>
               </div>
               <div className="flex flex-col items-center p-6">
-                <MousePointerSquare className="h-16 w-16 text-primary mb-4" />
+                <MousePointerClick className="h-16 w-16 text-primary mb-4" />
                 <h3 className="text-xl font-semibold mb-2">2. Fill in the Details</h3>
                 <p className="text-muted-foreground">Enter your information into a simple, guided form with a live preview.</p>
               </div>
