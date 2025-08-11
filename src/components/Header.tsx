@@ -1,23 +1,39 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { Button } from '@/components/ui/button';
 
 export function Header() {
   return (
-    <header>
-      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <Link href="/dashboard" className="flex items-center gap-2 text-xl font-semibold text-primary hover:opacity-80 transition-opacity">
+    <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[95vw] max-w-7xl">
+      <div className="w-full bg-background/60 backdrop-blur-lg border rounded-full shadow-lg p-2 flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-2 text-xl font-semibold text-primary hover:opacity-80 transition-opacity pl-4">
           <Image 
             src="/doc-illustration.svg"
             alt="Draftify Logo" 
-            width={40} 
-            height={40}
+            width={32} 
+            height={32}
             data-ai-hint="logo icon"
             className="rounded-md"
           />
-          <span>Draftify</span>
+          <span className="hidden sm:inline-block">Draftify</span>
         </Link>
-        {/* Future navigation items can go here */}
+        
+        <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-foreground/80">
+          <Link href="/" className="hover:text-primary transition-colors">Home</Link>
+          <Link href="#" className="hover:text-primary transition-colors">Pricing</Link>
+          <Link href="#" className="hover:text-primary transition-colors">About Us</Link>
+          <Link href="#" className="hover:text-primary transition-colors">Resources</Link>
+        </nav>
+
+        <div className="flex items-center gap-2 pr-2">
+          <Button variant="ghost" asChild>
+            <Link href="#">Create an account</Link>
+          </Button>
+          <Button asChild>
+            <Link href="/dashboard">Try App</Link>
+          </Button>
+        </div>
       </div>
     </header>
   );

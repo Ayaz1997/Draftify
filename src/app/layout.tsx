@@ -53,7 +53,7 @@ export default function RootLayout({
         suppressHydrationWarning={true}
       >
         <Header />
-        <main className="flex-grow container mx-auto px-4 py-8 pb-32 lg:pb-16">
+        <main className="flex-grow container mx-auto px-4 py-8 pt-28 pb-32 lg:pb-16">
           {children}
         </main>
         <Footer />
