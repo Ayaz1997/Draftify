@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import { Sparkles } from 'lucide-react';
 
 export function Header() {
   return (
@@ -31,7 +32,10 @@ export function Header() {
             <Link href="#">Create an account</Link>
           </Button>
           <Button asChild className="rounded-full">
-            <Link href="/dashboard">Try App</Link>
+            <Link href="/dashboard">
+              <Sparkles className="mr-2 h-4 w-4" />
+              Try App
+            </Link>
           </Button>
         </div>
       </div>

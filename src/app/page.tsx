@@ -1,7 +1,7 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, FileText, MousePointerClick, Download, CheckCircle, PencilRuler, Bot } from 'lucide-react';
+import { ArrowRight, FileText, MousePointerClick, Download, CheckCircle, PencilRuler, Bot, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -32,6 +32,7 @@ export default function LandingPage() {
             <div className="mt-10 flex justify-center">
               <Button asChild size="lg" className="text-lg rounded-full">
                 <Link href="/dashboard">
+                  <Sparkles className="mr-2 h-5 w-5" />
                   Try the App <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
