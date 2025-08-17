@@ -246,14 +246,14 @@ export default function LandingPage() {
         
         {/* Final CTA Section */}
         <section className="w-full max-w-6xl mx-auto py-16 px-4">
-          <div className="bg-gradient-to-r from-orange-500 to-yellow-400 rounded-3xl p-12 text-center text-white">
-            <h2 className="text-4xl font-bold mb-4">Let AI take the busywork off your team's plate</h2>
+          <div className="bg-gradient-to-r from-blue-600 to-blue-400 rounded-3xl p-12 text-center text-white">
+            <h2 className="text-4xl font-bold mb-4">Stop wrestling with word processors. Start creating beautiful documents today.</h2>
             <p className="max-w-2xl mx-auto mb-8">
-              From dispatching and documents to messages and reports, automate the tasks your team shouldn’t be doing manually.
+              Customize to your business requirements!
             </p>
             <Button asChild size="lg" variant="outline" className="bg-white text-primary hover:bg-gray-100 rounded-full">
               <Link href="/dashboard">
-                Build My Site <ArrowRight className="ml-2 h-4 w-4" />
+                Let's connect <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </div>
@@ -263,3 +263,5 @@ export default function LandingPage() {
     </div>
   );
 }
+
+    
