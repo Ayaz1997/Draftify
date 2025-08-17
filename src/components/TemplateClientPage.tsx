@@ -3,7 +3,7 @@
 
 import type { Template, DocumentFormPropsTemplate, FormData } from '@/types';
 import { DocumentForm } from '@/components/DocumentForm';
-import { Printer, Eye } from 'lucide-react';
+import { Printer, Eye, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -96,6 +96,9 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
   useEffect(() => {
     const editDataKey = `docuFormEditData-${templateData.id}`;
     const storedEditDataString = sessionStorage.getItem(editDataKey);
+    const localDataKey = `docuFormData-${templateData.id}`;
+    const storedLocalDataString = localStorage.getItem(localDataKey);
+
 
     let initialValues: Record<string, any> = {};
 
@@ -105,9 +108,14 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
         sessionStorage.removeItem(editDataKey); // CRUCIAL: Clear after loading to prevent re-use
       } catch (e) {
         console.error('Failed to parse edit data from session storage:', e);
-        // Fallback to default values if parsing fails
       }
-    } 
+    } else if (storedLocalDataString) {
+       try {
+        initialValues = JSON.parse(storedLocalDataString);
+      } catch (e) {
+        console.error('Failed to parse data from local storage:', e);
+      }
+    }
     
     // If initialValues is still empty (no edit data or failed parse), set defaults
     if (Object.keys(initialValues).length === 0 && template) {
@@ -147,6 +155,68 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
     methods.reset(initialValues);
 
   }, [templateData.id, methods, template]);
+  
+  const processAndSaveData = async (data: Record<string, any>, storage: 'sessionStorage' | 'localStorage') => {
+    const fileFields = template?.fields.filter(f => f.type === 'file') || [];
+    const submissionValues = { ...data };
+
+    for (const field of fileFields) {
+        const fileValue = data[field.id];
+        if (fileValue && fileValue instanceof File) {
+            try {
+                const dataUri = await new Promise<string>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (event) => resolve(event.target?.result as string);
+                    reader.onerror = (error) => reject(error);
+                    reader.readAsDataURL(fileValue);
+                });
+                submissionValues[field.id] = dataUri;
+            } catch (error) {
+                console.error(`Error processing file for ${field.id}:`, error);
+                toast({
+                    variant: "destructive",
+                    title: "File Read Error",
+                    description: `Could not read the file for ${field.label}.`,
+                });
+                submissionValues[field.id] = null; // Or keep original if you want to retry
+                return null;
+            }
+        } else if (typeof fileValue === 'string' && fileValue.startsWith('data:image')) {
+            submissionValues[field.id] = fileValue;
+        } else if (!fileValue) {
+            submissionValues[field.id] = null;
+        }
+    }
+    
+    try {
+        if (typeof window !== 'undefined') {
+            const storageKey = storage === 'localStorage' ? `docuFormData-${templateData.id}` : `docuFormPreviewData-${templateData.id}`;
+            window[storage].setItem(storageKey, JSON.stringify(submissionValues));
+            return submissionValues;
+        }
+    } catch (e: any) {
+        console.error(`Error saving to ${storage}:`, e);
+        toast({
+            variant: "destructive",
+            title: `Error Saving Data`,
+            description: e.message || `Could not save data to ${storage}.`,
+        });
+        return null;
+    }
+    return null;
+  };
+
+  const handleSave = async () => {
+    const currentData = methods.getValues();
+    const savedData = await processAndSaveData(currentData, 'localStorage');
+    if (savedData) {
+        toast({
+            title: "Data Saved!",
+            description: "Your document details have been saved to this browser.",
+            variant: "default",
+        });
+    }
+  };
 
   const handlePrint = () => {
     toast({
@@ -173,50 +243,14 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
   };
 
   const onSubmit = async (values: Record<string, any>) => {
-    const fileFields = template?.fields.filter(f => f.type === 'file') || [];
-    const submissionValues = { ...values };
-
-    for (const field of fileFields) {
-        const fileValue = values[field.id];
-        if (fileValue && fileValue instanceof File) {
-            try {
-                const dataUri = await new Promise<string>((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = (event) => resolve(event.target?.result as string);
-                    reader.onerror = (error) => reject(error);
-                    reader.readAsDataURL(fileValue);
-                });
-                submissionValues[field.id] = dataUri;
-            } catch (error) {
-                console.error(`Error processing file for ${field.id}:`, error);
-                toast({
-                    variant: "destructive",
-                    title: "File Read Error",
-                    description: `Could not read the file for ${field.label}.`,
-                });
-                submissionValues[field.id] = null;
-            }
-        } else if (typeof fileValue === 'string' && fileValue.startsWith('data:image')) {
-            submissionValues[field.id] = fileValue;
-        } else {
-            submissionValues[field.id] = null;
-        }
-    }
-
-    try {
-        if (typeof window !== 'undefined' && window.sessionStorage) {
-            const dataKey = `docuFormPreviewData-${templateData.id}`;
-            sessionStorage.setItem(dataKey, JSON.stringify(submissionValues));
-            router.push(`/templates/${templateData.id}/preview`);
-        } else {
-            throw new Error('Session storage is not available.');
-        }
-    } catch (e: any) {
-        console.error('Error saving to session storage or navigating:', e);
+    const dataForPreview = await processAndSaveData(values, 'sessionStorage');
+    if (dataForPreview) {
+        router.push(`/templates/${templateData.id}/preview`);
+    } else {
         toast({
             variant: "destructive",
             title: "Error Proceeding to Preview",
-            description: e.message || "Could not save data for preview.",
+            description: "Could not prepare data for the preview page.",
         });
     }
   };
@@ -252,9 +286,14 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
             <div className="bg-muted/50 border rounded-lg p-4">
               <div className="flex justify-between items-center mb-4">
                   <h2 className="text-xl font-semibold text-primary">Live Preview</h2>
-                  <Button variant="outline" size="sm" onClick={handlePrint} type="button">
-                      <Printer className="mr-2 h-4 w-4" /> Print / Save PDF
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={handleSave} type="button">
+                        <Save className="mr-2 h-4 w-4" /> Save
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={handlePrint} type="button">
+                        <Printer className="mr-2 h-4 w-4" /> Print / Save PDF
+                    </Button>
+                  </div>
               </div>
               <div
                   id="live-preview-area"
@@ -276,3 +315,5 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
     </FormProvider>
   );
 }
+
+    
