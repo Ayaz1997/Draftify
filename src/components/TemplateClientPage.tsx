@@ -3,7 +3,7 @@
 
 import type { Template, DocumentFormPropsTemplate, FormData } from '@/types';
 import { DocumentForm } from '@/components/DocumentForm';
-import { Printer } from 'lucide-react';
+import { Printer, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -239,11 +239,14 @@ router.push(`/templates/${templateData.id}/preview`);
 
 
         {/* Mobile-only Preview Button */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-background border-t z-50">
-          <Button className="w-full" onClick={methods.handleSubmit(handleMobilePreview)}>
-            Preview Document
-          </Button>
-        </div>
+        {template.id !== 'work-order' && (
+          <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-background border-t z-50">
+            <Button className="w-full" onClick={methods.handleSubmit(handleMobilePreview)}>
+              <Eye className="mr-2 h-4 w-4" />
+              Preview Document
+            </Button>
+          </div>
+        )}
       </div>
     </FormProvider>
   );

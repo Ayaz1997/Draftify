@@ -486,11 +486,11 @@ export function DocumentForm({ template }: DocumentFormProps) {
             <CardHeader>
                 <CardTitle className="text-lg font-medium">Fill in the details for your {template.name}</CardTitle>
             </CardHeader>
-            <form onKeyDown={handleFormKeyDown}>
+            <form onKeyDown={handleFormKeyDown} onSubmit={(e) => e.preventDefault()}>
                 <Tabs value={currentTab} onValueChange={handleTabChangeAttempt} className="w-full">
-                     <div className="px-6">
+                     <div className="relative px-6">
                       <div className="overflow-x-auto pb-2 -mx-6 px-6">
-                        <TabsList>
+                        <TabsList className="inline-flex">
                             {WORK_ORDER_TABS_CONFIG.map(tab => (
                                 <TabsTrigger key={tab.id} value={tab.id} className="whitespace-nowrap">
                                     {tab.title}
@@ -529,26 +529,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
                     ))}
                 </Tabs>
 
-                <CardFooter className="flex justify-between border-t pt-6 mt-4 px-6 lg:hidden">
-                    <Button type="button" variant="outline" onClick={handlePrevious} disabled={currentTabIndex === 0}>
-                        Previous
-                    </Button>
-                    {currentTabIndex === WORK_ORDER_TABS_CONFIG.length - 1 ? (
-                        <Button 
-                            type="button" 
-                            variant="default" 
-                            onClick={form.handleSubmit(onSubmit)}
-                        >
-                            <Eye className="mr-2 h-4 w-4" />
-                            Preview Document
-                        </Button>
-                    ) : (
-                        <Button type="button" variant="default" onClick={handleNext}>
-                            Next
-                        </Button>
-                    )}
-                </CardFooter>
-                 <CardFooter className="hidden lg:flex justify-between border-t pt-6 mt-4 px-6">
+                 <CardFooter className="flex justify-between border-t pt-6 mt-4 px-6">
                     <Button type="button" variant="outline" onClick={handlePrevious} disabled={currentTabIndex === 0}>
                         Previous
                     </Button>
