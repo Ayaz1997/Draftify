@@ -245,29 +245,21 @@ export default function LandingPage() {
         </section>
         
         {/* Final CTA Section */}
-        <section className="w-full py-16">
-            <div className="max-w-3xl mx-auto text-center">
-                <h2 className="text-3xl font-bold text-foreground">Customize to your business requirements!</h2>
-                <p className="mt-4 text-lg text-muted-foreground">
-                    Stop wrestling with word processors. Start creating beautiful documents today.
-                </p>
-                <div className="mt-8">
-                    <Button asChild size="lg" className="text-lg rounded-full">
-                        <Link href="mailto:hey@ayaz.me">
-                        <Handshake className="ml-2 h-5 w-5" /> Contact for Business Enquiries
-                        </Link>
-                    </Button>
-                </div>
-            </div>
+        <section className="w-full max-w-6xl mx-auto py-16 px-4">
+          <div className="bg-gradient-to-r from-orange-500 to-yellow-400 rounded-3xl p-12 text-center text-white">
+            <h2 className="text-4xl font-bold mb-4">Let AI take the busywork off your team's plate</h2>
+            <p className="max-w-2xl mx-auto mb-8">
+              From dispatching and documents to messages and reports, automate the tasks your team shouldn’t be doing manually.
+            </p>
+            <Button asChild size="lg" variant="outline" className="bg-white text-primary hover:bg-gray-100 rounded-full">
+              <Link href="/dashboard">
+                Build My Site <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
         </section>
 
       </main>
     </div>
   );
 }
-
-    
-
-    
-
-    
