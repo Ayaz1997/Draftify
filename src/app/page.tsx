@@ -10,18 +10,8 @@ export default function LandingPage() {
       <main className="flex-1 flex flex-col items-center px-4 sm:px-6 lg:px-8">
         
         {/* Hero Section */}
-        <section className="w-full py-20 lg:py-32">
-          <div className="max-w-4xl mx-auto">
-            <div className="mb-8">
-                <Image 
-                  src="/doc-illustration.svg"
-                  alt="Draftify document icon"
-                  width={120}
-                  height={120}
-                  className="mx-auto"
-                  data-ai-hint="document illustration"
-                />
-            </div>
+        <section className="w-full py-20 lg:py-24">
+          <div className="max-w-5xl mx-auto">
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-primary tracking-tight">
               Welcome to Draftify
             </h1>
@@ -35,6 +25,16 @@ export default function LandingPage() {
                   Try App
                 </Link>
               </Button>
+            </div>
+            <div className="mt-16">
+              <Image 
+                src="https://placehold.co/1200x800.png" 
+                alt="Draftify application screenshot"
+                width={1200}
+                height={800}
+                className="rounded-xl shadow-2xl ring-1 ring-black/10"
+                data-ai-hint="app screenshot"
+              />
             </div>
           </div>
         </section>
