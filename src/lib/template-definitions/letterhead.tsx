@@ -17,7 +17,7 @@ const formatDate = (dateString?: string) => {
 };
 
 export const LetterheadPreview = (data: FormData) => (
-  <Card className="w-full max-w-3xl mx-auto shadow-lg p-6 sm:p-8 print-friendly-letterhead" data-ai-hint="stationery paper">
+  <Card className="w-full max-w-3xl mx-auto p-6 sm:p-8 print-friendly-letterhead" data-ai-hint="stationery paper">
     <header className="flex justify-between items-center mb-10 sm:mb-12 border-b-2 border-primary pb-4 sm:pb-6">
       <div className="text-left">
         <h1 className="text-3xl sm:text-4xl font-bold text-primary">{data.companyName || 'Your Company Name'}</h1>

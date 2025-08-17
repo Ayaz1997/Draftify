@@ -93,22 +93,19 @@ export function DocumentPreview({ templateInfo }: DocumentPreviewProps) {
         top: 0;
         width: 100%;
         margin: 0;
-        padding: 20px !important; /* Ensure consistent padding for print */
+        padding: 0 !important;
         box-shadow: none !important;
         border: none !important;
-        overflow: visible !important; /* Allow content to expand for print */
+        overflow: visible !important;
       }
-      .printable-area .max-w-4xl { /* Override max-width for print if needed */
+      .printable-area .w-full.max-w-4xl, .printable-area .print-friendly-letterhead {
         max-width: none !important;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
       }
       .no-print {
         display: none !important;
-      }
-      .print-friendly-letterhead {
-        border: none !important;
-        box-shadow: none !important;
-        padding: 0 !important; 
-        max-width: 100% !important; 
       }
       .print-friendly-letterhead header, .print-friendly-letterhead footer {
          border-color: #ccc !important; 
