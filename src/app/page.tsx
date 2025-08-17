@@ -183,10 +183,12 @@ export default function LandingPage() {
               {/* Starter Plan */}
               <div className="bg-white rounded-3xl shadow-2xl p-6 flex flex-col h-full text-left">
                 <div className="flex-grow">
-                  <div className="bg-gray-100 rounded-full px-4 py-1 text-sm font-semibold inline-block mb-6">Starter</div>
-                  <div className="mb-6">
-                    <span className="text-5xl font-bold">$0</span>
-                    <span className="text-muted-foreground text-lg">/month</span>
+                  <div className="bg-gray-100 rounded-2xl p-6 mb-6">
+                    <div className="bg-gray-200 rounded-full px-4 py-1 text-sm font-semibold inline-block mb-6">Starter</div>
+                    <div className="mb-6">
+                      <span className="text-5xl font-bold">$0</span>
+                      <span className="text-muted-foreground text-lg">/month</span>
+                    </div>
                   </div>
                   <p className="text-muted-foreground mb-8">Perfect for Small Teams</p>
                   <Button className="w-full bg-black text-white hover:bg-gray-800 rounded-full text-lg py-6">Start Building</Button>
@@ -201,8 +203,8 @@ export default function LandingPage() {
               {/* Professional Plan */}
               <div className="bg-white rounded-3xl shadow-2xl p-6 flex flex-col h-full border-2 border-primary text-left">
                 <div className="flex-grow">
-                  <div className="bg-primary text-primary-foreground rounded-full px-4 py-1 text-sm font-semibold inline-block mb-6">PROFESSIONAL</div>
-                   <div className="rounded-2xl bg-gradient-to-br from-blue-50 via-white to-blue-100 p-6 mb-6">
+                  <div className="rounded-2xl bg-gradient-to-br from-blue-50 via-white to-blue-100 p-6 mb-6">
+                    <div className="bg-primary text-primary-foreground rounded-full px-4 py-1 text-sm font-semibold inline-block mb-6">PROFESSIONAL</div>
                     <span className="text-5xl font-bold">$99</span>
                     <span className="text-muted-foreground text-lg">/month</span>
                   </div>
@@ -220,10 +222,12 @@ export default function LandingPage() {
               {/* Enterprise Plan */}
               <div className="bg-white rounded-3xl shadow-2xl p-6 flex flex-col h-full text-left">
                 <div className="flex-grow">
-                  <div className="bg-gray-100 rounded-full px-4 py-1 text-sm font-semibold inline-block mb-6">ENTERPRISE</div>
-                  <div className="mb-6">
-                    <span className="text-5xl font-bold">Custom</span>
-                  </div>
+                    <div className="bg-gray-100 rounded-2xl p-6 mb-6">
+                        <div className="bg-gray-200 rounded-full px-4 py-1 text-sm font-semibold inline-block mb-6">ENTERPRISE</div>
+                        <div className="mb-6">
+                            <span className="text-5xl font-bold">Custom</span>
+                        </div>
+                    </div>
                   <p className="text-muted-foreground mb-8">For Large Organizations</p>
                   <Button className="w-full bg-black text-white hover:bg-gray-800 rounded-full text-lg py-6">Contact us</Button>
                    <ul className="mt-8 space-y-4 text-left">
