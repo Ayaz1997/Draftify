@@ -102,14 +102,17 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
     if (storedEditDataString) {
       try {
         initialValues = JSON.parse(storedEditDataString);
-        sessionStorage.removeItem(editDataKey); // Clear after loading
+        sessionStorage.removeItem(editDataKey); // CRUCIAL: Clear after loading to prevent re-use
       } catch (e) {
         console.error('Failed to parse edit data from session storage:', e);
+        // Fallback to default values if parsing fails
       }
-    } else if (template) {
-        // Initialize with default values if no edit data is found
+    } 
+    
+    // If initialValues is still empty (no edit data or failed parse), set defaults
+    if (Object.keys(initialValues).length === 0 && template) {
         template.fields.forEach(field => {
-            if (field.id.includes('.')) return; // Don't process nested definitions here
+            if (field.id.includes('.')) return;
             
             if (field.type === 'date') {
                 initialValues[field.id] = field.defaultValue && typeof field.defaultValue === 'string' && field.defaultValue.match(/^\d{4}-\d{2}-\d{2}$/)
@@ -121,26 +124,23 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
             } else if (field.type === 'number') {
                 initialValues[field.id] = undefined;
             } else if (field.type === 'file') {
-                initialValues[field.id] = null; // Default file to null
-            }
-             else {
+                initialValues[field.id] = null;
+            } else {
                 initialValues[field.id] = '';
             }
         });
         
-        // Specific client-side default for dynamic order number
         if (templateData.id === 'work-order' && !initialValues['orderNumber']) {
           initialValues['orderNumber'] = `WO-${Date.now().toString().slice(-6)}`;
         }
         
-        // Initialize field arrays
         if (template.id === 'work-order') {
-            initialValues['workItems'] = [{ description: '', area: '', rate: '' }];
-            initialValues['materials'] = [{ name: '', quantity: '', unit: 'Pcs', pricePerUnit: '' }];
-            initialValues['labor'] = [{ teamName: '', numPersons: '', amount: '' }];
+            initialValues['workItems'] = initialValues['workItems'] || [{ description: '', area: '', rate: '' }];
+            initialValues['materials'] = initialValues['materials'] || [{ name: '', quantity: '', unit: 'Pcs', pricePerUnit: '' }];
+            initialValues['labor'] = initialValues['labor'] || [{ teamName: '', numPersons: '', amount: '' }];
         }
         if (template.id === 'invoice' || template.id === 'claim-invoice') {
-             initialValues['items'] = [{ description: '', unit: 'pcs', quantity: '', unitCost: '', claimPercentage: template.id === 'claim-invoice' ? '' : undefined }];
+             initialValues['items'] = initialValues['items'] || [{ description: '', unit: 'pcs', quantity: '', unitCost: '', claimPercentage: template.id === 'claim-invoice' ? '' : undefined }];
         }
     }
 
@@ -154,16 +154,20 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
       description: "Use your browser's print functionality to save as PDF.",
       variant: "default",
     });
-    // This uses a trick to print only the preview area.
-    // A print-specific stylesheet could also be used.
     const previewElement = document.getElementById('live-preview-area');
     if (previewElement) {
       const printContents = previewElement.innerHTML;
       const originalContents = document.body.innerHTML;
-      document.body.innerHTML = printContents;
+      const printStyles = `<style>
+        @media print {
+          body { margin: 0; padding: 0; }
+          .printable-area, .printable-area * { visibility: visible; }
+          .printable-area { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
+        }
+      </style>`;
+      document.body.innerHTML = printStyles + printContents;
       window.print();
       document.body.innerHTML = originalContents;
-      // We might need to re-initialize some things after this, but for now it's simple.
       window.location.reload(); 
     }
   };
@@ -190,13 +194,12 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
                     title: "File Read Error",
                     description: `Could not read the file for ${field.label}.`,
                 });
-                submissionValues[field.id] = null; // Reset on error
+                submissionValues[field.id] = null;
             }
         } else if (typeof fileValue === 'string' && fileValue.startsWith('data:image')) {
-            // Keep existing data URI if no new file is selected
             submissionValues[field.id] = fileValue;
         } else {
-            submissionValues[field.id] = null; // No file or invalid
+            submissionValues[field.id] = null;
         }
     }
 
@@ -219,7 +222,6 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
   };
   
   if (!template) {
-    // This can happen briefly while the component is mounting
     return <div>Loading template...</div>;
   }
 
@@ -235,8 +237,7 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
     <FormProvider {...methods}>
      <form onSubmit={methods.handleSubmit(onSubmit)}>
       <div className="grid lg:grid-cols-2 gap-8 items-start">
-        {/* Left Column: Form */}
-        <Card className="w-full shadow-lg">
+        <Card className="w-full">
           <div className="p-6 space-y-6">
              <div className="text-center lg:text-left">
               <TemplateIcon className="h-12 w-12 text-accent mx-auto lg:mx-0 mb-3" />
@@ -247,7 +248,6 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
           </div>
         </Card>
 
-        {/* Right Column: Live Preview */}
         <div className="hidden lg:block sticky top-24">
             <div className="bg-muted/50 border rounded-lg p-4">
               <div className="flex justify-between items-center mb-4">
@@ -265,8 +265,6 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
             </div>
         </div>
 
-
-        {/* Mobile-only Preview Button */}
         <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-background border-t z-50">
            <Button className="w-full" type="submit">
               <Eye className="mr-2 h-4 w-4" />

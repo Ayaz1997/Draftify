@@ -62,7 +62,7 @@ export function DocumentPreview({ templateInfo }: DocumentPreviewProps) {
           description: "Could not prepare data for editing. Please try again.",
         });
       }
-    } else if (!formData) {
+    } else {
          toast({
           variant: "destructive",
           title: "No Data",
@@ -100,6 +100,8 @@ export function DocumentPreview({ templateInfo }: DocumentPreviewProps) {
         overflow: visible !important;
       }
       .printable-area [data-ai-hint~="document"],
+      .printable-area [data-ai-hint~="invoice"],
+      .printable-area [data-ai-hint~="stationery"],
       .printable-area .print-friendly-letterhead {
         max-width: none !important;
         box-shadow: none !important;
@@ -185,7 +187,6 @@ export function DocumentPreview({ templateInfo }: DocumentPreviewProps) {
       </Card>
       
       <div className="printable-area p-2 sm:p-4 overflow-x-auto">
-        {/* The preview component itself may have a max-width, which is fine. The overflow-x-auto handles if its content is wider. */}
         {fullTemplate.previewLayout(formData)}
       </div>
 
