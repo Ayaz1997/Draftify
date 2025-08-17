@@ -40,12 +40,12 @@ export default function LandingPage() {
         </section>
 
         {/* How It Works Section */}
-        <section className="w-full py-16 bg-muted/50 rounded-2xl">
+        <section className="w-full py-16">
           <div className="max-w-5xl mx-auto px-4">
             <h2 className="text-3xl font-bold text-foreground mb-12">Create Documents in 3 Easy Steps</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <Card className="bg-background rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-                <CardContent className="p-6 flex flex-col items-center">
+                <CardContent className="p-4 flex flex-col items-center">
                   <Image 
                     src="https://placehold.co/500x300.png" 
                     alt="Illustration for selecting a template"
@@ -59,7 +59,7 @@ export default function LandingPage() {
                 </CardContent>
               </Card>
               <Card className="bg-background rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-                <CardContent className="p-6 flex flex-col items-center">
+                <CardContent className="p-4 flex flex-col items-center">
                    <Image 
                     src="https://placehold.co/500x300.png" 
                     alt="Illustration for filling in details"
@@ -73,7 +73,7 @@ export default function LandingPage() {
                 </CardContent>
               </Card>
               <Card className="bg-background rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-                <CardContent className="p-6 flex flex-col items-center">
+                <CardContent className="p-4 flex flex-col items-center">
                    <Image 
                     src="https://placehold.co/500x300.png" 
                     alt="Illustration for downloading a document"
