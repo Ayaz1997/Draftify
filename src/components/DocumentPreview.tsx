@@ -99,7 +99,8 @@ export function DocumentPreview({ templateInfo }: DocumentPreviewProps) {
         border: none !important;
         overflow: visible !important;
       }
-      .printable-area [data-ai-hint~="document"] {
+      .printable-area [data-ai-hint~="document"],
+      .printable-area .print-friendly-letterhead {
         max-width: none !important;
         box-shadow: none !important;
         border: none !important;

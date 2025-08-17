@@ -189,22 +189,8 @@ export function DocumentForm({ template }: DocumentFormProps) {
   const currentTabIndex = WORK_ORDER_TABS_CONFIG.findIndex(tab => tab.id === currentTab);
 
   const onSubmit = form.handleSubmit(async (values: Record<string, any>) => {
-    try {
-        if (typeof window !== 'undefined' && window.sessionStorage) {
-            const dataKey = `docuFormPreviewData-${template.id}`;
-            sessionStorage.setItem(dataKey, JSON.stringify(values));
-            router.push(`/templates/${template.id}/preview`);
-        } else {
-            throw new Error('Session storage is not available.');
-        }
-    } catch (e: any) {
-        console.error('Error saving to session storage or navigating:', e);
-        toast({
-            variant: "destructive",
-            title: "Error Proceeding to Preview",
-            description: e.message || "Could not save data for preview.",
-        });
-    }
+    // Note: The actual submission logic including file handling is now in TemplateClientPage
+    // This function is here to be attached to the button, but the parent's onSubmit will be called.
   });
 
 
@@ -236,15 +222,19 @@ export function DocumentForm({ template }: DocumentFormProps) {
         return <Input type="email" placeholder={field.placeholder} {...rest} value={value || ''} />;
       }
       case 'file': {
-        const { onChange, ...fileProps } = rest;
+        const { onChange, value: fileValue, ...fileProps } = rest;
         return (
-          <Input
-            type="file"
-            accept="image/*"
-            onChange={(e) => onChange(e.target.files)}
-            {...fileProps}
-            className="pt-2"
-          />
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                if (e.target.files && e.target.files.length > 0) {
+                  onChange(e.target.files[0]); // Pass the File object
+                }
+              }}
+              {...fileProps}
+              className="pt-2"
+            />
         );
       }
       case 'boolean': {
@@ -301,25 +291,21 @@ export function DocumentForm({ template }: DocumentFormProps) {
   const renderFormField = (field?: TemplateField) => {
     if (!field) return null;
 
-    // For file inputs that hold a data URI string, we need to inform react-hook-form not to treat it as a File object on re-render.
-    // The `value` is managed, but we don't pass it down to the native input element.
     if (field.type === 'file') {
       return (
         <FormField
           key={field.id}
           control={form.control}
           name={field.id}
-          render={({ field: { value, onChange, onBlur, ref } }) => (
+          render={({ field: { value, onChange, ...rest } }) => (
             <FormItem>
               <FormLabel className="font-semibold text-foreground/90">{field.label}</FormLabel>
               <FormControl>
                 <Input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => onChange(e.target.files)}
-                  onBlur={onBlur}
-                  name={field.id}
-                  ref={ref}
+                  onChange={(e) => onChange(e.target.files?.[0] ?? null)}
+                  {...rest}
                   className="pt-2"
                 />
               </FormControl>
@@ -453,14 +439,14 @@ export function DocumentForm({ template }: DocumentFormProps) {
       const includeLaborField = template.fields.find(f => f.id === 'includeLaborTable');
 
     return (
-        <Card className="shadow-lg">
-            <CardHeader>
+        <Card className="shadow-none border-0">
+            <CardHeader className="p-0 mb-4">
                 <CardTitle className="text-lg font-medium">Fill in the details for your {template.name}</CardTitle>
             </CardHeader>
             <form onKeyDown={handleFormKeyDown} onSubmit={(e) => e.preventDefault()}>
                 <Tabs value={currentTab} onValueChange={handleTabChangeAttempt} className="w-full">
-                     <div className="relative px-6">
-                      <div className="overflow-x-auto pb-2 -mx-6 px-6">
+                     <div className="relative px-0">
+                      <div className="overflow-x-auto pb-2 -mx-0 px-0">
                         <TabsList className="inline-flex">
                             {WORK_ORDER_TABS_CONFIG.map(tab => (
                                 <TabsTrigger key={tab.id} value={tab.id} className="whitespace-nowrap">
@@ -473,7 +459,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
 
                     {WORK_ORDER_TABS_CONFIG.map(tabInfo => (
                         <TabsContent key={tabInfo.id} value={tabInfo.id} className="focus-visible:ring-0 focus-visible:ring-offset-0">
-                            <CardContent className="space-y-6 px-6 pb-6 pt-4">
+                            <CardContent className="space-y-6 px-1 pb-6 pt-4">
                                 {tabInfo.id === 'workOrderSpecifics' ? (
                                     <div className="space-y-6">
                                         {workOrderSpecificFields.slice(0, 2).map(field => renderFormField(field))}
@@ -500,7 +486,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
                     ))}
                 </Tabs>
 
-                 <CardFooter className="flex justify-between border-t pt-6 mt-4 px-6">
+                 <CardFooter className="flex justify-between border-t pt-6 mt-4 px-1">
                     <Button type="button" variant="outline" onClick={handlePrevious} disabled={currentTabIndex === 0}>
                         Previous
                     </Button>
@@ -524,34 +510,20 @@ export function DocumentForm({ template }: DocumentFormProps) {
     );
   }
 
-  if (template.id === 'invoice' || template.id === 'claim-invoice' || template.id === 'letterhead') {
-    const includeItemsField = template.fields.find(f => f.id === 'includeItemsTable');
-    return (
-      <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-lg font-medium">Fill in the details for your {template.name}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {template.fields.filter(f => !f.id.startsWith('item') && f.id !== 'includeItemsTable').map((field) => renderFormField(field))}
-          
-          {includeItemsField && renderFormField(includeItemsField)}
-          {(template.id === 'invoice' || template.id === 'claim-invoice') && (
-            <InvoiceItemsSection form={form} template={template} />
-          )}
-
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Default form for other templates (fallback)
+  // Fallback for non-tabbed forms
   return (
-    <Card className="shadow-lg">
-      <CardHeader>
+    <Card className="shadow-none border-0">
+      <CardHeader className="p-0 mb-4">
         <CardTitle className="text-lg font-medium">Fill in the details for your {template.name}</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {template.fields.map((field) => renderFormField(field))}
+      <CardContent className="space-y-6 p-1">
+        {template.fields.filter(f => !f.id.startsWith('item') && f.id !== 'includeItemsTable').map((field) => renderFormField(field))}
+        
+        {template.id !== 'letterhead' && template.fields.find(f => f.id === 'includeItemsTable') && renderFormField(template.fields.find(f => f.id === 'includeItemsTable'))}
+        {(template.id === 'invoice' || template.id === 'claim-invoice') && (
+          <InvoiceItemsSection form={form} template={template} />
+        )}
+
       </CardContent>
     </Card>
   );

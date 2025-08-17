@@ -12,6 +12,8 @@ import { useMemo, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
 import { templates } from '@/lib/templates'; // Import templates for client-side lookup
+import { Card } from '@/components/ui/card';
+
 
 interface TemplateClientPageProps {
   templateData: DocumentFormPropsTemplate & {
@@ -34,7 +36,7 @@ const createFormSchema = (template?: Template) => {
             case 'date': validator = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'Date must be YYYY-MM-DD' }); break;
             case 'textarea': validator = z.string(); break;
             case 'boolean': validator = z.boolean().default(field.defaultValue === true); break;
-            case 'file': validator = z.any(); break;
+            case 'file': validator = z.any(); break; // Allow any type for file, can be File object or string
             case 'select':
                 if (field.options && field.options.length > 0) {
                     const enumValues = field.options.map(opt => opt.value) as [string, ...string[]];
@@ -48,7 +50,7 @@ const createFormSchema = (template?: Template) => {
 
         if (!field.required) {
             if (field.type === 'number') validator = validator.optional().nullable();
-            else if (field.type === 'boolean' || field.type === 'file') validator = validator.optional();
+            else if (field.type === 'boolean') validator = validator.optional();
             else validator = validator.optional().or(z.literal(''));
         }
         shape[field.id] = validator;
@@ -118,7 +120,10 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
                 initialValues[field.id] = false;
             } else if (field.type === 'number') {
                 initialValues[field.id] = undefined;
-            } else {
+            } else if (field.type === 'file') {
+                initialValues[field.id] = null; // Default file to null
+            }
+             else {
                 initialValues[field.id] = '';
             }
         });
@@ -168,15 +173,14 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
     const submissionValues = { ...values };
 
     for (const field of fileFields) {
-        const fileList = values[field.id];
-        if (fileList && fileList instanceof FileList && fileList.length > 0) {
-            const file = fileList[0];
+        const fileValue = values[field.id];
+        if (fileValue && fileValue instanceof File) {
             try {
                 const dataUri = await new Promise<string>((resolve, reject) => {
                     const reader = new FileReader();
                     reader.onload = (event) => resolve(event.target?.result as string);
                     reader.onerror = (error) => reject(error);
-                    reader.readAsDataURL(file);
+                    reader.readAsDataURL(fileValue);
                 });
                 submissionValues[field.id] = dataUri;
             } catch (error) {
@@ -186,13 +190,13 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
                     title: "File Read Error",
                     description: `Could not read the file for ${field.label}.`,
                 });
-                submissionValues[field.id] = ''; // Reset on error
+                submissionValues[field.id] = null; // Reset on error
             }
-        } else if (typeof values[field.id] === 'string' && values[field.id].startsWith('data:image')) {
+        } else if (typeof fileValue === 'string' && fileValue.startsWith('data:image')) {
             // Keep existing data URI if no new file is selected
-            submissionValues[field.id] = values[field.id];
+            submissionValues[field.id] = fileValue;
         } else {
-            submissionValues[field.id] = ''; // No file or invalid
+            submissionValues[field.id] = null; // No file or invalid
         }
     }
 
@@ -229,23 +233,26 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
 
   return (
     <FormProvider {...methods}>
+     <form onSubmit={methods.handleSubmit(onSubmit)}>
       <div className="grid lg:grid-cols-2 gap-8 items-start">
         {/* Left Column: Form */}
-        <div className="w-full">
-          <div className="mb-8 text-center lg:text-left">
-            <TemplateIcon className="h-12 w-12 text-accent mx-auto lg:mx-0 mb-3" />
-            <h1 className="text-3xl font-bold text-primary">{template.name}</h1>
-            <p className="text-md text-foreground/70 mt-1">{template.description}</p>
+        <Card className="w-full shadow-lg">
+          <div className="p-6 space-y-6">
+             <div className="text-center lg:text-left">
+              <TemplateIcon className="h-12 w-12 text-accent mx-auto lg:mx-0 mb-3" />
+              <h1 className="text-3xl font-bold text-primary">{template.name}</h1>
+              <p className="text-md text-foreground/70 mt-1">{template.description}</p>
+            </div>
+            <DocumentForm template={templateDataForForm} />
           </div>
-          <DocumentForm template={templateDataForForm} />
-        </div>
+        </Card>
 
         {/* Right Column: Live Preview */}
         <div className="hidden lg:block sticky top-24">
             <div className="bg-muted/50 border rounded-lg p-4">
               <div className="flex justify-between items-center mb-4">
                   <h2 className="text-xl font-semibold text-primary">Live Preview</h2>
-                  <Button variant="outline" size="sm" onClick={handlePrint}>
+                  <Button variant="outline" size="sm" onClick={handlePrint} type="button">
                       <Printer className="mr-2 h-4 w-4" /> Print / Save PDF
                   </Button>
               </div>
@@ -261,12 +268,13 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
 
         {/* Mobile-only Preview Button */}
         <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-background border-t z-50">
-           <Button className="w-full" onClick={methods.handleSubmit(onSubmit)}>
+           <Button className="w-full" type="submit">
               <Eye className="mr-2 h-4 w-4" />
               Preview Document
             </Button>
         </div>
       </div>
+      </form>
     </FormProvider>
   );
 }
