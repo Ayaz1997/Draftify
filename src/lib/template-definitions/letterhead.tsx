@@ -18,16 +18,20 @@ const formatDate = (dateString?: string) => {
 
 export const LetterheadPreview = (data: FormData) => (
   <Card className="w-full max-w-3xl mx-auto shadow-lg p-6 sm:p-8 print-friendly-letterhead" data-ai-hint="stationery paper">
-    <header className="mb-10 sm:mb-12 text-center border-b-2 border-primary pb-4 sm:pb-6">
-      {data.logoUrl && typeof data.logoUrl === 'string' && data.logoUrl.startsWith('data:image') ? (
-        <Image src={data.logoUrl} alt="Company Logo" width={150} height={75} className="mx-auto mb-4 object-contain" data-ai-hint="company brand"/>
-      ) : data.logoUrl && typeof data.logoUrl === 'string' ? (
-         <Image src={data.logoUrl} alt="Company Logo (External)" width={150} height={75} className="mx-auto mb-4 object-contain" data-ai-hint="company brand"/>
-      ) : (
-        <div className="h-16 w-32 bg-muted mx-auto mb-4 flex items-center justify-center text-muted-foreground rounded text-xs p-1">Logo Placeholder</div>
-      )}
-      <h1 className="text-3xl sm:text-4xl font-bold text-primary">{data.companyName || 'Your Company Name'}</h1>
-      <p className="text-muted-foreground text-sm sm:text-base mt-1">{data.companySlogan || 'Your Company Slogan/Tagline'}</p>
+    <header className="flex justify-between items-center mb-10 sm:mb-12 border-b-2 border-primary pb-4 sm:pb-6">
+      <div className="text-left">
+        <h1 className="text-3xl sm:text-4xl font-bold text-primary">{data.companyName || 'Your Company Name'}</h1>
+        <p className="text-muted-foreground text-sm sm:text-base mt-1">{data.companySlogan || 'Your Company Slogan/Tagline'}</p>
+      </div>
+      <div className="w-[150px] h-[75px] flex-shrink-0 flex items-center justify-end">
+        {data.logoUrl && typeof data.logoUrl === 'string' && data.logoUrl.startsWith('data:image') ? (
+          <Image src={data.logoUrl} alt="Company Logo" width={150} height={75} className="object-contain" data-ai-hint="company brand"/>
+        ) : data.logoUrl && typeof data.logoUrl === 'string' ? (
+          <Image src={data.logoUrl} alt="Company Logo (External)" width={150} height={75} className="object-contain" data-ai-hint="company brand"/>
+        ) : (
+          <div className="h-16 w-32 bg-muted flex items-center justify-center text-muted-foreground rounded text-xs p-1">Logo Placeholder</div>
+        )}
+      </div>
     </header>
 
     <section className="mb-6 sm:mb-8 text-sm sm:text-base">
