@@ -1,7 +1,7 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, FileText, MousePointerClick, Download, CheckCircle, PencilRuler, Bot, Sparkles, Handshake, Palette, Zap, Share2 } from 'lucide-react';
+import { ArrowRight, FileText, MousePointerClick, Download, CheckCircle, PencilRuler, Bot, Sparkles, Handshake, Palette, Zap, Share2, Check } from 'lucide-react';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -106,7 +106,7 @@ export default function LandingPage() {
                             className="rounded-xl mb-6"
                             data-ai-hint="template variety"
                         />
-                        <h3 className="text-xl font-semibold mb-2">Professional Templates</h3>
+                        <h3 className="text-xl font-semibold mb-2 text-foreground">Professional Templates</h3>
                         <p className="text-muted-foreground">Access a library of pre-built documents for invoices, work orders, letterheads, and more. Look professional from day one.</p>
                     </div>
 
@@ -120,7 +120,7 @@ export default function LandingPage() {
                             className="rounded-xl mb-6"
                             data-ai-hint="intuitive interface"
                         />
-                        <h3 className="text-xl font-semibold mb-2">Intuitive & Fast</h3>
+                        <h3 className="text-xl font-semibold mb-2 text-foreground">Intuitive & Fast</h3>
                         <p className="text-muted-foreground">Our guided forms and live preview make document creation effortless. No more fighting with word processors.</p>
                     </div>
 
@@ -134,7 +134,7 @@ export default function LandingPage() {
                             className="rounded-xl mb-6"
                             data-ai-hint="ai assistant"
                         />
-                        <h3 className="text-xl font-semibold mb-2">AI-Powered Assistance</h3>
+                        <h3 className="text-xl font-semibold mb-2 text-foreground">AI-Powered Assistance</h3>
                         <p className="text-muted-foreground">Leverage AI to help you write content, generate ideas, and ensure your documents are error-free. (Coming Soon)</p>
                     </div>
 
@@ -148,14 +148,14 @@ export default function LandingPage() {
                             className="rounded-xl mb-6"
                             data-ai-hint="download share"
                         />
-                        <h3 className="text-xl font-semibold mb-2">Instant Download & Share</h3>
+                        <h3 className="text-xl font-semibold mb-2 text-foreground">Instant Download & Share</h3>
                         <p className="text-muted-foreground">Generate a pixel-perfect PDF of your document in seconds. Print it, email it, or share it via your favorite apps.</p>
                     </div>
                     
                     {/* Card 5 (Full Width) */}
                     <div className="md:col-span-2 bg-white p-6 rounded-3xl shadow-xl border-4 border-gray-100 flex flex-col md:flex-row items-center gap-8">
                          <div className="flex-1">
-                            <h3 className="text-xl font-semibold mb-2">Customize to Your Brand</h3>
+                            <h3 className="text-xl font-semibold mb-2 text-foreground">Customize to Your Brand</h3>
                             <p className="text-muted-foreground">Add your company logo, choose your brand colors, and save your business details to create documents that are uniquely yours.</p>
                         </div>
                         <div className="flex-1 w-full">
@@ -171,6 +171,70 @@ export default function LandingPage() {
                     </div>
                 </div>
             </div>
+        </section>
+
+        {/* Pricing Section */}
+        <section className="w-full py-24">
+          <div className="max-w-6xl mx-auto px-4">
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4 text-center">Pricing plans</h2>
+            <p className="text-lg text-muted-foreground mb-12 text-center">Choose the right plan for your needs</p>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+              {/* Starter Plan */}
+              <div className="bg-white rounded-3xl shadow-2xl p-8 flex flex-col h-full">
+                <div className="flex-grow">
+                  <div className="bg-gray-100 rounded-full px-4 py-1 text-sm font-semibold inline-block mb-6">Starter</div>
+                  <div className="mb-6">
+                    <span className="text-5xl font-bold">$0</span>
+                    <span className="text-muted-foreground text-lg">/month</span>
+                  </div>
+                  <p className="text-muted-foreground mb-8">Perfect for Small Teams</p>
+                  <Button className="w-full bg-black text-white hover:bg-gray-800 rounded-full text-lg py-6">Start Hiring</Button>
+                  <ul className="mt-8 space-y-4 text-left">
+                    <li className="flex items-center gap-3"><Check className="text-green-500 h-5 w-5" /><span>3 Projects</span></li>
+                    <li className="flex items-center gap-3"><Check className="text-green-500 h-5 w-5" /><span>AI Application Screening</span></li>
+                    <li className="flex items-center gap-3"><Check className="text-green-500 h-5 w-5" /><span>AI Recruiter</span></li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Professional Plan */}
+              <div className="bg-white rounded-3xl shadow-2xl p-8 flex flex-col h-full border-2 border-primary">
+                <div className="flex-grow">
+                  <div className="bg-gray-100 rounded-full px-4 py-1 text-sm font-semibold inline-block mb-6">PROFESSIONAL</div>
+                  <div className="rounded-2xl bg-gradient-to-br from-blue-200 via-yellow-50 to-orange-200 p-8 mb-6">
+                    <span className="text-5xl font-bold">$99</span>
+                    <span className="text-muted-foreground text-lg">/month</span>
+                  </div>
+                  <p className="text-muted-foreground mb-8">Perfect for Growing Teams</p>
+                  <Button className="w-full bg-black text-white hover:bg-gray-800 rounded-full text-lg py-6">Start Hiring</Button>
+                  <ul className="mt-8 space-y-4 text-left">
+                    <li className="flex items-center gap-3"><Check className="text-green-500 h-5 w-5" /><span>Unlimited Projects</span></li>
+                    <li className="flex items-center gap-3"><Check className="text-green-500 h-5 w-5" /><span>AI Application Screening</span></li>
+                    <li className="flex items-center gap-3"><Check className="text-green-500 h-5 w-5" /><span>AI Recruiter</span></li>
+                    <li className="flex items-center gap-3"><Check className="text-green-500 h-5 w-5" /><span>Risk-Free Guarantee</span></li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Enterprise Plan */}
+              <div className="bg-white rounded-3xl shadow-2xl p-8 flex flex-col h-full">
+                <div className="flex-grow">
+                  <div className="bg-gray-100 rounded-full px-4 py-1 text-sm font-semibold inline-block mb-6">ENTERPRISE</div>
+                  <div className="mb-6">
+                    <span className="text-5xl font-bold">Custom</span>
+                  </div>
+                  <p className="text-muted-foreground mb-8">For Large Organizations</p>
+                  <Button className="w-full bg-black text-white hover:bg-gray-800 rounded-full text-lg py-6">Contact us</Button>
+                   <ul className="mt-8 space-y-4 text-left">
+                    <li className="flex items-center gap-3"><Check className="text-green-500 h-5 w-5" /><span>Unlimited Projects</span></li>
+                    <li className="flex items-center gap-3"><Check className="text-green-500 h-5 w-5" /><span>AI Application Screening</span></li>
+                    <li className="flex items-center gap-3"><Check className="text-green-500 h-5 w-5" /><span>Custom Skill Assessments</span></li>
+                     <li className="flex items-center gap-3"><Check className="text-green-500 h-5 w-5" /><span>AI Application Screening</span></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* Final CTA Section */}
