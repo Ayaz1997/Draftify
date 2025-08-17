@@ -25,7 +25,7 @@ export function Footer() {
               <span>Draftify</span>
             </Link>
             <p className="text-muted-foreground text-sm max-w-xs">
-              AI-powered document template designed to help you launch stunning sites effortlessly and fast.
+              AI-powered document template designed to help you create and manage business documents effortlessly and fast.
             </p>
             <div className="flex items-center gap-4">
               <a href="#" className="text-muted-foreground hover:text-primary transition-colors"><Facebook className="h-5 w-5" /></a>
@@ -42,7 +42,6 @@ export function Footer() {
               <li><Link href="#" className="text-muted-foreground hover:text-primary">Home</Link></li>
               <li><Link href="#" className="text-muted-foreground hover:text-primary">About us</Link></li>
               <li><Link href="#" className="text-muted-foreground hover:text-primary">Pricing</Link></li>
-              <li><Link href="#" className="text-muted-foreground hover:text-primary">Blog</Link></li>
             </ul>
           </div>
 
@@ -63,13 +62,15 @@ export function Footer() {
             <p className="text-muted-foreground mb-4">Get tips, product updates, and insights on working smarter with AI.</p>
             <div className="flex w-full max-w-sm items-center space-x-2">
               <Input type="email" placeholder="Email address" className="rounded-full" />
-              <Button type="submit" className="rounded-full bg-orange-500 hover:bg-orange-600 text-white">Subscribe</Button>
+              <Button type="submit" variant="default" className="rounded-full">Subscribe</Button>
             </div>
           </div>
         </div>
 
         <div className="border-t border-border mt-12 pt-6 flex flex-col md:flex-row justify-between items-center text-sm text-muted-foreground">
-          <p className="mb-4 md:mb-0">© 2025 Draftify. All rights reserved.</p>
+          <p className="mb-4 md:mb-0">
+             © 2025 — Developed and maintained by <a href="https://ayaz.me/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Ayaz</a> at <a href="https://www.runtime.works/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">runtime.works</a>
+          </p>
           <div className="flex items-center gap-6">
             <Link href="#" className="hover:text-primary">Privacy Policy</Link>
             <Link href="#" className="hover:text-primary">Terms of Service</Link>
