@@ -100,7 +100,7 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
     if (storedEditDataString) {
       try {
         initialValues = JSON.parse(storedEditDataString);
-        sessionStorage.removeItem(editDataKey);
+        sessionStorage.removeItem(editDataKey); // Clear after loading
       } catch (e) {
         console.error('Failed to parse edit data from session storage:', e);
       }
@@ -163,23 +163,44 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
     }
   };
 
-  const handleMobilePreview = async () => {
-    const isValid = await methods.trigger();
-    if (!isValid) {
-      toast({
-        variant: "destructive",
-        title: "Validation Error",
-        description: "Please correct the errors before proceeding.",
-      });
-      return;
+  const onSubmit = async (values: Record<string, any>) => {
+    const fileFields = template?.fields.filter(f => f.type === 'file') || [];
+    const submissionValues = { ...values };
+
+    for (const field of fileFields) {
+        const fileList = values[field.id];
+        if (fileList && fileList instanceof FileList && fileList.length > 0) {
+            const file = fileList[0];
+            try {
+                const dataUri = await new Promise<string>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (event) => resolve(event.target?.result as string);
+                    reader.onerror = (error) => reject(error);
+                    reader.readAsDataURL(file);
+                });
+                submissionValues[field.id] = dataUri;
+            } catch (error) {
+                console.error(`Error processing file for ${field.id}:`, error);
+                toast({
+                    variant: "destructive",
+                    title: "File Read Error",
+                    description: `Could not read the file for ${field.label}.`,
+                });
+                submissionValues[field.id] = ''; // Reset on error
+            }
+        } else if (typeof values[field.id] === 'string' && values[field.id].startsWith('data:image')) {
+            // Keep existing data URI if no new file is selected
+            submissionValues[field.id] = values[field.id];
+        } else {
+            submissionValues[field.id] = ''; // No file or invalid
+        }
     }
-    
-    const values = methods.getValues();
-     try {
+
+    try {
         if (typeof window !== 'undefined' && window.sessionStorage) {
             const dataKey = `docuFormPreviewData-${templateData.id}`;
-            sessionStorage.setItem(dataKey, JSON.stringify(values));
-router.push(`/templates/${templateData.id}/preview`);
+            sessionStorage.setItem(dataKey, JSON.stringify(submissionValues));
+            router.push(`/templates/${templateData.id}/preview`);
         } else {
             throw new Error('Session storage is not available.');
         }
@@ -239,14 +260,12 @@ router.push(`/templates/${templateData.id}/preview`);
 
 
         {/* Mobile-only Preview Button */}
-        {template.id !== 'work-order' && (
-          <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-background border-t z-50">
-            <Button className="w-full" onClick={methods.handleSubmit(handleMobilePreview)}>
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-background border-t z-50">
+           <Button className="w-full" onClick={methods.handleSubmit(onSubmit)}>
               <Eye className="mr-2 h-4 w-4" />
               Preview Document
             </Button>
-          </div>
-        )}
+        </div>
       </div>
     </FormProvider>
   );

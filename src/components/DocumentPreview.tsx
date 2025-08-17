@@ -51,7 +51,8 @@ export function DocumentPreview({ templateInfo }: DocumentPreviewProps) {
   const handleEdit = () => {
     if (formData && typeof window !== 'undefined' && window.sessionStorage) {
       try {
-        sessionStorage.setItem(`docuFormEditData-${templateInfo.id}`, JSON.stringify(formData));
+        const editDataKey = `docuFormEditData-${templateInfo.id}`;
+        sessionStorage.setItem(editDataKey, JSON.stringify(formData));
         router.push(`/templates/${templateInfo.id}`); 
       } catch (storageError) {
         console.error("Error saving edit data to session storage:", storageError);
@@ -98,7 +99,7 @@ export function DocumentPreview({ templateInfo }: DocumentPreviewProps) {
         border: none !important;
         overflow: visible !important;
       }
-      .printable-area .w-full.max-w-4xl, .printable-area .print-friendly-letterhead {
+      .printable-area [data-ai-hint~="document"] {
         max-width: none !important;
         box-shadow: none !important;
         border: none !important;

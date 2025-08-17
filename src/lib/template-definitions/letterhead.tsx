@@ -1,7 +1,7 @@
 
 import React from 'react';
 import type { FormData, TemplateField } from '@/types';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import Image from 'next/image';
 
 const formatDate = (dateString?: string) => {
@@ -17,7 +17,7 @@ const formatDate = (dateString?: string) => {
 };
 
 export const LetterheadPreview = (data: FormData) => (
-  <Card className="w-full max-w-3xl mx-auto p-6 sm:p-8 print-friendly-letterhead" data-ai-hint="stationery paper">
+  <Card className="w-full max-w-4xl mx-auto p-6 sm:p-8 print-friendly-letterhead" data-ai-hint="document stationery paper">
     <header className="flex justify-between items-center mb-10 sm:mb-12 border-b-2 border-primary pb-4 sm:pb-6">
       <div className="text-left">
         <h1 className="text-3xl sm:text-4xl font-bold text-primary">{data.companyName || 'Your Company Name'}</h1>
@@ -26,8 +26,6 @@ export const LetterheadPreview = (data: FormData) => (
       <div className="w-[150px] h-[75px] flex-shrink-0 flex items-center justify-end">
         {data.logoUrl && typeof data.logoUrl === 'string' && data.logoUrl.startsWith('data:image') ? (
           <Image src={data.logoUrl} alt="Company Logo" width={150} height={75} className="object-contain" data-ai-hint="company brand"/>
-        ) : data.logoUrl && typeof data.logoUrl === 'string' ? (
-          <Image src={data.logoUrl} alt="Company Logo (External)" width={150} height={75} className="object-contain" data-ai-hint="company brand"/>
         ) : (
           <div className="h-16 w-32 bg-muted flex items-center justify-center text-muted-foreground rounded text-xs p-1">Logo Placeholder</div>
         )}
