@@ -180,7 +180,7 @@ export default function LandingPage() {
             <p className="text-lg text-muted-foreground mb-12 text-center">Choose the right plan for your needs</p>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
               {/* Starter Plan */}
-              <div className="bg-white rounded-3xl shadow-2xl p-8 flex flex-col h-full">
+              <div className="bg-white rounded-3xl shadow-2xl p-6 flex flex-col h-full text-left">
                 <div className="flex-grow">
                   <div className="bg-gray-100 rounded-full px-4 py-1 text-sm font-semibold inline-block mb-6">Starter</div>
                   <div className="mb-6">
@@ -188,7 +188,7 @@ export default function LandingPage() {
                     <span className="text-muted-foreground text-lg">/month</span>
                   </div>
                   <p className="text-muted-foreground mb-8">Perfect for Small Teams</p>
-                  <Button className="w-full bg-black text-white hover:bg-gray-800 rounded-full text-lg py-6">Start Hiring</Button>
+                  <Button className="w-full bg-black text-white hover:bg-gray-800 rounded-full text-lg py-6">Start Building</Button>
                   <ul className="mt-8 space-y-4 text-left">
                     <li className="flex items-center gap-3"><Check className="text-green-500 h-5 w-5" /><span>3 Projects</span></li>
                     <li className="flex items-center gap-3"><Check className="text-green-500 h-5 w-5" /><span>AI Application Screening</span></li>
@@ -198,15 +198,15 @@ export default function LandingPage() {
               </div>
 
               {/* Professional Plan */}
-              <div className="bg-white rounded-3xl shadow-2xl p-8 flex flex-col h-full border-2 border-primary">
+              <div className="bg-white rounded-3xl shadow-2xl p-6 flex flex-col h-full border-2 border-primary text-left">
                 <div className="flex-grow">
                   <div className="bg-gray-100 rounded-full px-4 py-1 text-sm font-semibold inline-block mb-6">PROFESSIONAL</div>
-                  <div className="rounded-2xl bg-gradient-to-br from-blue-200 via-yellow-50 to-orange-200 p-8 mb-6">
+                  <div className="rounded-2xl bg-gradient-to-br from-blue-200 via-yellow-50 to-orange-200 p-6 mb-6">
                     <span className="text-5xl font-bold">$99</span>
                     <span className="text-muted-foreground text-lg">/month</span>
                   </div>
                   <p className="text-muted-foreground mb-8">Perfect for Growing Teams</p>
-                  <Button className="w-full bg-black text-white hover:bg-gray-800 rounded-full text-lg py-6">Start Hiring</Button>
+                  <Button className="w-full bg-black text-white hover:bg-gray-800 rounded-full text-lg py-6">Start Building</Button>
                   <ul className="mt-8 space-y-4 text-left">
                     <li className="flex items-center gap-3"><Check className="text-green-500 h-5 w-5" /><span>Unlimited Projects</span></li>
                     <li className="flex items-center gap-3"><Check className="text-green-500 h-5 w-5" /><span>AI Application Screening</span></li>
@@ -217,7 +217,7 @@ export default function LandingPage() {
               </div>
 
               {/* Enterprise Plan */}
-              <div className="bg-white rounded-3xl shadow-2xl p-8 flex flex-col h-full">
+              <div className="bg-white rounded-3xl shadow-2xl p-6 flex flex-col h-full text-left">
                 <div className="flex-grow">
                   <div className="bg-gray-100 rounded-full px-4 py-1 text-sm font-semibold inline-block mb-6">ENTERPRISE</div>
                   <div className="mb-6">
