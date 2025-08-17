@@ -29,7 +29,7 @@ export default function DashboardPage() {
 
         <section>
           <h2 className="text-2xl font-semibold text-foreground mb-6 pb-2 border-b border-border text-left">Available Templates</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {templates.map((template) => (
               <Card key={template.id} className="flex flex-col hover:shadow-lg transition-shadow duration-300 ease-in-out group">
                 <CardHeader className="pb-4">
