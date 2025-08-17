@@ -179,6 +179,7 @@ export default function LandingPage() {
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4 text-center">Pricing plans</h2>
             <p className="text-lg text-muted-foreground mb-12 text-center">Choose the right plan for your needs</p>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+              
               {/* Starter Plan */}
               <div className="bg-white rounded-3xl shadow-2xl p-6 flex flex-col h-full text-left">
                 <div className="flex-grow">
@@ -200,8 +201,8 @@ export default function LandingPage() {
               {/* Professional Plan */}
               <div className="bg-white rounded-3xl shadow-2xl p-6 flex flex-col h-full border-2 border-primary text-left">
                 <div className="flex-grow">
-                  <div className="bg-gray-100 rounded-full px-4 py-1 text-sm font-semibold inline-block mb-6">PROFESSIONAL</div>
-                  <div className="rounded-2xl bg-gradient-to-br from-blue-200 via-yellow-50 to-orange-200 p-6 mb-6">
+                  <div className="bg-primary text-primary-foreground rounded-full px-4 py-1 text-sm font-semibold inline-block mb-6">PROFESSIONAL</div>
+                   <div className="rounded-2xl bg-gradient-to-br from-blue-50 via-white to-blue-100 p-6 mb-6">
                     <span className="text-5xl font-bold">$99</span>
                     <span className="text-muted-foreground text-lg">/month</span>
                   </div>
@@ -236,7 +237,7 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
-
+        
         {/* Final CTA Section */}
         <section className="w-full py-16">
             <div className="max-w-3xl mx-auto text-center">
@@ -258,3 +259,5 @@ export default function LandingPage() {
     </div>
   );
 }
+
+    
