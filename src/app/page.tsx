@@ -1,17 +1,74 @@
 
+'use client';
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, FileText, MousePointerClick, Download, CheckCircle, PencilRuler, Bot, Sparkles, Handshake, Palette, Zap, Share2, Check } from 'lucide-react';
+import { ArrowRight, Sparkles, Check } from 'lucide-react';
 import Image from 'next/image';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+import { useEffect, useRef, useState } from 'react';
 
 export default function LandingPage() {
+  const sectionsRef = useRef<(HTMLElement | null)[]>([]);
+  const [visibleSections, setVisibleSections] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const index = sectionsRef.current.indexOf(entry.target as HTMLElement);
+            if (index !== -1) {
+              setVisibleSections((prev) => new Set(prev).add(index));
+              observer.unobserve(entry.target);
+            }
+          }
+        });
+      },
+      {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px',
+      }
+    );
+
+    sectionsRef.current.forEach((section) => {
+      if (section) {
+        observer.observe(section);
+      }
+    });
+
+    return () => {
+      sectionsRef.current.forEach((section) => {
+        if (section) {
+          observer.unobserve(section);
+        }
+      });
+    };
+  }, []);
+
+  const isVisible = (index: number) => visibleSections.has(index);
+
   return (
     <div className="flex flex-col min-h-[80vh] items-center text-center">
+       <style jsx>{`
+        .section-hidden {
+          opacity: 0;
+          transform: translateY(20px);
+          transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .section-visible {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      `}</style>
+
       <main className="flex-1 flex flex-col items-center px-4 sm:px-6 lg:px-8">
         
         {/* Hero Section */}
-        <section className="w-full py-20 lg:py-24">
+        <section
+          ref={(el) => (sectionsRef.current[0] = el)}
+          className={`w-full py-20 lg:py-24 section-hidden ${isVisible(0) ? 'section-visible' : ''}`}
+        >
           <div className="max-w-5xl mx-auto">
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-primary tracking-tight">
               Welcome to Draftify
@@ -41,7 +98,10 @@ export default function LandingPage() {
         </section>
 
         {/* How It Works Section */}
-        <section className="w-full py-16">
+        <section
+          ref={(el) => (sectionsRef.current[1] = el)}
+          className={`w-full py-16 section-hidden ${isVisible(1) ? 'section-visible' : ''}`}
+        >
           <div className="max-w-5xl mx-auto px-4">
             <h2 className="text-3xl font-bold text-foreground mb-12 text-center">Create Documents in 3 Easy Steps</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -92,12 +152,15 @@ export default function LandingPage() {
         </section>
 
         {/* Features Section - Bento Grid */}
-        <section className="w-full py-24">
+        <section
+          ref={(el) => (sectionsRef.current[2] = el)}
+          className={`w-full py-24 section-hidden ${isVisible(2) ? 'section-visible' : ''}`}
+        >
             <div className="max-w-5xl mx-auto px-4">
                 <h2 className="text-3xl font-bold text-foreground mb-12 text-center">Why Choose Draftify?</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
                     {/* Card 1 */}
-                    <div className="bg-white p-6 rounded-3xl shadow-xl border-4 border-gray-100 flex flex-col">
+                    <div className="bg-white p-6 rounded-3xl shadow-xl border border-gray-100 flex flex-col">
                         <Image 
                             src="https://placehold.co/600x400.png" 
                             alt="Template Variety" 
@@ -111,7 +174,7 @@ export default function LandingPage() {
                     </div>
 
                     {/* Card 2 */}
-                    <div className="bg-white p-6 rounded-3xl shadow-xl border-4 border-gray-100 flex flex-col">
+                    <div className="bg-white p-6 rounded-3xl shadow-xl border border-gray-100 flex flex-col">
                         <Image 
                             src="https://placehold.co/600x400.png" 
                             alt="Easy to Use" 
@@ -125,7 +188,7 @@ export default function LandingPage() {
                     </div>
 
                     {/* Card 3 */}
-                    <div className="bg-white p-6 rounded-3xl shadow-xl border-4 border-gray-100 flex flex-col">
+                    <div className="bg-white p-6 rounded-3xl shadow-xl border border-gray-100 flex flex-col">
                         <Image 
                             src="https://placehold.co/600x400.png" 
                             alt="AI-Powered Assistance" 
@@ -139,7 +202,7 @@ export default function LandingPage() {
                     </div>
 
                     {/* Card 4 */}
-                    <div className="bg-white p-6 rounded-3xl shadow-xl border-4 border-gray-100 flex flex-col">
+                    <div className="bg-white p-6 rounded-3xl shadow-xl border border-gray-100 flex flex-col">
                         <Image 
                             src="https://placehold.co/600x400.png" 
                             alt="Instant Download & Share" 
@@ -153,7 +216,7 @@ export default function LandingPage() {
                     </div>
                     
                     {/* Card 5 (Full Width) */}
-                    <div className="md:col-span-2 bg-white p-6 rounded-3xl shadow-xl border-4 border-gray-100 flex flex-col md:flex-row items-center gap-8">
+                    <div className="md:col-span-2 bg-white p-6 rounded-3xl shadow-xl border border-gray-100 flex flex-col md:flex-row items-center gap-8">
                          <div className="flex-1">
                             <h3 className="text-xl font-semibold mb-2 text-foreground">Customize to Your Brand</h3>
                             <p className="text-muted-foreground">Add your company logo, choose your brand colors, and save your business details to create documents that are uniquely yours.</p>
@@ -174,7 +237,10 @@ export default function LandingPage() {
         </section>
 
         {/* Pricing Section */}
-        <section className="w-full py-24">
+        <section
+          ref={(el) => (sectionsRef.current[3] = el)}
+          className={`w-full py-24 section-hidden ${isVisible(3) ? 'section-visible' : ''}`}
+        >
           <div className="max-w-6xl mx-auto px-4">
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4 text-center">Pricing plans</h2>
             <p className="text-lg text-muted-foreground mb-12 text-center">Choose the right plan for your needs</p>
@@ -182,16 +248,20 @@ export default function LandingPage() {
               
               {/* Starter Plan */}
               <div className="bg-white rounded-3xl shadow-2xl p-6 flex flex-col h-full text-left">
-                <div className="flex-grow">
-                  <div className="bg-gray-100 rounded-2xl p-6 mb-6">
-                    <div className="bg-gray-200 rounded-full px-4 py-1 text-sm font-semibold inline-block mb-6">Starter</div>
-                    <div className="mb-6">
-                      <span className="text-5xl font-bold">$0</span>
-                      <span className="text-muted-foreground text-lg">/month</span>
+                <div className="flex-grow flex flex-col">
+                    <div className="bg-white p-4 rounded-2xl border shadow-md flex-grow flex flex-col">
+                        <div className="bg-gray-100 rounded-2xl p-6 mb-6">
+                            <div className="bg-gray-200 rounded-full px-4 py-1 text-sm font-semibold inline-block mb-6">Starter</div>
+                            <div className="mb-6">
+                            <span className="text-5xl font-bold">$0</span>
+                            <span className="text-muted-foreground text-lg">/month</span>
+                            </div>
+                        </div>
+                        <p className="text-muted-foreground mb-8">Perfect for Small Teams</p>
+                        <div className="mt-auto">
+                            <Button className="w-full bg-black text-white hover:bg-gray-800 rounded-full text-lg py-6">Start Building</Button>
+                        </div>
                     </div>
-                  </div>
-                  <p className="text-muted-foreground mb-8">Perfect for Small Teams</p>
-                  <Button className="w-full bg-black text-white hover:bg-gray-800 rounded-full text-lg py-6">Start Building</Button>
                 </div>
                 <ul className="mt-8 space-y-4 text-left">
                   <li className="flex items-center gap-3"><Check className="text-green-500 h-5 w-5" /><span>3 Projects</span></li>
@@ -202,16 +272,20 @@ export default function LandingPage() {
 
               {/* Professional Plan */}
               <div className="bg-white rounded-3xl shadow-2xl p-6 flex flex-col h-full border-2 border-primary text-left">
-                <div className="flex-grow">
-                  <div className="rounded-2xl bg-gradient-to-br from-blue-50 via-white to-blue-100 p-6 mb-6">
-                    <div className="bg-primary text-primary-foreground rounded-full px-4 py-1 text-sm font-semibold inline-block mb-6">PROFESSIONAL</div>
-                    <div className="mb-6">
-                      <span className="text-5xl font-bold">$99</span>
-                      <span className="text-muted-foreground text-lg">/month</span>
+                 <div className="flex-grow flex flex-col">
+                    <div className="bg-white p-4 rounded-2xl border shadow-md flex-grow flex flex-col">
+                        <div className="rounded-2xl bg-gradient-to-br from-blue-50 via-white to-blue-100 p-6 mb-6">
+                            <div className="bg-primary text-primary-foreground rounded-full px-4 py-1 text-sm font-semibold inline-block mb-6">PROFESSIONAL</div>
+                            <div className="mb-6">
+                            <span className="text-5xl font-bold">$99</span>
+                            <span className="text-muted-foreground text-lg">/month</span>
+                            </div>
+                        </div>
+                        <p className="text-muted-foreground mb-8">Perfect for Growing Teams</p>
+                        <div className="mt-auto">
+                            <Button className="w-full bg-black text-white hover:bg-gray-800 rounded-full text-lg py-6">Start Building</Button>
+                        </div>
                     </div>
-                  </div>
-                  <p className="text-muted-foreground mb-8">Perfect for Growing Teams</p>
-                  <Button className="w-full bg-black text-white hover:bg-gray-800 rounded-full text-lg py-6">Start Building</Button>
                 </div>
                 <ul className="mt-8 space-y-4 text-left">
                   <li className="flex items-center gap-3"><Check className="text-green-500 h-5 w-5" /><span>Unlimited Projects</span></li>
@@ -223,15 +297,19 @@ export default function LandingPage() {
 
               {/* Enterprise Plan */}
               <div className="bg-white rounded-3xl shadow-2xl p-6 flex flex-col h-full text-left">
-                <div className="flex-grow">
-                  <div className="bg-gray-100 rounded-2xl p-6 mb-6">
-                    <div className="bg-gray-200 rounded-full px-4 py-1 text-sm font-semibold inline-block mb-6">ENTERPRISE</div>
-                    <div className="mb-6">
-                      <span className="text-5xl font-bold">Custom</span>
+                 <div className="flex-grow flex flex-col">
+                    <div className="bg-white p-4 rounded-2xl border shadow-md flex-grow flex flex-col">
+                        <div className="bg-gray-100 rounded-2xl p-6 mb-6">
+                            <div className="bg-gray-200 rounded-full px-4 py-1 text-sm font-semibold inline-block mb-6">ENTERPRISE</div>
+                            <div className="mb-6">
+                            <span className="text-5xl font-bold">Custom</span>
+                            </div>
+                        </div>
+                        <p className="text-muted-foreground mb-8">For Large Organizations</p>
+                        <div className="mt-auto">
+                            <Button className="w-full bg-black text-white hover:bg-gray-800 rounded-full text-lg py-6">Contact us</Button>
+                        </div>
                     </div>
-                  </div>
-                  <p className="text-muted-foreground mb-8">For Large Organizations</p>
-                  <Button className="w-full bg-black text-white hover:bg-gray-800 rounded-full text-lg py-6">Contact us</Button>
                 </div>
                 <ul className="mt-8 space-y-4 text-left">
                   <li className="flex items-center gap-3"><Check className="text-green-500 h-5 w-5" /><span>Unlimited Projects</span></li>
@@ -245,7 +323,10 @@ export default function LandingPage() {
         </section>
         
         {/* Final CTA Section */}
-        <section className="w-full max-w-6xl mx-auto py-16 px-4">
+        <section
+          ref={(el) => (sectionsRef.current[4] = el)}
+          className={`w-full max-w-6xl mx-auto py-16 px-4 section-hidden ${isVisible(4) ? 'section-visible' : ''}`}
+        >
           <div className="bg-gradient-to-r from-blue-600 to-blue-400 rounded-3xl p-12 text-center text-white">
             <h2 className="text-4xl font-bold mb-4">Stop wrestling with word processors. Start creating beautiful documents today.</h2>
             <p className="max-w-2xl mx-auto mb-8">
@@ -263,5 +344,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
-    
