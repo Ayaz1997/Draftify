@@ -34,7 +34,7 @@ export const StandardInvoicePreview = (data: FormData) => {
   const grandTotal = totalCostSum + taxAmount;
   
   return (
-    <Card className="w-full max-w-4xl mx-auto shadow-lg text-sm" data-ai-hint="invoice document">
+    <Card className="w-full max-w-4xl mx-auto text-sm" data-ai-hint="invoice document">
       <CardHeader className="p-4 sm:p-6 bg-muted/30">
         {data.businessLogo && typeof data.businessLogo === 'string' && data.businessLogo.startsWith('data:image') && (
             <div className="flex justify-center mb-4">
@@ -46,7 +46,7 @@ export const StandardInvoicePreview = (data: FormData) => {
             <h1 className="text-2xl sm:text-3xl font-bold text-primary">{data.businessName || 'Your Business Name'}</h1>
             <p className="text-xs sm:text-sm text-foreground/80 whitespace-pre-wrap mt-1">{data.businessAddress || '123 Business St, City, State, PIN'}</p>
             <p className="text-xs text-muted-foreground mt-1">
-              <strong>Contact:</strong> {data.businessContact || 'N/A'} | <strong>Email:</strong> {data.businessEmail || 'N/A'}
+              <strong>Contact:</strong> {data.businessContact || 'N/A'} | <strong>Email:</strong> {data.businessEmail || 'N_A'}
             </p>
             <p className="text-xs text-muted-foreground">
               <strong>GST No:</strong> {data.businessGstNo || 'N/A'}
@@ -65,7 +65,7 @@ export const StandardInvoicePreview = (data: FormData) => {
           <p className="font-bold">{data.clientName || 'Client Name'}</p>
           <p className="whitespace-pre-wrap text-foreground/90">{data.clientAddress || 'Client Address'}</p>
           <p className="text-xs text-muted-foreground mt-1">
-            <strong>Contact:</strong> {data.clientContact || 'N/A'} | <strong>Email:</strong> {data.clientEmail || 'N/A'}
+            <strong>Contact:</strong> {data.clientContact || 'N/A'} | <strong>Email:</strong> {data.clientEmail || 'N_A'}
           </p>
           <p className="text-xs text-muted-foreground">
             <strong>GST No:</strong> {data.clientGstNo || 'N/A'}

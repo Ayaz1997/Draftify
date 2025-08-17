@@ -65,14 +65,14 @@ export const WorkOrderPreview = (data: FormData) => {
 
 
   return (
-    <Card className="w-full max-w-4xl mx-auto shadow-xl">
+    <Card className="w-full max-w-4xl mx-auto">
       <CardHeader className="bg-muted/30 p-4 sm:p-6 rounded-t-lg">
         <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
           <div className="flex-grow">
             <h1 className="text-2xl sm:text-3xl font-bold text-primary">{data.businessName || 'Your Business Name'}</h1>
             <p className="text-xs sm:text-sm text-foreground/80 whitespace-pre-wrap">{data.businessAddress || '123 Business St, City, State, PIN'}</p>
             <p className="text-xs sm:text-sm text-foreground/80">
-              Contact: {data.businessContactNumber || 'N/A'} | Email: {data.businessEmail || 'N/A'}
+              Contact: {data.businessContactNumber || 'N/A'} | Email: {data.businessEmail || 'N_A'}
             </p>
           </div>
            <div className="w-[100px] h-[50px] sm:w-[120px] sm:h-[60px] flex items-center justify-center border rounded bg-gray-50 overflow-hidden self-start sm:self-center">
@@ -108,7 +108,7 @@ export const WorkOrderPreview = (data: FormData) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-xs sm:text-sm">
             <div className="flex"><strong className="w-1/2 sm:w-2/5">Client Name:</strong><span className="flex-1">{data.clientName || 'N/A'}</span></div>
             <div className="flex"><strong className="w-1/2 sm:w-2/5">Client Phone:</strong><span className="flex-1">{data.clientPhone || 'N/A'}</span></div>
-            <div className="flex"><strong className="w-1/2 sm:w-2/5">Client Email:</strong><span className="flex-1">{data.clientEmail || 'N/A'}</span></div>
+            <div className="flex"><strong className="w-1/2 sm:w-2/5">Client Email:</strong><span className="flex-1">{data.clientEmail || 'N_A'}</span></div>
             <div className="flex"><strong className="w-1/2 sm:w-2/5">Received By:</strong><span className="flex-1">{data.orderReceivedBy || 'N/A'}</span></div>
             <div className="flex sm:col-span-2"><strong className="w-1/2 sm:w-[20%]">Work Location:</strong><span className="flex-1 whitespace-pre-wrap">{data.workLocation || 'N/A'}</span></div>
           </div>
