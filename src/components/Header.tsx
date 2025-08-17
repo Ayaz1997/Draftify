@@ -1,10 +1,20 @@
 
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Sparkles } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 
 export function Header() {
+  const pathname = usePathname();
+
+  // Only render the header on the landing page
+  if (pathname !== '/') {
+    return null;
+  }
+
   return (
     <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-5xl">
       <div className="w-full bg-background/60 backdrop-blur-lg border rounded-full shadow-lg p-2 flex items-center justify-between">
