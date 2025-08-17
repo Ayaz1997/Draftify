@@ -92,12 +92,12 @@ export default function LandingPage() {
         </section>
 
         {/* Features Section - Bento Grid */}
-        <section className="w-full py-20">
+        <section className="w-full py-24">
             <div className="max-w-5xl mx-auto px-4">
                 <h2 className="text-3xl font-bold text-foreground mb-12 text-center">Why Choose Draftify?</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
                     {/* Card 1 */}
-                    <div className="bg-white p-8 rounded-3xl shadow-xl border-4 border-gray-100 flex flex-col">
+                    <div className="bg-white p-6 rounded-3xl shadow-xl border-4 border-gray-100 flex flex-col">
                         <Image 
                             src="https://placehold.co/600x400.png" 
                             alt="Template Variety" 
@@ -106,12 +106,12 @@ export default function LandingPage() {
                             className="rounded-xl mb-6"
                             data-ai-hint="template variety"
                         />
-                        <h3 className="text-2xl font-semibold mb-3 text-primary">Professional Templates</h3>
+                        <h3 className="text-xl font-semibold mb-2">Professional Templates</h3>
                         <p className="text-muted-foreground">Access a library of pre-built documents for invoices, work orders, letterheads, and more. Look professional from day one.</p>
                     </div>
 
                     {/* Card 2 */}
-                    <div className="bg-white p-8 rounded-3xl shadow-xl border-4 border-gray-100 flex flex-col">
+                    <div className="bg-white p-6 rounded-3xl shadow-xl border-4 border-gray-100 flex flex-col">
                         <Image 
                             src="https://placehold.co/600x400.png" 
                             alt="Easy to Use" 
@@ -120,12 +120,12 @@ export default function LandingPage() {
                             className="rounded-xl mb-6"
                             data-ai-hint="intuitive interface"
                         />
-                        <h3 className="text-2xl font-semibold mb-3 text-primary">Intuitive & Fast</h3>
+                        <h3 className="text-xl font-semibold mb-2">Intuitive & Fast</h3>
                         <p className="text-muted-foreground">Our guided forms and live preview make document creation effortless. No more fighting with word processors.</p>
                     </div>
 
                     {/* Card 3 */}
-                    <div className="bg-white p-8 rounded-3xl shadow-xl border-4 border-gray-100 flex flex-col">
+                    <div className="bg-white p-6 rounded-3xl shadow-xl border-4 border-gray-100 flex flex-col">
                         <Image 
                             src="https://placehold.co/600x400.png" 
                             alt="AI-Powered Assistance" 
@@ -134,12 +134,12 @@ export default function LandingPage() {
                             className="rounded-xl mb-6"
                             data-ai-hint="ai assistant"
                         />
-                        <h3 className="text-2xl font-semibold mb-3 text-primary">AI-Powered Assistance</h3>
+                        <h3 className="text-xl font-semibold mb-2">AI-Powered Assistance</h3>
                         <p className="text-muted-foreground">Leverage AI to help you write content, generate ideas, and ensure your documents are error-free. (Coming Soon)</p>
                     </div>
 
                     {/* Card 4 */}
-                    <div className="bg-white p-8 rounded-3xl shadow-xl border-4 border-gray-100 flex flex-col">
+                    <div className="bg-white p-6 rounded-3xl shadow-xl border-4 border-gray-100 flex flex-col">
                         <Image 
                             src="https://placehold.co/600x400.png" 
                             alt="Instant Download & Share" 
@@ -148,14 +148,14 @@ export default function LandingPage() {
                             className="rounded-xl mb-6"
                             data-ai-hint="download share"
                         />
-                        <h3 className="text-2xl font-semibold mb-3 text-primary">Instant Download & Share</h3>
+                        <h3 className="text-xl font-semibold mb-2">Instant Download & Share</h3>
                         <p className="text-muted-foreground">Generate a pixel-perfect PDF of your document in seconds. Print it, email it, or share it via your favorite apps.</p>
                     </div>
                     
                     {/* Card 5 (Full Width) */}
-                    <div className="md:col-span-2 bg-white p-8 rounded-3xl shadow-xl border-4 border-gray-100 flex flex-col md:flex-row items-center gap-8">
+                    <div className="md:col-span-2 bg-white p-6 rounded-3xl shadow-xl border-4 border-gray-100 flex flex-col md:flex-row items-center gap-8">
                          <div className="flex-1">
-                            <h3 className="text-2xl font-semibold mb-3 text-primary">Customize to Your Brand</h3>
+                            <h3 className="text-xl font-semibold mb-2">Customize to Your Brand</h3>
                             <p className="text-muted-foreground">Add your company logo, choose your brand colors, and save your business details to create documents that are uniquely yours.</p>
                         </div>
                         <div className="flex-1 w-full">
