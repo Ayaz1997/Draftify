@@ -26,7 +26,6 @@ import { useToast } from "@/hooks/use-toast";
 import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import { Accordion, AccordionItem, AccordionContent } from '@/components/ui/accordion';
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
 
@@ -44,7 +43,7 @@ const workOrderSectionStructure: Record<string, string[]> = {
   ]
 };
 
-const WORK_ORDER_TABS_CONFIG = [
+const WORK_ORDER_SECTIONS_CONFIG = [
   { id: 'businessDetails', title: 'Business Details', fieldIds: workOrderSectionStructure['Business Details'] },
   { id: 'orderDetails', title: 'Order Details', fieldIds: workOrderSectionStructure['Order Details'] },
   { id: 'clientDetails', title: 'Client Details', fieldIds: workOrderSectionStructure['Client Details'] },
@@ -182,14 +181,12 @@ const InvoiceItemsSection = ({ form, template }: { form: any, template: Document
 export function DocumentForm({ template }: DocumentFormProps) {
   const router = useRouter();
   const { toast } = useToast();
-  // We get the form methods from the context provided by the parent page.
   const form = useFormContext(); 
 
-  const [currentTab, setCurrentTab] = useState(WORK_ORDER_TABS_CONFIG[0].id);
-  const currentTabIndex = WORK_ORDER_TABS_CONFIG.findIndex(tab => tab.id === currentTab);
+  const [currentSection, setCurrentSection] = useState(WORK_ORDER_SECTIONS_CONFIG[0].id);
+  const currentSectionIndex = WORK_ORDER_SECTIONS_CONFIG.findIndex(s => s.id === currentSection);
 
   const onSubmit = form.handleSubmit(async (values: Record<string, any>) => {
-    // Note: The actual submission logic including file handling is now in TemplateClientPage
     // This function is here to be attached to the button, but the parent's onSubmit will be called.
   });
 
@@ -335,39 +332,14 @@ export function DocumentForm({ template }: DocumentFormProps) {
     );
   };
 
-  const handleTabChangeAttempt = async (targetTabId: string) => {
-    const targetTabIndex = WORK_ORDER_TABS_CONFIG.findIndex(t => t.id === targetTabId);
-    const currentActiveTabIndex = WORK_ORDER_TABS_CONFIG.findIndex(t => t.id === currentTab);
 
-    if (targetTabIndex > currentActiveTabIndex) {
-        for (let i = currentActiveTabIndex; i < targetTabIndex; i++) {
-            const tabToValidate = WORK_ORDER_TABS_CONFIG[i];
-            const fieldsToValidate = getFieldsForTabValidation(tabToValidate.id);
-            if (fieldsToValidate.length > 0) {
-                const isValid = await form.trigger(fieldsToValidate as any);
-                if (!isValid) {
-                    toast({
-                        title: "Validation Error",
-                        description: `Please correct errors in the "${tabToValidate.title}" tab.`,
-                        variant: "destructive",
-                    });
-                    setCurrentTab(tabToValidate.id);
-                    return;
-                }
-            }
-        }
-    }
-    setCurrentTab(targetTabId);
-  };
+  const getFieldsForSectionValidation = (sectionId: string): (keyof FormData)[] => {
+    const sectionConfig = WORK_ORDER_SECTIONS_CONFIG.find(s => s.id === sectionId);
+    if (!sectionConfig) return [];
 
+    let fields: (keyof FormData)[] = [...(sectionConfig.fieldIds || [])];
 
-  const getFieldsForTabValidation = (tabId: string): (keyof FormData)[] => {
-    const tabConfig = WORK_ORDER_TABS_CONFIG.find(t => t.id === tabId);
-    if (!tabConfig) return [];
-
-    let fields: (keyof FormData)[] = [...(tabConfig.fieldIds || [])];
-
-    if (tabId === 'workOrderSpecifics') {
+    if (sectionId === 'workOrderSpecifics') {
         const dynamicSections = [
             { toggle: 'includeWorkDescriptionTable', arrayName: 'workItems' },
             { toggle: 'includeMaterialTable', arrayName: 'materials' },
@@ -390,111 +362,98 @@ export function DocumentForm({ template }: DocumentFormProps) {
     return fields.filter(Boolean);
 };
 
-
   const handleNext = async () => {
-    const currentTabConfig = WORK_ORDER_TABS_CONFIG[currentTabIndex];
-    const fieldsToValidate = getFieldsForTabValidation(currentTabConfig.id);
+    const currentSectionConfig = WORK_ORDER_SECTIONS_CONFIG[currentSectionIndex];
+    const fieldsToValidate = getFieldsForSectionValidation(currentSectionConfig.id);
 
     if (fieldsToValidate.length > 0) {
         const isValid = await form.trigger(fieldsToValidate as any);
         if (!isValid) {
             toast({
                 title: "Validation Error",
-                description: `Please correct the errors on the "${currentTabConfig.title}" tab before proceeding.`,
+                description: `Please correct the errors in "${currentSectionConfig.title}" before proceeding.`,
                 variant: "destructive",
             });
             return;
         }
     }
 
-    if (currentTabIndex < WORK_ORDER_TABS_CONFIG.length - 1) {
-      setCurrentTab(WORK_ORDER_TABS_CONFIG[currentTabIndex + 1].id);
+    if (currentSectionIndex < WORK_ORDER_SECTIONS_CONFIG.length - 1) {
+      setCurrentSection(WORK_ORDER_SECTIONS_CONFIG[currentSectionIndex + 1].id);
     }
   };
 
   const handlePrevious = () => {
-    if (currentTabIndex > 0) {
-      setCurrentTab(WORK_ORDER_TABS_CONFIG[currentTabIndex - 1].id);
+    if (currentSectionIndex > 0) {
+      setCurrentSection(WORK_ORDER_SECTIONS_CONFIG[currentSectionIndex - 1].id);
     }
   };
+  
+  const renderCurrentSection = () => {
+    const sectionConfig = WORK_ORDER_SECTIONS_CONFIG.find(s => s.id === currentSection);
+    if (!sectionConfig) return null;
 
-  const handleFormKeyDown = (event: React.KeyboardEvent<HTMLFormElement>) => {
-    if (event.key === 'Enter' &&
-        (event.target instanceof HTMLInputElement ||
-         event.target instanceof HTMLTextAreaElement ||
-         event.target instanceof HTMLSelectElement)) {
-      if (currentTabIndex < WORK_ORDER_TABS_CONFIG.length - 1) {
-        if (!(event.target instanceof HTMLTextAreaElement && event.shiftKey)) { 
-          event.preventDefault();
-        }
-      }
-    }
-  };
-
-
-  if (template.id === 'work-order') {
+    if (sectionConfig.id === 'workOrderSpecifics') {
       const workOrderSpecificFields = template.fields.filter(f => ['generalWorkDescription', 'termsOfService', 'otherCosts', 'taxRatePercentage', 'approvedByName', 'dateOfApproval'].includes(f.id));
       const includeWorkDescField = template.fields.find(f => f.id === 'includeWorkDescriptionTable');
       const includeMaterialField = template.fields.find(f => f.id === 'includeMaterialTable');
       const includeLaborField = template.fields.find(f => f.id === 'includeLaborTable');
+        return (
+          <div className="space-y-6">
+              {workOrderSpecificFields.slice(0, 2).map(field => renderFormField(field))}
+              
+              {includeWorkDescField && renderFormField(includeWorkDescField)}
+              <WorkItemsSection form={form} template={template} />
 
+              {includeMaterialField && renderFormField(includeMaterialField)}
+              <MaterialsSection form={form} template={template} />
+
+              {includeLaborField && renderFormField(includeLaborField)}
+              <LaborSection form={form} template={template} />
+
+              {workOrderSpecificFields.slice(2).map(field => renderFormField(field))}
+          </div>
+      );
+    }
+
+    return sectionConfig.fieldIds?.map(fieldId => {
+        const field = template.fields.find(f => f.id === fieldId);
+        return field ? renderFormField(field) : null;
+    });
+  }
+
+
+  if (template.id === 'work-order') {
     return (
         <Card className="shadow-none border-0">
             <CardHeader className="p-0 mb-4">
                 <CardTitle className="text-lg font-medium">Fill in the details for your {template.name}</CardTitle>
             </CardHeader>
-            <form onKeyDown={handleFormKeyDown} onSubmit={(e) => e.preventDefault()}>
-                <Tabs value={currentTab} onValueChange={handleTabChangeAttempt} className="w-full">
-                     <div className="relative px-0">
-                      <div className="overflow-x-auto pb-2 -mx-0 px-0">
-                        <TabsList className="inline-flex">
-                            {WORK_ORDER_TABS_CONFIG.map(tab => (
-                                <TabsTrigger key={tab.id} value={tab.id} className="whitespace-nowrap">
-                                    {tab.title}
-                                </TabsTrigger>
-                            ))}
-                        </TabsList>
-                      </div>
-                    </div>
+            <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
+                <Select value={currentSection} onValueChange={setCurrentSection}>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Select a section" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {WORK_ORDER_SECTIONS_CONFIG.map(section => (
+                            <SelectItem key={section.id} value={section.id}>
+                                {section.title}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
 
-                    {WORK_ORDER_TABS_CONFIG.map(tabInfo => (
-                        <TabsContent key={tabInfo.id} value={tabInfo.id} className="focus-visible:ring-0 focus-visible:ring-offset-0">
-                            <CardContent className="space-y-6 px-1 pb-6 pt-4">
-                                {tabInfo.id === 'workOrderSpecifics' ? (
-                                    <div className="space-y-6">
-                                        {workOrderSpecificFields.slice(0, 2).map(field => renderFormField(field))}
-                                        
-                                        {includeWorkDescField && renderFormField(includeWorkDescField)}
-                                        <WorkItemsSection form={form} template={template} />
-
-                                        {includeMaterialField && renderFormField(includeMaterialField)}
-                                        <MaterialsSection form={form} template={template} />
-
-                                        {includeLaborField && renderFormField(includeLaborField)}
-                                        <LaborSection form={form} template={template} />
-
-                                        {workOrderSpecificFields.slice(2).map(field => renderFormField(field))}
-                                    </div>
-                                ) : (
-                                    tabInfo.fieldIds?.map(fieldId => {
-                                        const field = template.fields.find(f => f.id === fieldId);
-                                        return field ? renderFormField(field) : null;
-                                    })
-                                )}
-                            </CardContent>
-                        </TabsContent>
-                    ))}
-                </Tabs>
+                <CardContent className="space-y-6 px-1 pb-6 pt-4 border-t mt-4">
+                  {renderCurrentSection()}
+                </CardContent>
 
                  <CardFooter className="flex justify-between border-t pt-6 mt-4 px-1">
-                    <Button type="button" variant="outline" onClick={handlePrevious} disabled={currentTabIndex === 0}>
+                    <Button type="button" variant="outline" onClick={handlePrevious} disabled={currentSectionIndex === 0}>
                         Previous
                     </Button>
-                     {currentTabIndex < WORK_ORDER_TABS_CONFIG.length - 1 ? (
-                        <Button type="button" variant="default" onClick={handleNext}>
-                            Next
-                        </Button>
-                    ) : null}
+                    <Button type="button" variant="default" onClick={handleNext} disabled={currentSectionIndex === WORK_ORDER_SECTIONS_CONFIG.length - 1}>
+                        Next
+                    </Button>
                 </CardFooter>
             </form>
         </Card>
@@ -519,3 +478,5 @@ export function DocumentForm({ template }: DocumentFormProps) {
     </Card>
   );
 }
+
+    
