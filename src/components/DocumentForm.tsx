@@ -490,13 +490,11 @@ export function DocumentForm({ template }: DocumentFormProps) {
                     <Button type="button" variant="outline" onClick={handlePrevious} disabled={currentTabIndex === 0}>
                         Previous
                     </Button>
-                     {currentTabIndex === WORK_ORDER_TABS_CONFIG.length - 1 ? (
-                       null
-                    ) : (
+                     {currentTabIndex < WORK_ORDER_TABS_CONFIG.length - 1 ? (
                         <Button type="button" variant="default" onClick={handleNext}>
                             Next
                         </Button>
-                    )}
+                    ) : null}
                 </CardFooter>
             </form>
         </Card>
