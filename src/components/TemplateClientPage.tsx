@@ -1,8 +1,9 @@
+
 'use client';
 
 import type { Template, DocumentFormPropsTemplate, FormData } from '@/types';
 import { DocumentForm } from '@/components/DocumentForm';
-import { Printer, Eye, Save } from 'lucide-react';
+import { Printer, Eye, Save, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
 import { templates } from '@/lib/templates'; // Import templates for client-side lookup
 import { Card } from '@/components/ui/card';
+import Link from 'next/link';
 
 
 interface TemplateClientPageProps {
@@ -298,6 +300,14 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
       <div className="grid lg:grid-cols-2 gap-8 items-start">
         <Card className="w-full">
           <div className="p-6 space-y-6">
+            <div className="mb-4">
+               <Button asChild variant="outline" size="sm" className="mb-4">
+                <Link href="/dashboard">
+                  <ChevronLeft className="mr-2 h-4 w-4" />
+                  Back to Dashboard
+                </Link>
+              </Button>
+            </div>
              <div className="text-center lg:text-left">
               <TemplateIcon className="h-12 w-12 text-accent mx-auto lg:mx-0 mb-3" />
               <h1 className="text-3xl font-bold text-primary">{template.name}</h1>
