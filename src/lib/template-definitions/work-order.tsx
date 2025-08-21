@@ -75,7 +75,7 @@ export const WorkOrderPreview = (data: FormData) => {
               Contact: {data.businessContactNumber || 'N/A'} | Email: {data.businessEmail || 'N_A'}
             </p>
           </div>
-           <div className="w-[100px] h-[50px] sm:w-[120px] sm:h-[60px] flex items-center justify-center rounded bg-gray-50 overflow-hidden self-start sm:self-center">
+           <div className="w-[100px] h-[50px] sm:w-[120px] sm:h-[60px] flex items-center justify-center bg-gray-50 rounded overflow-hidden self-start sm:self-center">
             {canDisplayLogo ? (
               <Image src={logoSrc} alt="Business Logo" width={120} height={60} className="object-contain" data-ai-hint="company brand" />
             ) : logoUrlFromData && typeof logoUrlFromData === 'string' && logoUrlFromData.trim() !== '' && !logoUrlFromData.startsWith('data:image') ? (
@@ -335,5 +335,7 @@ export const workOrderFields: TemplateField[] = [
   { id: 'approvedByName', label: 'Approved By (Name)', type: 'text', placeholder: 'Project Manager Name' },
   { id: 'dateOfApproval', label: 'Date of Approval', type: 'date' },
 ];
+
+    
 
     
