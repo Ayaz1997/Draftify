@@ -429,7 +429,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
             <CardHeader className="p-0 mb-4">
                 <CardTitle className="text-lg font-medium">Fill in the details for your {template.name}</CardTitle>
             </CardHeader>
-            <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
+            <div className="space-y-6">
                 <Select value={currentSection} onValueChange={setCurrentSection}>
                     <SelectTrigger>
                         <SelectValue placeholder="Select a section" />
@@ -455,7 +455,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
                         Next
                     </Button>
                 </CardFooter>
-            </form>
+            </div>
         </Card>
     );
   }
