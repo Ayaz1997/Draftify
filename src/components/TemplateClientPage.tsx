@@ -1,4 +1,3 @@
-
 'use client';
 
 import type { Template, DocumentFormPropsTemplate, FormData } from '@/types';
@@ -8,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
 import { templates } from '@/lib/templates'; // Import templates for client-side lookup
@@ -79,6 +78,7 @@ const createFormSchema = (template?: Template) => {
 export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const [isSaved, setIsSaved] = useState(false);
   
   // Find the full template object on the client-side using the ID
   const template = useMemo(() => templates.find(t => t.id === templateData.id), [templateData.id]);
@@ -92,6 +92,13 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
   });
 
   const formData = methods.watch();
+
+  useEffect(() => {
+    const subscription = methods.watch(() => {
+      setIsSaved(false);
+    });
+    return () => subscription.unsubscribe();
+  }, [methods]);
 
   useEffect(() => {
     const editDataKey = `docuFormEditData-${templateData.id}`;
@@ -112,6 +119,7 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
     } else if (storedLocalDataString) {
        try {
         initialValues = JSON.parse(storedLocalDataString);
+        setIsSaved(true); // If loading from local storage, it's considered "saved"
       } catch (e) {
         console.error('Failed to parse data from local storage:', e);
       }
@@ -210,6 +218,7 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
     const currentData = methods.getValues();
     const savedData = await processAndSaveData(currentData, 'localStorage');
     if (savedData) {
+        setIsSaved(true);
         toast({
             title: "Data Saved!",
             description: "Your document details have been saved to this browser.",
@@ -217,8 +226,20 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
         });
     }
   };
+  
+  const showSaveReminderToast = () => {
+    toast({
+        variant: 'destructive',
+        title: "Action Required",
+        description: "Please save your document first to enable this action.",
+    });
+  };
 
   const handlePrint = () => {
+    if (!isSaved) {
+        showSaveReminderToast();
+        return;
+    }
     toast({
       title: "Print / Save PDF",
       description: "Use your browser's print functionality to save as PDF.",
@@ -243,6 +264,10 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
   };
 
   const onSubmit = async (values: Record<string, any>) => {
+    if (!isSaved) {
+        showSaveReminderToast();
+        return;
+    }
     const dataForPreview = await processAndSaveData(values, 'sessionStorage');
     if (dataForPreview) {
         router.push(`/templates/${templateData.id}/preview`);
@@ -290,7 +315,7 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
                     <Button variant="outline" size="sm" onClick={handleSave} type="button">
                         <Save className="mr-2 h-4 w-4" /> Save
                     </Button>
-                    <Button variant="outline" size="sm" onClick={handlePrint} type="button">
+                    <Button variant="outline" size="sm" onClick={handlePrint} type="button" disabled={!isSaved}>
                         <Printer className="mr-2 h-4 w-4" /> Print / Save PDF
                     </Button>
                   </div>
@@ -309,7 +334,7 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
              <Button variant="outline" className="w-full" size="lg" type="button" onClick={handleSave}>
               <Save className="mr-2 h-4 w-4" /> Save
             </Button>
-            <Button className="w-full" size="lg" type="button" onClick={methods.handleSubmit(onSubmit)}>
+            <Button className="w-full" size="lg" type="button" onClick={methods.handleSubmit(onSubmit)} disabled={!isSaved}>
               <Eye className="mr-2 h-4 w-4" /> Preview
             </Button>
            </div>
