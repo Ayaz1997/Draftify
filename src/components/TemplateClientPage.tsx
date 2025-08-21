@@ -304,18 +304,18 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
             </div>
         </div>
 
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-background border-t z-50">
-           <Button className="w-full" type="button" onClick={methods.handleSubmit(onSubmit)}>
-              <Eye className="mr-2 h-4 w-4" />
-              Preview Document
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 p-3 bg-background border-t z-50">
+           <div className="flex gap-3">
+             <Button variant="outline" className="w-full" size="lg" type="button" onClick={handleSave}>
+              <Save className="mr-2 h-4 w-4" /> Save
             </Button>
+            <Button className="w-full" size="lg" type="button" onClick={methods.handleSubmit(onSubmit)}>
+              <Eye className="mr-2 h-4 w-4" /> Preview
+            </Button>
+           </div>
         </div>
       </div>
       </form>
     </FormProvider>
   );
 }
-
-    
-
-    
