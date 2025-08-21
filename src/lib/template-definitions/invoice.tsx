@@ -80,9 +80,9 @@ export const StandardInvoicePreview = (data: FormData) => {
                   <TableHead className="p-2 w-10 text-left">Sl. No.</TableHead>
                   <TableHead className="p-2 text-left">Description</TableHead>
                   <TableHead className="p-2 w-20 text-left">Unit</TableHead>
-                  <TableHead className="p-2 text-right w-20">Quantity</TableHead>
-                  <TableHead className="p-2 text-right w-24">Unit Cost</TableHead>
-                  <TableHead className="p-2 text-right w-24">Total Cost</TableHead>
+                  <TableHead className="p-2 text-left w-20">Quantity</TableHead>
+                  <TableHead className="p-2 text-left w-24">Unit Cost</TableHead>
+                  <TableHead className="p-2 text-left w-24">Total Cost</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -96,19 +96,17 @@ export const StandardInvoicePreview = (data: FormData) => {
                       <TableCell className="p-2 text-left">{index + 1}</TableCell>
                       <TableCell className="p-2 whitespace-pre-wrap text-left">{item.description}</TableCell>
                       <TableCell className="p-2 text-left">{item.unit}</TableCell>
-                      <TableCell className="p-2 text-right">{quantity.toFixed(2)}</TableCell>
-                      <TableCell className="p-2 text-right">{formatCurrency(unitCost, currencySymbol)}</TableCell>
-                      <TableCell className="p-2 text-right font-medium">{formatCurrency(totalCost, currencySymbol)}</TableCell>
+                      <TableCell className="p-2 text-left">{quantity.toFixed(2)}</TableCell>
+                      <TableCell className="p-2 text-left">{formatCurrency(unitCost, currencySymbol)}</TableCell>
+                      <TableCell className="p-2 text-left font-medium">{formatCurrency(totalCost, currencySymbol)}</TableCell>
                     </TableRow>
                   );
                 })}
               </TableBody>
               <UiTableFooter>
                 <TableRow className="bg-muted/50 font-bold">
-                  <TableCell colSpan={3} className="p-2 text-right text-primary">TOTAL</TableCell>
-                  <TableCell className="p-2 text-right text-primary">{totalQuantity.toFixed(2)}</TableCell>
-                  <TableCell className="p-2"></TableCell>
-                  <TableCell className="p-2 text-right text-primary">{formatCurrency(totalCostSum, currencySymbol)}</TableCell>
+                  <TableCell colSpan={5} className="p-2 text-right text-primary">TOTAL</TableCell>
+                  <TableCell className="p-2 text-left text-primary">{formatCurrency(totalCostSum, currencySymbol)}</TableCell>
                 </TableRow>
               </UiTableFooter>
             </Table>
@@ -208,4 +206,5 @@ export const standardInvoiceFields: TemplateField[] = [
     
 
     
+
 

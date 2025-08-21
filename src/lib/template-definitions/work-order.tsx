@@ -128,9 +128,9 @@ export const WorkOrderPreview = (data: FormData) => {
               <TableHeader>
                 <TableRow>
                   <TableHead className="py-1 px-2 sm:py-2 sm:px-3 text-left text-xs sm:text-sm">Work Description</TableHead>
-                  <TableHead className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Area (Sq. ft.)</TableHead>
-                  <TableHead className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Rate ({currencySymbol})</TableHead>
-                  <TableHead className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Amount ({currencySymbol})</TableHead>
+                  <TableHead className="text-left py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Area (Sq. ft.)</TableHead>
+                  <TableHead className="text-left py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Rate ({currencySymbol})</TableHead>
+                  <TableHead className="text-left py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Amount ({currencySymbol})</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -142,9 +142,9 @@ export const WorkOrderPreview = (data: FormData) => {
                   return (
                     <TableRow key={`work-${index}`}>
                       <TableCell className="whitespace-pre-wrap py-1 px-2 sm:py-2 sm:px-3 text-left text-xs sm:text-sm">{item.description}</TableCell>
-                      <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{area.toFixed(2)}</TableCell>
-                      <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(rate, '')}</TableCell>
-                      <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(amount, '')}</TableCell>
+                      <TableCell className="text-left py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{area.toFixed(2)}</TableCell>
+                      <TableCell className="text-left py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(rate, '')}</TableCell>
+                      <TableCell className="text-left py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(amount, '')}</TableCell>
                     </TableRow>
                   )
                 })}
@@ -152,7 +152,7 @@ export const WorkOrderPreview = (data: FormData) => {
               <UiTableFooter>
                 <TableRow className="bg-muted/50">
                   <TableCell colSpan={3} className="text-right font-bold text-primary py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Subtotal Work Description</TableCell>
-                  <TableCell className="text-right font-bold py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(subtotalWorkDescription, currencySymbol)}</TableCell>
+                  <TableCell className="text-left font-bold py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(subtotalWorkDescription, currencySymbol)}</TableCell>
                 </TableRow>
               </UiTableFooter>
             </Table>
@@ -167,9 +167,9 @@ export const WorkOrderPreview = (data: FormData) => {
                 <TableRow>
                   <TableHead className="py-1 px-2 sm:py-2 sm:px-3 text-left text-xs sm:text-sm">Material Name</TableHead>
                   <TableHead className="py-1 px-2 sm:py-2 sm:px-3 text-left text-xs sm:text-sm">Unit</TableHead>
-                  <TableHead className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Quantity</TableHead>
-                  <TableHead className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Price/Unit ({currencySymbol})</TableHead>
-                  <TableHead className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Amount ({currencySymbol})</TableHead>
+                  <TableHead className="text-left py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Quantity</TableHead>
+                  <TableHead className="text-left py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Price/Unit ({currencySymbol})</TableHead>
+                  <TableHead className="text-left py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Amount ({currencySymbol})</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -182,9 +182,9 @@ export const WorkOrderPreview = (data: FormData) => {
                     <TableRow key={`material-${index}`}>
                       <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-left text-xs sm:text-sm">{item.name}</TableCell>
                       <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-left text-xs sm:text-sm">{item.unit}</TableCell>
-                      <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{quantity}</TableCell>
-                      <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(pricePerUnit, '')}</TableCell>
-                      <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(amount, '')}</TableCell>
+                      <TableCell className="text-left py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{quantity}</TableCell>
+                      <TableCell className="text-left py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(pricePerUnit, '')}</TableCell>
+                      <TableCell className="text-left py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(amount, '')}</TableCell>
                     </TableRow>
                   )
                 })}
@@ -192,7 +192,7 @@ export const WorkOrderPreview = (data: FormData) => {
               <UiTableFooter>
                 <TableRow className="bg-muted/50">
                   <TableCell colSpan={4} className="text-right font-bold text-primary py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Subtotal Materials</TableCell>
-                  <TableCell className="text-right font-bold py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(subtotalMaterial, currencySymbol)}</TableCell>
+                  <TableCell className="text-left font-bold py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(subtotalMaterial, currencySymbol)}</TableCell>
                 </TableRow>
               </UiTableFooter>
             </Table>
@@ -206,8 +206,8 @@ export const WorkOrderPreview = (data: FormData) => {
               <TableHeader>
                 <TableRow>
                   <TableHead className="py-1 px-2 sm:py-2 sm:px-3 text-left text-xs sm:text-sm">Team Name / Description</TableHead>
-                  <TableHead className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">No. of Persons</TableHead>
-                  <TableHead className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Amount ({currencySymbol})</TableHead>
+                  <TableHead className="text-left py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">No. of Persons</TableHead>
+                  <TableHead className="text-left py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Amount ({currencySymbol})</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -218,8 +218,8 @@ export const WorkOrderPreview = (data: FormData) => {
                   return (
                     <TableRow key={`labor-${index}`}>
                       <TableCell className="py-1 px-2 sm:py-2 sm:px-3 text-left text-xs sm:text-sm">{item.teamName}</TableCell>
-                      <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{numPersons}</TableCell>
-                      <TableCell className="text-right py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(amount, '')}</TableCell>
+                      <TableCell className="text-left py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{numPersons}</TableCell>
+                      <TableCell className="text-left py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(amount, '')}</TableCell>
                     </TableRow>
                   )
                 })}
@@ -227,7 +227,7 @@ export const WorkOrderPreview = (data: FormData) => {
               <UiTableFooter>
                 <TableRow className="bg-muted/50">
                   <TableCell colSpan={2} className="text-right font-bold text-primary py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">Subtotal Labor</TableCell>
-                  <TableCell className="text-right font-bold py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(subtotalLabor, currencySymbol)}</TableCell>
+                  <TableCell className="text-left font-bold py-1 px-2 sm:py-2 sm:px-3 text-xs sm:text-sm">{formatCurrency(subtotalLabor, currencySymbol)}</TableCell>
                 </TableRow>
               </UiTableFooter>
             </Table>
@@ -339,4 +339,5 @@ export const workOrderFields: TemplateField[] = [
     
 
     
+
 
