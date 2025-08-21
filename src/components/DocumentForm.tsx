@@ -491,14 +491,7 @@ export function DocumentForm({ template }: DocumentFormProps) {
                         Previous
                     </Button>
                      {currentTabIndex === WORK_ORDER_TABS_CONFIG.length - 1 ? (
-                        <Button 
-                            type="button" 
-                            variant="default" 
-                            onClick={onSubmit}
-                        >
-                            <Eye className="mr-2 h-4 w-4" />
-                            Preview Document
-                        </Button>
+                       null
                     ) : (
                         <Button type="button" variant="default" onClick={handleNext}>
                             Next
