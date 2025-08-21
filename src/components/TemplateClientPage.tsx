@@ -296,18 +296,18 @@ export function TemplateClientPage({ templateData }: TemplateClientPageProps) {
 
   return (
     <FormProvider {...methods}>
+     <div className="mb-6">
+        <Button asChild variant="outline" size="sm">
+          <Link href="/dashboard">
+            <ChevronLeft className="mr-2 h-4 w-4" />
+            Back to Dashboard
+          </Link>
+        </Button>
+      </div>
      <form onSubmit={methods.handleSubmit(onSubmit)}>
       <div className="grid lg:grid-cols-2 gap-8 items-start">
         <Card className="w-full">
           <div className="p-6 space-y-6">
-            <div className="mb-4">
-               <Button asChild variant="outline" size="sm" className="mb-4">
-                <Link href="/dashboard">
-                  <ChevronLeft className="mr-2 h-4 w-4" />
-                  Back to Dashboard
-                </Link>
-              </Button>
-            </div>
              <div className="text-center lg:text-left">
               <TemplateIcon className="h-12 w-12 text-accent mx-auto lg:mx-0 mb-3" />
               <h1 className="text-3xl font-bold text-primary">{template.name}</h1>
