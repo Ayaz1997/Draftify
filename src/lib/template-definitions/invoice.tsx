@@ -77,9 +77,9 @@ export const StandardInvoicePreview = (data: FormData) => {
             <Table>
               <TableHeader className="bg-muted/50">
                 <TableRow>
-                  <TableHead className="p-2 w-10">Sl. No.</TableHead>
-                  <TableHead className="p-2">Description</TableHead>
-                  <TableHead className="p-2 w-20">Unit</TableHead>
+                  <TableHead className="p-2 w-10 text-left">Sl. No.</TableHead>
+                  <TableHead className="p-2 text-left">Description</TableHead>
+                  <TableHead className="p-2 w-20 text-left">Unit</TableHead>
                   <TableHead className="p-2 text-right w-20">Quantity</TableHead>
                   <TableHead className="p-2 text-right w-24">Unit Cost</TableHead>
                   <TableHead className="p-2 text-right w-24">Total Cost</TableHead>
@@ -93,9 +93,9 @@ export const StandardInvoicePreview = (data: FormData) => {
                   const totalCost = quantity * unitCost;
                   return (
                     <TableRow key={index}>
-                      <TableCell className="p-2 text-center">{index + 1}</TableCell>
-                      <TableCell className="p-2 whitespace-pre-wrap">{item.description}</TableCell>
-                      <TableCell className="p-2">{item.unit}</TableCell>
+                      <TableCell className="p-2 text-left">{index + 1}</TableCell>
+                      <TableCell className="p-2 whitespace-pre-wrap text-left">{item.description}</TableCell>
+                      <TableCell className="p-2 text-left">{item.unit}</TableCell>
                       <TableCell className="p-2 text-right">{quantity.toFixed(2)}</TableCell>
                       <TableCell className="p-2 text-right">{formatCurrency(unitCost, currencySymbol)}</TableCell>
                       <TableCell className="p-2 text-right font-medium">{formatCurrency(totalCost, currencySymbol)}</TableCell>
@@ -208,3 +208,4 @@ export const standardInvoiceFields: TemplateField[] = [
     
 
     
+
